@@ -10,6 +10,10 @@ Health checker for UNIX/Linux is a small framework of monitoring scripts (plugin
 * UNIX cron or other scheduler
 * execute as user root only
 
+## Build
+
+Use the build templates & scripts in the build/ directory to roll your own packages.
+
 ## Installation
 
 ### HP-UX
