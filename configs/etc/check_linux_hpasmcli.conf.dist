@@ -1,0 +1,29 @@
+#******************************************************************************
+# @(#) check_linux_hpasmcli.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_hpasmcli HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# location of 'hpasmcli' tool
+hpasmcli_bin="/sbin/hpasmcli"
+
+# SHOW FANS (0=off, 1=on) [default: 1]
+do_asm_fans=1
+
+# SHOW DIMM (0=off, 1=on) [default: 1]
+do_asm_dimm=1
+
+# SHOW POWERSUPPLY (0=off, 1=on) [default: 1]
+do_asm_powersupply=1
+
+# SHOW SERVER (0=off, 1=on) [default: 1]
+do_asm_server=1
+
+# SHOW TEMPERATURE (0=off, 1=on) [default: 1]
+do_asm_temperature=1
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

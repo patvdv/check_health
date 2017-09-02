@@ -1,0 +1,11 @@
+*** MESSAGE ***
+<## @_HC_BODY ##>
+
+*** RECOMMENDATION ***
+If this host is part of Serviceguard cluster and the affected volume group
+is cluster aware, then major/minor numbers must be unique AND identical on
+all cluster nodes.
+
+View the current major/minor:
+* vgs
+

@@ -1,0 +1,64 @@
+#!/usr/bin/env ksh
+#******************************************************************************
+# @(#) post-uninstall script for hc_aix LPP package
+#******************************************************************************
+# @(#) Copyright (C) 2014 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+#
+# This program is a free software; you can redistribute it and/or modify
+# it under the same terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
+#******************************************************************************
+
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of ETC dir
+HC_ETC_DIR="/etc/opt/hc"
+# location of VAR dir
+HC_VAR_DIR="/var/opt/hc"
+# location of MAIN dir
+HC_MAIN_DIR="/opt/hc"
+# ------------------------- CONFIGURATION ends here ---------------------------
+echo "INFO: starting post-uninstall script ..."
+
+# remove ETC DIR (only .dist files)
+if [[ -d ${HC_ETC_DIR} ]]
+then
+	rm -rf ${HC_ETC_DIR}/*.dist >/dev/null || \
+	print -u2 "WARN: could not remove .dist files in directory ${HC_ETC_DIR}"
+fi
+if [[ -d ${HC_ETC_DIR}/core ]]
+then
+	rm -rf ${HC_ETC_DIR}/core/*.dist >/dev/null || \
+	print -u2 "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core"
+fi
+if [[ -d ${HC_ETC_DIR}/core/providers ]]
+then
+	rm -rf ${HC_ETC_DIR}/core/providers/*.dist >/dev/null || \
+	print -u2 "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core/providers"
+fi
+
+# remove VAR DIR (temporary state only)
+if [[ -d ${HC_VAR_DIR} ]]
+then
+	rm -rf ${HC_VAR_DIR}/state/temporary >/dev/null || \
+	print -u2 "WARN: could not remove directory ${HC_VAR_DIR}/state/temporary"
+fi
+
+# remove MAIN DIR
+if [[ -d ${HC_MAIN_DIR} ]]
+then
+	rm -rf ${HC_MAIN_DIR} >/dev/null || \
+	print -u2 "WARN: could not remove directory ${HC_VAR_DIR}"
+fi
+
+print "INFO: finished post-uninstall script"
+
+exit 0
+
+#******************************************************************************
+# END of script
+#******************************************************************************

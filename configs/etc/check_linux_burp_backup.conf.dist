@@ -1,0 +1,17 @@
+#******************************************************************************
+# @(#) check_linux_burp_backup.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_burp_backup HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# client name; maximum amount of warnings allowed; maximum backup age (hours/days/weeks)
+testclient1;0;10h
+testclient2;0;2d
+testclient3;0;5w
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

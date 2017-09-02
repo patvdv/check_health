@@ -1,0 +1,19 @@
+#******************************************************************************
+# @(#) check_hpux_ignite_backup.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_ignite_backup HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# maximum days before backup gets flagged as 'too old'
+# [default: 14]
+backup_age=14
+
+# list of hosts to exclude from the check (comma-separated list)
+# [default: none]
+exclude_hosts=""
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

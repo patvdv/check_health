@@ -1,0 +1,15 @@
+#******************************************************************************
+# @(#) check_linux_sg_cluster_status.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_linux_sg_cluster_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# list of required cluster statuses (format : "parameter=value")
+#status=up
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -1,0 +1,35 @@
+#******************************************************************************
+# @(#) check_aix_subsystems.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_aix_subsystems HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# list of required active subsystems
+sendmail
+syslogd
+portmap
+inetd
+snmpd
+hostmibd
+snmpmibd
+aixmibd
+#nimsh
+biod
+rpc.statd
+rpc.lockd
+automountd
+qdaemon
+writesrv
+sshd
+xntpd
+cimsys
+ctrmc
+IBM.ServiceRM
+IBM.DRM
+IBM.CSMAgentRM
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

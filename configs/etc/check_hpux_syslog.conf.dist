@@ -1,0 +1,20 @@
+#******************************************************************************
+# @(#) check_hpux_syslog.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_syslog HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# path to the SYSLOG file
+# [default: /var/adm/syslog/syslog.log]
+syslog_file="/var/adm/syslog/syslog.log"
+
+# comma-separated list of tags to search for (case insensitive) (see man 1 logger)
+# [default: vmunix]
+syslog_classes="vmunix"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

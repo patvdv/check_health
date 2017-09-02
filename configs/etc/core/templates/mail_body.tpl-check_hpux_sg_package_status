@@ -1,0 +1,15 @@
+*** MESSAGE ***
+<## @_HC_BODY ##>
+
+*** RECOMMENDATION ***
+Check current package status:
+* cmviewcl [-v] -p <PKG_NAME>
+If the package is down:
+* cmrunpkg <PKG_NAME> (on the primary node)
+- or -
+* cmmodpkg -e <PKG_NAME>
+* cmmodpkg -e -n <PRIMARY_NODE> <PKG_NAME>
+Check for possible errors in:
+* /var/adm/cmcluster/log/*
+* /var/adm/syslog/syslog.log (cmcld)
+

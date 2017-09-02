@@ -1,0 +1,26 @@
+#******************************************************************************
+# @(#) check_linux_hpssacli.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_hpssacli HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# location of 'hpssacli' tool
+hpssacli_bin="/usr/sbin/hpssacli"
+
+# controller all show status (0=off, 1=on) [default: 1]
+do_ssa_controller=1
+
+# controller slot=X enclosure all show (0=off, 1=on) [default: 1]
+do_ssa_enclosure=1
+
+# controller slot=X physicaldrive all show status (0=off, 1=on) [default: 1]
+do_ssa_physical=1
+
+#  controller slot=X logicaldrive all show status (0=off, 1=on) [default: 1]
+do_ssa_logical=1
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

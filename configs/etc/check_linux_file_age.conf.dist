@@ -1,0 +1,15 @@
+#******************************************************************************
+# @(#) check_linux_file_age.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_file_age HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# file (full path); maximum age in minutes since last change
+/var/log/messages;60
+/var/log/ntp.log;30
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

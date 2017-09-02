@@ -1,0 +1,12 @@
+*** MESSAGE ***
+<## @_HC_BODY ##>
+
+*** RECOMMENDATION ***
+Check current cluster status:
+* cmviewcl [-v]
+If the cluster is down:
+* cmruncl
+Check for possible errors in:
+* /var/adm/cmcluster/log/*
+* /var/adm/syslog/syslog.log (cmcld)
+

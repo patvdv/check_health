@@ -1,0 +1,10 @@
+*** MESSAGE ***
+<## @_HC_BODY ##>
+
+*** RECOMMENDATION ***
+Check any faulty devices or error messages:
+* ioscan -P health (look for 'offline' devices)
+* ioscan -fnN (look for 'NO_HW' devices)
+* dmesg
+* /var/adm/syslog/syslog.log
+

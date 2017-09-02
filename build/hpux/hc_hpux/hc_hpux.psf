@@ -1,0 +1,118 @@
+# Depot definition:
+depot
+    layout_version  1.0
+
+# Vendor definition:
+vendor
+        tag             KUDOS 
+        title           "KUDOS BVBA - http://www.kudos.be"
+end
+
+# Bundle definitions:
+bundle
+        tag             HC-HPUX
+        title           "The Health Checker (HC) for UNIX"
+        os_name         HP-UX
+        revision        %BUILD_DATE%
+        architecture    HP-UX_B.11_32/64
+        machine_type    ia64*
+        vendor_tag      KUDOS
+        contents        HC-HPUX-MAIN,r=,a=,v=
+end
+
+# Product definitions:
+product
+    tag             HC-HPUX-MAIN
+    revision        %BUILD_DATE%
+    category        tools
+    category_title  Tools
+    title           "The Health Checker (HC) for UNIX"
+    description     "The Health Checker is collection of scripts (plugins)
+designed to perform regular - but not intensive - health checks on 
+UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as 
+well customer specific checks. Checks may include topics such file 
+system mounts, process checks, file consistency etc."
+    architecture    S700/S800_HP-UX_10/HP-UX_11/IA64_HP-UX_11
+    machine_type    9000/7*|9000/8*|ia64*
+    os_name         HP-UX
+    os_release      ?.1?.*
+    os_version      [A-Z]
+    directory       /opt/hc
+    is_locatable    false
+    is_patch        false
+
+    postinstall     scripts/hc_hpux.postinstall
+    postremove      scripts/hc_hpux.postremove
+        
+    # Fileset definitions:
+    fileset
+        tag             scripts
+        title           UX Health Checker (scripts)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+
+        file_permissions -u 0222 -o root -g sys
+        
+        directory       ../../sources/bin=/opt/hc/bin
+        file            -m 755 check_health.sh
+        directory       ../../sources/lib/core=/opt/hc/lib/core
+        file            -m 755 include_core.sh
+        file            -m 755 include_data.sh
+        file            -m 755 include_os.sh
+    end
+
+    fileset
+        tag             core_plugins
+        title           UX Health Checker (core plugins)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+
+        file_permissions -u 0222 -o root -g sys
+        
+        directory       ../../sources/lib/core=/opt/hc/lib/core
+        file            -m 755 notify_mail.sh
+    end
+    
+    fileset
+        tag             config
+        title           UX Health Checker (configuration)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-HPUX-MAIN.scripts      
+
+        file_permissions -u 0222 -o root -g sys
+        
+        directory       ../../sources/etc/core=/etc/opt/hc/core
+        file            -m 644 check_health.conf.dist
+        directory       ../../sources/etc=/etc/opt/hc
+        file            -m 644 check_host.conf.dist
+    end
+    
+    fileset
+        tag             templates
+        title           UX Health Checker (templates)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-HPUX-MAIN.scripts     
+
+        file_permissions -u 0222 -o root -g sys
+        
+        directory       ../../sources/etc/core/templates=/etc/opt/hc/core/templates
+        file            -m 644 mail_info.tpl
+        file            -m 644 mail_header.tpl
+        file            -m 644 mail_body.tpl
+        file            -m 644 mail_footer.tpl
+    end
+end

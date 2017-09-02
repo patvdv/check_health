@@ -1,0 +1,18 @@
+#******************************************************************************
+# @(#) notify_sms.conf
+#******************************************************************************
+# This is the the configuration file for the notify_sms.sh provider.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# --- SMS settings ---
+# list of supported SMS providers (comma-separated)
+SMS_PROVIDERS=""
+
+# configuration settings for individual SMS providers go here
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

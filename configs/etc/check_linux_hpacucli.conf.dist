@@ -1,0 +1,26 @@
+#******************************************************************************
+# @(#) check_linux_hpacucli.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_hpacucli HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# location of 'hpacucli' tool
+hpacucli_bin="/usr/sbin/hpacucli"
+
+# controller all show status (0=off, 1=on) [default: 1]
+do_acu_controller=1
+
+# controller slot=X enclosure all show (0=off, 1=on) [default: 1]
+do_acu_enclosure=1
+
+# controller slot=X physicaldrive all show status (0=off, 1=on) [default: 1]
+do_acu_physical=1
+
+#  controller slot=X logicaldrive all show status (0=off, 1=on) [default: 1]
+do_acu_logical=1
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

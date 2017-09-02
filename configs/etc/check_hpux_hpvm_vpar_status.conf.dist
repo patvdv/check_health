@@ -1,0 +1,18 @@
+#******************************************************************************
+# @(#) check_hpux_hpvm_vpar_status.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_hpvm_vpar_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify properties as displayed by the 'vzlist -a -H -o ctid,status,onboot' command
+# [parid;runtime_status;boot_status]
+# runtime_status should be 'on' or 'off'
+# boot_status should be 'auto' or 'manual'
+#1;on;auto
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

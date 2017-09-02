@@ -1,0 +1,24 @@
+#******************************************************************************
+# @(#) check_hpux_ioscan.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_ioscan HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# comma-separated list of HW device classes that should be checked
+# [default: ctl,diag,disk,ext_bus,fc,fcp,i2o,ipmi,lan,lvm,olar,vxvm]
+ioscan_classes="ctl,diag,disk,ext_bus,fc,fcp,i2o,ipmi,lan,lvm,olar,vxvm"
+
+# specify whether ioscan needs to be run in kernel-cached or not (yes|no)
+# [default: yes]
+kernel_mode=yes
+
+# specify whether ioscan needs to report in Agile view or not (yes|no)
+# [default: yes]
+agile_view=yes
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

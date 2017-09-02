@@ -1,0 +1,13 @@
+*** MESSAGE ***
+<## @_HC_BODY ##>
+
+*** RECOMMENDATION ***
+File system is mounted with incorrect options. Remount the file system with the correct options.
+* Check /etc/fstab
+* Check /etc/cmcluster/<PKG_NAME>/<PKG_NAME>.conf files (directive "fs_mount_opt")
+
+Keep in mind that special mount options may apply for:
+* NFS file systems
+* SAP file systems
+* Oracle data/redo files
+

@@ -1,0 +1,136 @@
+# Depot definition:
+depot
+    layout_version  1.0
+
+# Vendor definition:
+vendor
+        tag             KUDOS
+        title           "KUDOS BVBA - http://www.kudos.be"
+end
+
+# Bundle definitions:
+bundle
+        tag             HC-PLATFORM
+        title           "The Health Checker (HC) for UNIX (OS plugins)"
+        os_name         HP-UX
+        revision        %BUILD_DATE%
+        architecture    HP-UX_B.11_32/64
+        machine_type    ia64*
+        vendor_tag      KUDOS
+        contents        HC-PLATFORM-MAIN,r=,a=,v=
+end
+
+# Product definitions:
+product
+    tag             HC-PLATFORM-MAIN
+    revision        %BUILD_DATE%
+    category        tools
+    category_title  Tools
+    title           "The Health Checker (HC) for UNIX (OS plugins)"
+    description     "The Health Checker is collection of scripts (plugins)
+designed to perform regular - but not intensive - health checks on
+UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as
+well customer specific checks. Checks may include topics such file
+system mounts, process checks, file consistency etc.
+This is the OS/platform plugin package"
+    architecture    S700/S800_HP-UX_10/HP-UX_11/IA64_HP-UX_11
+    machine_type    9000/7*|9000/8*|ia64*
+    os_name         HP-UX
+    os_release      ?.1?.*
+    os_version      [A-Z]
+    directory       /opt/hc
+    is_locatable    false
+    is_patch        false
+
+    postinstall     scripts/hc_hpux_platform.postinstall
+    postremove      scripts/hc_hpux_platform.postremove
+
+    # Fileset definitions:
+    fileset
+        tag             plugins
+        title           UX Health Checker (OS/Platform plugins)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-HPUX-MAIN
+
+        file_permissions -u 0222 -o root -g sys
+
+        directory       ../../sources/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
+        file            -m 755 check_hpux_autopath.sh
+        file            -m 755 check_hpux_file_age.sh
+        file            -m 755 check_hpux_file_change.sh
+        file            -m 755 check_hpux_fs_mounts.sh
+        file            -m 755 check_hpux_fs_mounts_options.sh
+        file            -m 755 check_hpux_ignite_backup.sh
+        file            -m 755 check_hpux_ioscan.sh
+        file            -m 755 check_hpux_guid_status.sh
+        file            -m 644 check_hpux_hpvm_vpar_status.sh
+        file            -m 755 check_hpux_httpd_status.sh
+        file            -m 755 check_hpux_named_status.sh
+        file            -m 755 check_hpux_ntp_status.sh
+        file            -m 755 check_hpux_ovpa_status.sh
+        file            -m 755 check_hpux_postfix_status.sh
+        file            -m 755 check_hpux_root_crontab.sh
+        file            -m 755 check_hpux_sg_package_status.sh
+        file            -m 755 check_hpux_sg_package_config.sh
+        file            -m 755 check_hpux_sg_cluster_status.sh
+        file            -m 755 check_hpux_sg_cluster_config.sh
+        file            -m 755 check_hpux_sg_qs_status.sh
+        file            -m 755 check_hpux_sshd_status.sh
+        file            -m 755 check_hpux_syslog.sh
+        file            -m 755 check_hpux_vg_minor_number.sh
+    end
+
+    fileset
+        tag             config
+        title           UX Health Checker (OS/Platform plugins: configuration)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-PLATFORM-MAIN.plugins
+
+        file_permissions -u 0222 -o root -g sys
+
+        directory       ../../sources/etc/=/etc/opt/hc
+        file            -m 644 check_hpux_file_age.conf.dist
+        file            -m 644 check_hpux_file_change.conf.dist
+        file            -m 644 check_hpux_fs_mounts_options.conf.dist
+        file            -m 644 check_hpux_hpvm_vpar_status.conf.dist
+        file            -m 644 check_hpux_ignite_backup.conf.dist
+        file            -m 644 check_hpux_ioscan.conf.dist
+        file            -m 644 check_hpux_ntp_status.conf.dist
+        file            -m 644 check_hpux_root_crontab.conf.dist
+        file            -m 644 check_hpux_sg_package_status.conf.dist
+        file            -m 644 check_hpux_sg_package_config.conf.dist
+        file            -m 644 check_hpux_sg_cluster_status.conf.dist
+        file            -m 644 check_hpux_sg_cluster_config.conf.dist
+        file            -m 644 check_hpux_syslog.conf.dist
+    end
+
+    fileset
+        tag             templates
+        title           UX Health Checker (OS/Platform plugins: templates)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-PLATFORM-MAIN.plugins
+
+        file_permissions -u 0222 -o root -g sys
+
+        directory       ../../sources/etc/core/templates=/etc/opt/hc/core/templates
+        file            -m 644 mail_body.tpl-check_hpux_fs_mounts_options
+        file            -m 644 mail_body.tpl-check_hpux_ioscan
+        file            -m 644 mail_body.tpl-check_hpux_ovpa_status
+        file            -m 644 mail_body.tpl-check_hpux_root_crontab
+        file            -m 644 mail_body.tpl-check_hpux_sg_cluster_status
+        file            -m 644 mail_body.tpl-check_hpux_sg_package_status
+        file            -m 644 mail_body.tpl-check_hpux_vg_minor_number
+    end
+end

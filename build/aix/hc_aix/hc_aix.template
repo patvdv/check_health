@@ -1,0 +1,43 @@
+Package Name: hc_aix
+Package VRMF: %BUILD_DATE%
+Update: N
+Fileset
+  Fileset Name: hc_aix.rte
+  Fileset VRMF: %BUILD_DATE%
+  Fileset Description: Health Checker
+  USRLIBLPPFiles
+  EOUSRLIBLPPFiles
+  ROOTLIBLPPFiles
+     Post-installation Script: /export/nim/build/hc_aix/scripts/hc_aix.postinstall
+     Unpost-installation Script: /export/nim/build/hc_aix/scripts/hc_aix.postuninstall
+  EOROOTLIBLPPFiles
+  Bosboot required: N
+  License agreement acceptance required: N
+  Include license files in this package: N
+  Requisites: 
+  USRFiles
+  EOUSRFiles
+  ROOT Part: Y
+  ROOTFiles
+    /opt/hc
+    /opt/hc/bin
+    /opt/hc/bin/check_health.sh
+    /opt/hc/lib
+    /opt/hc/lib/core
+    /opt/hc/lib/core/include_core.sh
+    /opt/hc/lib/core/include_data.sh
+    /opt/hc/lib/core/include_os.sh
+    /opt/hc/lib/core/notify_mail.sh
+    /etc/opt/hc
+    /etc/opt/hc/check_host.conf.dist
+    /etc/opt/hc/core
+    /etc/opt/hc/core/check_health.conf.dist
+    /etc/opt/hc/core/templates
+	/etc/opt/hc/core/templates/mail_info.tpl
+	/etc/opt/hc/core/templates/mail_header.tpl
+	/etc/opt/hc/core/templates/mail_body.tpl
+	/etc/opt/hc/core/templates/mail_footer.tpl
+    /var/opt/hc
+  EOROOTFiles
+  Relocatable: N
+EOFileset

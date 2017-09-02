@@ -1,0 +1,30 @@
+#******************************************************************************
+# @(#) check_aix_file_change.conf
+#******************************************************************************
+# This is a configuration file for the check_aix_file_change HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# name of the state file to use (will be relative to /var/opt/hc/state/persistent
+# [default: discovered.file_change]
+state_file=discovered.file_change
+
+# specify if file names need to be checked/flagged for meta characters [yes|no]
+# [default: yes]
+do_meta_check=yes
+
+# specify files or directories check (directories are automatically expanded)
+# format:
+# incl:<full path> (includes a path)
+# excl:<full path> (excludes a path)
+# note: shell wild cards in the file paths are not supported! Exclusions have
+#       a higher priority than inclusions.
+incl:file1
+incl:dir1
+excl:dir1/file2
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -1,0 +1,31 @@
+Package Name: hc_notify_sms
+Package VRMF: %BUILD_DATE%
+Update: N
+Fileset
+  Fileset Name: hc_notify_sms.rte
+  Fileset VRMF: %BUILD_DATE%
+  Fileset Description: Health Checker - core SMS plugin
+  USRLIBLPPFiles
+  EOUSRLIBLPPFiles
+  ROOTLIBLPPFiles
+     Post-installation Script: /export/nim/build/hc_notify_sms/scripts/hc_notify_sms.postinstall
+     Unpost-installation Script: /export/nim/build/hc_notify_sms/scripts/hc_notify_sms.postuninstall
+  EOROOTLIBLPPFiles
+  Bosboot required: N
+  License agreement acceptance required: N
+  Include license files in this package: N
+  Requisites: /export/nim/build/hc_notify_sms/hc_notify_sms.reqs
+  USRFiles
+  EOUSRFiles
+  ROOT Part: Y
+  ROOTFiles
+/opt/hc/lib
+/opt/hc/lib/core
+/opt/hc/lib/platform/aix/notify_sms.sh
+/etc/opt/hc
+/etc/opt/hc/core
+/etc/opt/hc/core/providers
+/etc/opt/hc/core/providers/notify_sms.conf.dist
+  EOROOTFiles
+  Relocatable: N
+EOFileset

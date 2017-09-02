@@ -1,0 +1,31 @@
+#******************************************************************************
+# @(#) check_health.conf
+#******************************************************************************
+# This is the main configuration file for the check_health.sh tool.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# --- general settings ---
+# maximum timeout for HC calls (seconds)
+HC_TIME_OUT=60
+
+# location of log directory, see also --log-dir)
+LOG_DIR="/var/opt/hc"
+
+# location of events directory
+EVENTS_DIR="${LOG_DIR}/events"
+
+# location of state directory
+STATE_DIR="${LOG_DIR}/state"
+
+# location of persistent state directory
+STATE_PERM_DIR="${STATE_DIR}/persistent"
+
+# location of temporary state directory
+STATE_TEMP_DIR="${STATE_DIR}/temporary"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -1,0 +1,19 @@
+#******************************************************************************
+# @(#) check_linux_hplog.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_hplog HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# location of 'hpacucli' tool
+hplog_bin="/sbin/hplog"
+
+# comma-separated list of severities to search for (case insensitive)
+# [default: CRITICAL,CAUTION]
+hplog_severities="CRITICAL,CAUTION"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

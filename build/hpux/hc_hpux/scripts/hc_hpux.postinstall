@@ -1,0 +1,96 @@
+#!/usr/bin/env ksh
+#******************************************************************************
+# @(#) post-install script for HC-HPUX SD package
+#******************************************************************************
+# @(#) Copyright (C) 2014 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+#
+# This program is a free software; you can redistribute it and/or modify
+# it under the same terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
+#******************************************************************************
+
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of ETC dir
+HC_ETC_DIR="/etc/opt/hc"
+# location of VAR dir
+HC_VAR_DIR="/var/opt/hc"
+# location of check_health.sh
+HC_BIN="/opt/hc/bin/check_health.sh"
+PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
+# ------------------------- CONFIGURATION ends here ---------------------------
+
+print "INFO: starting post-install script ..."
+
+# create ETC DIR
+if [[ ! -d ${HC_ETC_DIR} ]]
+then
+	mkdir -p ${HC_ETC_DIR} >/dev/null || \
+	{
+		print -u2 "ERROR: could not create directory ${HC_ETC_DIR}"
+		exit 1
+	}
+	chmod 755 ${HC_ETC_DIR} >/dev/null || \
+		print -u2 "WARN: could not 'chmod 755' on directory ${HC_ETC_DIR}"
+fi
+if [[ ! -d ${HC_ETC_DIR}/core ]]
+then
+	mkdir -p ${HC_ETC_DIR}/core >/dev/null || \
+	{
+		print -u2 "ERROR: could not create directory ${HC_ETC_DIR}/core"
+		exit 1
+	}
+	chmod 755 ${HC_ETC_DIR} >/dev/null || \
+		print -u2 "WARN: could not 'chmod 755' on directory ${HC_ETC_DIR}/core"
+fi
+
+# copy main config file from dist (if needed)
+if [[ ! -f ${HC_ETC_DIR}/core/check_health.conf ]]
+then
+	cp -p ${HC_ETC_DIR}/core/check_health.conf.dist ${HC_ETC_DIR}/core/check_health.conf >/dev/null || \
+	{
+		print -u2 "ERROR: could not copy main config file in ${HC_ETC_DIR}/core"
+		exit 1
+	}
+fi
+# copy host check config file from dist (if needed)
+if [[ ! -f ${HC_ETC_DIR}/check_host.conf ]]
+then
+	cp -p ${HC_ETC_DIR}/check_host.conf.dist ${HC_ETC_DIR}/check_host.conf >/dev/null || \
+	{
+		print -u2 "ERROR: could not copy host check config file in ${HC_ETC_DIR}"
+		exit 1
+	}
+fi
+
+# create VAR DIR
+if [[ ! -d ${HC_VAR_DIR} ]]
+then
+	mkdir -p ${HC_VAR_DIR} >/dev/null || \
+	{
+		print -u2 "ERROR: could not create directory ${HC_VAR_DIR}"
+		exit 1
+	}
+	chmod 755 ${HC_VAR_DIR} >/dev/null || \
+		print -u2 "WARN: could not 'chmod 755' on directory ${HC_VAR_DIR}"
+fi
+
+# refresh symbolic FPATH links for core plugins
+if [[ -x ${HC_BIN} ]]
+then
+	${HC_BIN} --fix-symlinks || print -u2 "WARN: updating symlinks failed"
+else
+	print -u2 "ERROR: could not locate or excute the HC main script (${HC_BIN})"
+fi
+
+print "INFO: finished post-install script"
+
+exit 0
+
+#******************************************************************************
+# END of script
+#******************************************************************************

@@ -1,0 +1,41 @@
+#!/usr/bin/env ksh
+#******************************************************************************
+# @(#) post-install script for hc_display_terse LPP package
+#******************************************************************************
+# @(#) Copyright (C) 2017 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+#
+# This program is a free software; you can redistribute it and/or modify
+# it under the same terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
+#******************************************************************************
+
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of ETC dir
+HC_ETC_DIR="/etc/opt/hc"
+# location of check_health.sh
+HC_BIN="/opt/hc/bin/check_health.sh"
+PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
+# ------------------------- CONFIGURATION ends here ---------------------------
+
+print "INFO: starting post-install script ..."
+
+# refresh symbolic FPATH links
+if [[ -x ${HC_BIN} ]]
+then
+	${HC_BIN} --fix-symlinks || print -u2 "WARN: updating symlinks failed"
+else
+	print -u2 "ERROR: could not locate or excute the HC main script (${HC_BIN})"
+fi
+
+print "INFO: finished post-install script"
+
+exit 0
+
+#******************************************************************************
+# END of script
+#******************************************************************************

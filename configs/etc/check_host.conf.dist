@@ -1,0 +1,21 @@
+#******************************************************************************
+# @(#) check_host.conf
+#******************************************************************************
+# This is a configuration file for the check_host feature.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify the style in which results should be displayed (see --list-core)
+# [default: init]
+display_style=init
+
+# specify the list of HC plugins that need to be executed
+# [hc:HC plugin name]
+hc:plugin1
+hc:plugin2
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

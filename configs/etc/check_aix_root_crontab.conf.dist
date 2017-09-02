@@ -1,0 +1,16 @@
+#******************************************************************************
+# @(#) check_aix_root_crontab.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_aix_root_crontab HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# list of commands (or strings) that should appear in active cron entries
+/opt/cfg2html/bin/cfg2html_aix.sh
+/usr/local/bin/run_aix_system_backup.sh
+/usr/bin/nmon
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

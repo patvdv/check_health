@@ -1,0 +1,15 @@
+#******************************************************************************
+# @(#) check_aix_file_age.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_aix_file_age HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# file (full path); maximum age in minutes since last change
+/var/adm/ras/syslog.caa;600
+/var/log/ntp.log;30
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

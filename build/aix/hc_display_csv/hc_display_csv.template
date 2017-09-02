@@ -1,0 +1,27 @@
+Package Name: hc_display_csv
+Package VRMF: %BUILD_DATE%
+Update: N
+Fileset
+  Fileset Name: hc_display_csv.rte
+  Fileset VRMF: %BUILD_DATE%
+  Fileset Description: Health Checker - core CSV plugin
+  USRLIBLPPFiles
+  EOUSRLIBLPPFiles
+  ROOTLIBLPPFiles
+     Post-installation Script: /export/nim/build/hc_display_csv/scripts/hc_display_csv.postinstall
+     Unpost-installation Script: /export/nim/build/hc_display_csv/scripts/hc_display_csv.postuninstall
+  EOROOTLIBLPPFiles
+  Bosboot required: N
+  License agreement acceptance required: N
+  Include license files in this package: N
+  Requisites: /export/nim/build/hc_display_csv/hc_display_csv.reqs
+  USRFiles
+  EOUSRFiles
+  ROOT Part: Y
+  ROOTFiles
+/opt/hc/lib
+/opt/hc/lib/core
+/opt/hc/lib/platform/aix/display_csv.sh
+  EOROOTFiles
+  Relocatable: N
+EOFileset

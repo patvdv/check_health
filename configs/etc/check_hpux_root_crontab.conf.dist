@@ -1,0 +1,14 @@
+#******************************************************************************
+# @(#) check_hpux_root_crontab.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_root_crontab HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# list of commands (or strings) that should appear in active cron entries
+/opt/cfg2html/cfg2html_hpux.sh
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
