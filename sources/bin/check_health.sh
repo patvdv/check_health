@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-08-24"
+typeset -r SCRIPT_VERSION="2017-09-11"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -55,7 +55,7 @@ typeset -r SEP="|"
 typeset -r EXEC_USER="root"
 # ------------------------- CONFIGURATION ends here ---------------------------
 # miscellaneous
-typeset PATH=${PATH}:/usr/bin:/usr/sbin:/usr/local/bin
+typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
 typeset -r SCRIPT_NAME="$(basename $0)"
 typeset -r SCRIPT_DIR="$(dirname $0)"
 typeset -r HOST_NAME="$(hostname)"

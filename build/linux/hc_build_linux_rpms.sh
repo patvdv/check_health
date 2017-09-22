@@ -17,7 +17,7 @@
 #******************************************************************************
 # Requires following build (dir) structures:
 # 
-#   build_linux_rpms.sh
+#   hc_build_linux_rpms.sh
 #   BUILD/
 #   BUILDROOT/
 #   RPMS/
@@ -28,9 +28,9 @@
 #   SRPMS/
 #
 # Build order:
-#  1) Copy sources/scrips to the correct locations
+#  1) Copy sources/scripts to the correct locations
 #  2) Copy template, build and installer script files into correct locations
-#  3) Execute build_linux_rpms.sh
+#  3) Execute hc_build_linux_rpms.sh
 #  4) RPM packages may be found in the RPMS directory
 #******************************************************************************
 
