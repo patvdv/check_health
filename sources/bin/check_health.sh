@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-09-11"
+typeset -r SCRIPT_VERSION="2017-12-15"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -96,6 +96,7 @@ typeset ARG_LOG=1               # logging is on by default
 typeset ARG_MONITOR=1           # killing long running HC processes is on by default
 typeset ARG_NOTIFY=""           # notification of problems is off by default
 typeset ARG_REVERSE=0           # show report in reverse date order is off by default
+typeset ARG_REPORT=""           # report of HC events is off by default
 typeset ARG_TERSE=0             # show terse help is off by default
 typeset ARG_TODAY=0             # report today's events
 typeset ARG_VERBOSE=1           # STDOUT is on by default
@@ -308,70 +309,6 @@ then
         exit 1
     fi
 fi
-# --report/--detail/--id/--reverse/--last/--today
-if (( ARG_ACTION == 8 ))
-then
-    if (( ARG_DETAIL != 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
-    then
-        print -u2 "ERROR: you must specify an unique value for '--id' when using '--detail'"
-        exit 1
-    fi
-    if (( ARG_LAST != 0 )) && (( ARG_TODAY != 0 ))
-    then
-        print -u2 "ERROR: you cannot specify '--last' with '--today'"
-        exit 1
-    fi
-    if (( ARG_LAST != 0 )) && (( ARG_DETAIL != 0 ))
-    then
-        print -u2 "ERROR: you cannot specify '--last' with '--detail'"
-        exit 1
-    fi
-    if (( ARG_LAST != 0 )) && (( ARG_REVERSE != 0 ))
-    then
-        print -u2 "ERROR: you cannot specify '--last' with '--detail'"
-        exit 1
-    fi
-    if (( ARG_LAST != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
-    then
-        print -u2 "ERROR: you cannot specify '--last' with '--id'"
-        exit 1
-    fi
-    if (( ARG_TODAY != 0 )) && (( ARG_DETAIL != 0 ))
-    then
-        print -u2 "ERROR: you cannot specify '--today' with '--detail'"
-        exit 1
-    fi
-    if (( ARG_TODAY != 0 )) && (( ARG_REVERSE != 0 ))
-    then
-        print -u2 "ERROR: you cannot specify '--today' with '--detail'"
-        exit 1
-    fi
-    if (( ARG_TODAY != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
-    then
-        print -u2 "ERROR: you cannot specify '--today' with '--id'"
-        exit 1
-    fi
-fi
-if (( ARG_ACTION != 8 )) && (( ARG_LAST != 0 ))
-then
-    print -u2 "ERROR: you cannot specify '--last' without '--report'"
-    exit 1
-fi
-if (( ARG_ACTION != 8 )) && (( ARG_REVERSE != 0 ))
-then
-    print -u2 "ERROR: you cannot specify '--reverse' without '--report'"
-    exit 1
-fi
-if (( ARG_ACTION != 8 )) && (( ARG_DETAIL != 0 ))
-then
-    print -u2 "ERROR: you cannot specify '--detail' without '--report'"
-    exit 1
-fi
-if (( ARG_ACTION != 8 )) && [[ -n "${ARG_FAIL_ID}" ]]
-then
-    print -u2 "ERROR: you cannot specify '--id' without '--report'"
-    exit 1
-fi
 # --check-host,--check/--disable/--enable/--run/--show,--hc
 if [[ -n "${ARG_HC}" ]] && (( ARG_ACTION == 0 ))
 then
@@ -507,7 +444,7 @@ Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
         (--check-host | ((--check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--log-dir=<log_directory>]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
-                    --report ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]]) )
+                    [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]]) ) ]
 
 EOT
 
@@ -545,7 +482,7 @@ Parameters:
 --no-log        : do not log any messages to the script log file or health check results.
 --no-monitor    : do not stop the execution of a HC after \$HC_TIME_OUT seconds
 --notify        : notify upon HC failure(s). Multiple options may be specified if comma-separated (see --list-core for availble formats)
---report        : report on failed HC events
+--report        : report on failed HC events (STDOUT is the default reporting method)
 --reverse       : show the report in reverse date order (newest events first)
 --run           : execute HC(s).
 --show          : show information/documentation on a HC
@@ -802,7 +739,19 @@ do
         -no-monitor|--no-monitor)
             ARG_MONITOR=0
             ;;
-        -report|--report)
+        -report|--report)   # compatability support <2017-12-15
+            # STDOUT as default
+            ARG_REPORT="std"
+            ARG_LOG=0; ARG_VERBOSE=0
+            ARG_ACTION=8
+            ;;
+        -report=*)
+            ARG_REPORT="${PARAMETER#-report=}"
+            ARG_LOG=0; ARG_VERBOSE=0
+            ARG_ACTION=8
+            ;;
+        --report=*)
+            ARG_REPORT="${PARAMETER#--report=}"
             ARG_LOG=0; ARG_VERBOSE=0
             ARG_ACTION=8
             ;;
@@ -1122,128 +1071,8 @@ case ${ARG_ACTION} in
             fi
         done
         ;;
-    8)  # report on last events or FAIL_IDs
-        if (( ARG_LAST != 0 ))
-        then
-            printf "\n| %-30s | %-20s | %-14s | %-4s\n" "HC" "Timestamp" "FAIL ID" "STC (combined value)"
-            printf "%100s\n" | tr ' ' -
-            # loop over all HCs
-            list_hc "list" | while read -r HC_LAST
-            do
-                HC_LAST_TIME=""
-                HC_LAST_STC=0
-                HC_LAST_FAIL_ID="-"
-                # find last event or block of events (same timestamp)
-                # (but unfortunately this is only accurate to events within the SAME second!)
-                HC_LAST_TIME="$(grep ${HC_LAST} ${HC_LOG} 2>/dev/null | sort -n | cut -f1 -d${SEP} | uniq | tail -1)"
-                if [[ -z "${HC_LAST_TIME}" ]]
-                then
-                    HC_LAST_TIME="-"
-                    HC_LAST_STC="-"
-                else
-                    # find all STC codes for the last event and add them up
-                    grep "${HC_LAST_TIME}${SEP}${HC_LAST}" ${HC_LOG} 2>/dev/null |\
-                        while read -r REPORT_LINE
-                    do
-                        HC_LAST_EVENT_STC=$(print "${REPORT_LINE}" | cut -f3 -d"${SEP}")
-                        HC_LAST_EVENT_FAIL_ID=$(print "${REPORT_LINE}" | cut -f5 -d"${SEP}")
-                        HC_LAST_STC=$(( HC_LAST_STC + HC_LAST_EVENT_STC ))
-                        [[ -n "${HC_LAST_EVENT_FAIL_ID}" ]] && HC_LAST_FAIL_ID="${HC_LAST_EVENT_FAIL_ID}"
-                    done
-                fi
-                # report on findings
-                printf "| %-30s | %-20s | %-14s | %-4s\n" \
-                    "${HC_LAST}" "${HC_LAST_TIME}" "${HC_LAST_FAIL_ID}" "${HC_LAST_STC}"
-            done
-            # disclaimer
-            print "Note: this report only shows the overall combined status of all events of each HC within exactly"
-            print "      the *same* time stamp (seconds precise). It may therefore fail to report certain FAIL IDs."
-            print "      Use $0 --report to get the exact list of failure events."
-        else
-            ID_NEEDLE="[0-9][0-9]*"
-            [[ -n "${ARG_FAIL_ID}" ]] && ID_NEEDLE="${ARG_FAIL_ID}"
-            (( ARG_TODAY != 0 )) && ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
-
-            # check fail count (look for unique IDs in the 5th field of the HC log)
-            FAIL_COUNT=$(cut -f5 -d"${SEP}" ${HC_LOG} 2>/dev/null | grep -E -e "${ID_NEEDLE}" | uniq | wc -l)
-            if (( FAIL_COUNT != 0 ))
-            then
-                # check for detail or not?
-                if (( ARG_DETAIL != 0 )) && (( FAIL_COUNT != 1 ))
-                then
-                    ARG_LOG=1 die "you must specify a unique FAIL_ID value"
-                fi
-                # reverse?
-                if (( ARG_REVERSE == 0 ))
-                then
-                    SORT_CMD="sort -n"
-                else
-                    SORT_CMD="sort -rn"
-                fi
-                # global or detailed?
-                if (( ARG_DETAIL == 0 ))
-                then
-                    printf "\n| %-20s | %-14s | %-30s | %-s\n" \
-                        "Timestamp" "FAIL ID" "HC" "Message"
-                    printf "%120s\n" | tr ' ' -
-
-                    # print failed events
-                    # no extended grep here and no end $SEP!
-                    grep ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${ID_NEEDLE}" ${HC_LOG} 2>/dev/null |\
-                        ${SORT_CMD} | while read -r REPORT_LINE
-                    do
-                        FAIL_F1=$(print "${REPORT_LINE}" | cut -f1 -d"${SEP}")
-                        FAIL_F2=$(print "${REPORT_LINE}" | cut -f2 -d"${SEP}")
-                        FAIL_F3=$(print "${REPORT_LINE}" | cut -f4 -d"${SEP}")
-                        FAIL_F4=$(print "${REPORT_LINE}" | cut -f5 -d"${SEP}")
-
-                        printf "| %-20s | %-14s | %-30s | %-s\n" \
-                            "${FAIL_F1}" "${FAIL_F4}" "${FAIL_F2}" "${FAIL_F3}"
-                    done
-
-                    printf "\n%-s\n" "SUMMARY: ${FAIL_COUNT} failed HC event(s) found."
-                else
-                    # print failed events (we may have multiple events for 1 FAIL ID)
-                    EVENT_COUNT=1
-                    DIR_PREFIX="$(expr substr ${ARG_FAIL_ID} 1 4)-$(expr substr ${ARG_FAIL_ID} 5 2)"
-                    # no extended grep here!
-                    grep ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${ID_NEEDLE}${SEP}" ${HC_LOG} 2>/dev/null |\
-                        ${SORT_CMD} | while read -r REPORT_LINE
-                    do
-                        FAIL_F1=$(print "${REPORT_LINE}" | cut -f1 -d"${SEP}")
-                        FAIL_F2=$(print "${REPORT_LINE}" | cut -f2 -d"${SEP}")
-                        FAIL_F3=$(print "${REPORT_LINE}" | cut -f4 -d"${SEP}")
-
-                        printf "%36sMSG #%03d%36s" "" ${EVENT_COUNT} "" | tr ' ' -
-                        printf "\nTime    : %-s\nHC      : %-s\nDetail  : %-s\n" \
-                            "${FAIL_F1}" "${FAIL_F2}" "${FAIL_F3}"
-                        EVENT_COUNT=$(( EVENT_COUNT + 1 ))
-                    done
-
-                    printf "%37sSTDOUT%37s\n" | tr ' ' -;
-                    # display non-empty STDOUT file(s)
-                    if [[ -n "$(du -a ${EVENTS_DIR}/${DIR_PREFIX}/${ARG_FAIL_ID}/*.stdout.log 2>/dev/null | awk '$1*512 > 0 {print $2}')"  ]]
-                    then
-                        cat ${EVENTS_DIR}/${DIR_PREFIX}/${ARG_FAIL_ID}/*.stdout.log
-                    else
-                        printf "%-s\n" "No STDOUT found"
-                    fi
-
-                    printf "%37sSTDERR%37s\n" | tr ' ' -;
-                    # display non-empty STDERR file(s)
-                    if [[ -n "$(du -a ${EVENTS_DIR}/${DIR_PREFIX}/${ARG_FAIL_ID}/*.stderr.log 2>/dev/null | awk '$1*512 > 0 {print $2}')" ]]
-                    then
-                        cat ${EVENTS_DIR}/${DIR_PREFIX}/${ARG_FAIL_ID}/*.stderr.log
-                    else
-                        printf "%-s\n" "No STDERR found"
-                    fi
-
-                    printf "%80s\n" | tr ' ' -
-                fi
-            else
-                printf "\n%-s\n" "SUMMARY: 0 failed HC events found."
-            fi
-        fi
+    8)  # report on HC events
+        (( DO_REPORT_STD == 1 )) && report_std
         ;;
     9)  # list HC plugins
         list_hc "" "${ARG_LIST}"

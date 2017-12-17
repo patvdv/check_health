@@ -93,15 +93,17 @@ DO_DISPLAY_TERSE=0
 DO_NOTIFY_EIF=0
 DO_NOTIFY_MAIL=0
 DO_NOTIFY_SMS=0
+DO_REPORT_STD=0
 HAS_DISPLAY_CSV=0
 HAS_DISPLAY_INIT=0
 HAS_DISPLAY_TERSE=0
 HAS_NOTIFY_EIF=0
 HAS_NOTIFY_MAIL=0
 HAS_NOTIFY_SMS=0
+HAS_REPORT_STD=0
 
 # check which core display/notification plugins are installed
-# do not use a while-do loop here because mksh/pdksh does not pass updated 
+# do not use a while-do loop here because mksh/pdksh does not pass updated
 # variables back from the sub shell (only works for true ksh88/ksh93)
 for FFILE in $(ls -1 ${FPATH_PARENT}/core/*.sh 2>/dev/null | grep -v "include_" 2>/dev/null)
 do
@@ -130,6 +132,10 @@ do
             HAS_NOTIFY_EIF=1
             (( ARG_DEBUG != 0 )) && debug "notify_eif plugin is available"
             ;;
+        *report_std.sh)
+            HAS_REPORT_STD=1
+            (( ARG_DEBUG != 0 )) && debug "report_std plugin is available"
+            ;;
     esac
 done
 
@@ -144,7 +150,7 @@ then
                 DO_DISPLAY_CSV=1
                 ARG_VERBOSE=0
             else
-                warn "csv plugin for '--display' not present"             
+                warn "csv plugin for '--display' not present"
             fi
             ;;
         init) # init/boot format
@@ -153,7 +159,7 @@ then
                 DO_DISPLAY_INIT=1
                 ARG_VERBOSE=0
             else
-                warn "init plugin for '--display' not present"             
+                warn "init plugin for '--display' not present"
             fi
             ;;
         terse) # terse format
@@ -162,7 +168,7 @@ then
                 DO_DISPLAY_TERSE=1
                 ARG_VERBOSE=0
             else
-                warn "terse plugin for '--display' not present"             
+                warn "terse plugin for '--display' not present"
             fi
             ;;
         *) # stdout default
@@ -172,7 +178,7 @@ fi
 # --notify
 if [[ -n "${ARG_NOTIFY}" ]]
 then
-    # do not use a while-do loop here because mksh/pdksh does not pass updated 
+    # do not use a while-do loop here because mksh/pdksh does not pass updated
     # variables back from the sub shell (only works for true ksh88/ksh93)
     for NOTIFY_OPTS in $(print "${ARG_NOTIFY}" | tr ',' ' ' 2>/dev/null)
     do
@@ -188,6 +194,23 @@ then
                 ;;
             *) # no valid option
                 die "you have specified an invalid option for '--notify'"
+                ;;
+        esac
+    done
+fi
+# --report
+if [[ -n "${ARG_REPORT}" ]]
+then
+    # do not use a while-do loop here because mksh/pdksh does not pass updated
+    # variables back from the sub shell (only works for true ksh88/ksh93)
+    for REPORT_OPTS in $(print "${ARG_REPORT}" | tr ',' ' ' 2>/dev/null)
+    do
+        case "${REPORT_OPTS}" in
+            *std*) # STDOUT
+                DO_REPORT_STD=1
+                ;;
+            *) # no valid option
+                die "you have specified an invalid option for '--report'"
                 ;;
         esac
     done
@@ -218,6 +241,58 @@ if (( DO_NOTIFY_SMS != 0 )) && [[ -z "${ARG_SMS_PROVIDER}" ]]
 then
     die "you cannot specify '--notify=sms' without '--sms-provider'"
 fi
+# --report/--detail/--id/--reverse/--last/--today
+if (( DO_REPORT_STD != 0 ))
+then
+    if (( ARG_DETAIL != 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
+    then
+        die "you must specify an unique value for '--id' when using '--detail'"
+    fi
+    if (( ARG_LAST != 0 )) && (( ARG_TODAY != 0 ))
+    then
+        die "you cannot specify '--last' with '--today'"
+    fi
+    if (( ARG_LAST != 0 )) && (( ARG_DETAIL != 0 ))
+    then
+        die "you cannot specify '--last' with '--detail'"
+    fi
+    if (( ARG_LAST != 0 )) && (( ARG_REVERSE != 0 ))
+    then
+        die "you cannot specify '--last' with '--detail'"
+    fi
+    if (( ARG_LAST != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
+    then
+        die "you cannot specify '--last' with '--id'"
+    fi
+    if (( ARG_TODAY != 0 )) && (( ARG_DETAIL != 0 ))
+    then
+        die "you cannot specify '--today' with '--detail'"
+    fi
+    if (( ARG_TODAY != 0 )) && (( ARG_REVERSE != 0 ))
+    then
+        die "you cannot specify '--today' with '--detail'"
+    fi
+    if (( ARG_TODAY != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
+    then
+        die "you cannot specify '--today' with '--id'"
+    fi
+fi
+if (( DO_REPORT_STD == 0 )) && (( ARG_LAST != 0 ))
+then
+    die "you cannot specify '--last' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && (( ARG_REVERSE != 0 ))
+then
+    die "you cannot specify '--reverse' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && (( ARG_DETAIL != 0 ))
+then
+    die "you cannot specify '--detail' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
+then
+    die "you cannot specify '--id' without '--report'"
+fi
 
 return 0
 }
@@ -235,15 +310,15 @@ typeset EXISTS_HC="$1"
 typeset FDIR=""
 typeset EXISTS_RC=0
 
-# do not use a while-do loop here because mksh/pdksh does not pass updated 
+# do not use a while-do loop here because mksh/pdksh does not pass updated
 # variables back from the sub shell (only works for true ksh88/ksh93)
 for FDIR in $(print "${FPATH}" | tr ':' ' ' 2>/dev/null)
 do
-	$(data_contains_string "${FDIR}" "core")
-	if (( $? == 0 ))
-	then
-		ls "${FDIR}/${EXISTS_HC}" >/dev/null 2>&1 && EXISTS_RC=1
-	fi
+    $(data_contains_string "${FDIR}" "core")
+    if (( $? == 0 ))
+    then
+        ls "${FDIR}/${EXISTS_HC}" >/dev/null 2>&1 && EXISTS_RC=1
+    fi
 done
 
 return ${EXISTS_RC}
@@ -314,7 +389,7 @@ then
         I=$(( I + 1 ))
     done <${HC_MSG_FILE} 2>/dev/null
 fi
-    
+
 # display routines
 if (( ${#HC_MSG_STC[*]} > 0 ))
 then
@@ -335,7 +410,7 @@ then
             display_init "${HC_NAME}" "${HC_FAIL_ID}"
         else
             warn "display_init plugin is not avaible, cannot display_results!"
-        fi      
+        fi
     elif (( DO_DISPLAY_TERSE == 1 ))
     then
         if (( HAS_DISPLAY_TERSE == 1 ))
@@ -347,7 +422,7 @@ then
         fi
     else
         # default STDOUT
-        if (( ARG_VERBOSE != 0 )) 
+        if (( ARG_VERBOSE != 0 ))
         then
             I=0
             MAX_I=${#HC_MSG_STC[*]}
@@ -372,25 +447,25 @@ then
     # log routine (combined STC=0 or <>0)
     I=0
     MAX_I=${#HC_MSG_STC[*]}
-    while (( I < MAX_I ))    
+    while (( I < MAX_I ))
     do
         printf "%s${SEP}%s${SEP}%s${SEP}%s${SEP}" \
                 "${HC_MSG_TIME[${I}]}" \
                 "${HC_NAME}" \
                 ${HC_MSG_STC[${I}]} \
                 "${HC_MSG_TEXT[${I}]}" >>${HC_LOG}
-        if (( HC_MSG_STC[${I}] != 0 )) 
+        if (( HC_MSG_STC[${I}] != 0 ))
         then
-            printf "%s${SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}     
+            printf "%s${SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
         else
             printf "\n" >>${HC_LOG}
         fi
         HC_STC_COUNT=$(( HC_STC_COUNT + HC_MSG_STC[${I}] ))
         I=$(( I + 1 ))
     done
-    
+
     # notify routine (combined STC > 0)
-    if (( HC_STC_COUNT > 0 ))   
+    if (( HC_STC_COUNT > 0 ))
     then
         # save stdout/stderr to HC events location
         if [[ -s ${HC_STDOUT_LOG} ]] || [[ -s ${HC_STDERR_LOG} ]]
@@ -494,14 +569,14 @@ case "${REPORT_STYLE}" in
         if (( HAS_DISPLAY_CSV == 1 ))
         then
             DO_DISPLAY_CSV=1
-            ARG_VERBOSE=0          
+            ARG_VERBOSE=0
         fi
         ;;
     terse|TERSE) # terse format
         if (( HAS_DISPLAY_TERSE == 1 ))
         then
             DO_DISPLAY_TERSE=1
-            ARG_VERBOSE=0             
+            ARG_VERBOSE=0
         fi
         ;;
     *) # init/boot default, stdout fallback
@@ -511,7 +586,7 @@ case "${REPORT_STYLE}" in
             ARG_VERBOSE=0
         else
             ARG_VERBOSE=1
-            warn "default boot/init display plugin not present"  
+            warn "default boot/init display plugin not present"
         fi
 esac
 
@@ -519,10 +594,10 @@ esac
 ARG_HC=""
 grep -i '^hc:' ${HOST_CONFIG_FILE} 2>/dev/null |\
     while IFS=':' read DUMMY HC_EXEC HC_CONFIG HC_DESC
-do      
+do
     ARG_HC="${ARG_HC},${HC_EXEC}"
 done
-    
+
 return 0
 }
 
@@ -551,7 +626,7 @@ case "${HC_VERSION}" in
         ;;
     *)
         die "version of the HC plugin $1 is not in YYYY-MM-DD format (${HC_VERSION})"
-        ;;     
+        ;;
 esac
 
 return 0
@@ -579,13 +654,13 @@ case "${OS_NAME}" in
         # check system crontabs
         if (( CRON_COUNT == 0 ))
         then
-            CRON_COUNT=$(cat ${CRON_SYS_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null) 
+            CRON_COUNT=$(cat ${CRON_SYS_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null)
         fi
         # check anacron
         if (( CRON_COUNT == 0 ))
         then
-            CRON_COUNT=$(cat ${CRON_ANACRON_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null) 
-        fi      
+            CRON_COUNT=$(cat ${CRON_ANACRON_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null)
+        fi
         ;;
     *)
         # use default root crontab
@@ -640,7 +715,7 @@ do
         fi
         # check state (only for unlinked)
         [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
-        
+
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
@@ -648,7 +723,7 @@ do
                 "${FNAME#function *}" \
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
-                "${FCONFIG}"        
+                "${FCONFIG}"
         else
             printf "%s\n" "${FNAME#function *}"
         fi
@@ -711,7 +786,7 @@ then
 else
     FNEEDLE="${ARG_LIST}.sh"
 fi
-    
+
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
@@ -751,7 +826,7 @@ do
         else
             FSCHEDULED="Yes"
         fi
-        
+
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
@@ -760,7 +835,7 @@ do
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
                 "${FCONFIG}" \
-                "${FSCHEDULED}"         
+                "${FSCHEDULED}"
         else
             printf "%s\n" "${FNAME#function *}"
         fi
@@ -830,7 +905,7 @@ return 0
 # @(#) FUNCTION: log_hc()
 # DOES: log a HC plugin result
 # EXPECTS: 1=HC name [string], 2=HC status code [integer], 3=HC message [string],
-#          4=HC found value [string] (optional), 
+#          4=HC found value [string] (optional),
 #          5=HC expected value [string] (optional)
 # RETURNS: 0
 # REQUIRES: n/a
