@@ -28,6 +28,7 @@ Fileset
     /opt/hc/lib/core/include_data.sh
     /opt/hc/lib/core/include_os.sh
     /opt/hc/lib/core/notify_mail.sh
+	/opt/hc/lib/core/report_std.sh
     /etc/opt/hc
     /etc/opt/hc/check_host.conf.dist
     /etc/opt/hc/core

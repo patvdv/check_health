@@ -32,6 +32,7 @@ cp ../SOURCES/lib/core/include_core.sh $RPM_BUILD_ROOT/opt/hc/lib/core
 cp ../SOURCES/lib/core/include_data.sh $RPM_BUILD_ROOT/opt/hc/lib/core
 cp ../SOURCES/lib/core/include_os.sh $RPM_BUILD_ROOT/opt/hc/lib/core
 cp ../SOURCES/lib/core/notify_mail.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/lib/core/report_std.sh $RPM_BUILD_ROOT/opt/hc/lib/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
 cp ../SOURCES/etc/check_host.conf.dist $RPM_BUILD_ROOT/etc/opt/hc
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
@@ -141,6 +142,7 @@ fi
 %attr(755, root, root) /opt/hc/lib/core/include_data.sh
 %attr(755, root, root) /opt/hc/lib/core/include_os.sh
 %attr(755, root, root) /opt/hc/lib/core/notify_mail.sh
+%attr(755, root, root) /opt/hc/lib/core/report_std.sh
 %dir /etc/opt/hc
 %attr(644, root, root) /etc/opt/hc/check_host.conf.dist
 %dir /etc/opt/hc/core
@@ -154,6 +156,8 @@ fi
 %dir /var/opt/hc
 
 %changelog
+* Mon Dec 18 2017 <patrick@kudos.be> - 0.0.9
+- Added report_std.sh
 * Tue Jun 20 2017 <patrick@kudos.be> - 0.0.8
 - Made %postun RPM update aware
 * Mon May 08 2017 <patrick@kudos.be> - 0.0.7
