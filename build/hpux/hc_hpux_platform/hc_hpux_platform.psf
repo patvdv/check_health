@@ -96,7 +96,7 @@ This is the OS/platform plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../sources/configs/=/etc/opt/hc
+        directory       ../../configs/=/etc/opt/hc
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist
         file            -m 644 check_hpux_fs_mounts_options.conf.dist
@@ -124,7 +124,7 @@ This is the OS/platform plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../sources/configs/core/templates=/etc/opt/hc/core/templates
+        directory       ../../configs/core/templates=/etc/opt/hc/core/templates
         file            -m 644 mail_body.tpl-check_hpux_fs_mounts_options
         file            -m 644 mail_body.tpl-check_hpux_ioscan
         file            -m 644 mail_body.tpl-check_hpux_ovpa_status
