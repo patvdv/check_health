@@ -90,6 +90,7 @@ typeset NOTIFY_OPTS=""
 DO_DISPLAY_CSV=0
 DO_DISPLAY_INIT=0
 DO_DISPLAY_TERSE=0
+DO_DISPLAY_ZENOSS=0
 DO_NOTIFY_EIF=0
 DO_NOTIFY_MAIL=0
 DO_NOTIFY_SMS=0
@@ -97,6 +98,7 @@ DO_REPORT_STD=0
 HAS_DISPLAY_CSV=0
 HAS_DISPLAY_INIT=0
 HAS_DISPLAY_TERSE=0
+HAS_DISPLAY_ZENOSS=0
 HAS_NOTIFY_EIF=0
 HAS_NOTIFY_MAIL=0
 HAS_NOTIFY_SMS=0
@@ -119,6 +121,10 @@ do
         *display_terse.sh)
             HAS_DISPLAY_TERSE=1
             (( ARG_DEBUG != 0 )) && debug "display_terse plugin is available"
+            ;;
+        *display_zenoss.sh)
+            HAS_DISPLAY_ZENOSS=1
+            (( ARG_DEBUG != 0 )) && debug "display_zenoss plugin is available"
             ;;
         *notify_mail.sh)
             HAS_NOTIFY_MAIL=1
@@ -169,6 +175,15 @@ then
                 ARG_VERBOSE=0
             else
                 warn "terse plugin for '--display' not present"
+            fi
+            ;;
+        zenoss) # zenoss format
+            if (( HAS_DISPLAY_ZENOSS == 1 ))
+            then
+                DO_DISPLAY_ZENOSS=1
+                ARG_VERBOSE=0
+            else
+                warn "zenoss plugin for '--display' not present"
             fi
             ;;
         *) # stdout default
@@ -350,8 +365,8 @@ return 0
 # DOES: handle HC results
 # EXPECTS: 1=HC name [string], $HC_MSG_FILE temporary file
 # RETURNS: 0
-# REQUIRES: die(), display_csv(), display_terse(), notify_mail(), notify_sms(),
-#           notify_eif(), warn()
+# REQUIRES: die(), display_csv(), display_terse(), display_zenoss(), notify_mail(), 
+#           notify_sms(), notify_eif(), warn()
 function handle_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -400,7 +415,7 @@ then
             # call plugin
             display_csv "${HC_NAME}" "${HC_FAIL_ID}"
         else
-            warn "display_csv plugin is not avaible, cannot display_results!"
+            warn "display_csv plugin is not available, cannot display_results!"
         fi
     elif (( DO_DISPLAY_INIT == 1 ))
     then
@@ -409,7 +424,7 @@ then
             # call plugin
             display_init "${HC_NAME}" "${HC_FAIL_ID}"
         else
-            warn "display_init plugin is not avaible, cannot display_results!"
+            warn "display_init plugin is not available, cannot display_results!"
         fi
     elif (( DO_DISPLAY_TERSE == 1 ))
     then
@@ -418,7 +433,16 @@ then
             # call plugin
             display_terse "${HC_NAME}" "${HC_FAIL_ID}"
         else
-            warn "display_terse plugin is not avaible, cannot display_results!"
+            warn "display_terse plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_ZENOSS == 1 ))
+    then
+        if (( HAS_DISPLAY_ZENOSS == 1 ))
+        then
+            # call plugin
+            display_zenoss "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_zenoss plugin is not available, cannot display_results!"
         fi
     else
         # default STDOUT
@@ -576,6 +600,13 @@ case "${REPORT_STYLE}" in
         if (( HAS_DISPLAY_TERSE == 1 ))
         then
             DO_DISPLAY_TERSE=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    zenoss|ZENOSS) # zenoss format
+        if (( HAS_DISPLAY_ZENOSS == 1 ))
+        then
+            DO_DISPLAY_ZENOSS=1
             ARG_VERBOSE=0
         fi
         ;;
