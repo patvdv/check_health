@@ -1,0 +1,64 @@
+# Depot definition:
+depot
+    layout_version  1.0
+
+# Vendor definition:
+vendor
+        tag             KUDOS
+        title           "KUDOS BVBA - http://www.kudos.be"
+end
+
+# Bundle definitions:
+bundle
+        tag             HC-DISPLAY-ZENOSS
+        title           "The Health Checker (HC) for UNIX (core ZENOSS display plugin)"
+        os_name         HP-UX
+        revision        %BUILD_DATE%
+        architecture    HP-UX_B.11_32/64
+        machine_type    ia64*
+        vendor_tag      KUDOS
+        contents        HC-DISPLAY-ZENOSS-MAIN,r=,a=,v=
+end
+
+# Product definitions:
+product
+    tag             HC-DISPLAY-ZENOSS-MAIN
+    revision        %BUILD_DATE%
+    category        tools
+    category_title  Tools
+    title           "The Health Checker (HC) for UNIX (OS plugins)"
+    description     "The Health Checker is collection of scripts (plugins)
+designed to perform regular - but not intensive - health checks on
+UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as
+well customer specific checks. Checks may include topics such file
+system mounts, process checks, file consistency etc.
+This is the core ZENOSS display plugin package"
+    architecture    S700/S800_HP-UX_10/HP-UX_11/IA64_HP-UX_11
+    machine_type    9000/7*|9000/8*|ia64*
+    os_name         HP-UX
+    os_release      ?.1?.*
+    os_version      [A-Z]
+    directory       /opt/hc
+    is_locatable    false
+    is_patch        false
+
+    postinstall     scripts/hc_display_zenoss.postinstall
+    postremove      scripts/hc_display_zenoss.postremove
+
+    # Fileset definitions:
+    fileset
+        tag             core_plugins
+        title           UX Health Checker (core ZENOSS display plugins)
+        is_kernel       false
+        is_locatable    false
+        is_reboot       false
+        is_sparse       false
+        is_patch        false
+        prerequisite    HC-HPUX-MAIN
+
+        file_permissions -u 0222 -o root -g sys
+
+        directory       ../../sources/lib/core=/opt/hc/lib/core
+        file            -m 755 display_zenoss.sh
+    end
+end
