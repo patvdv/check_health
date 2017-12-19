@@ -122,7 +122,7 @@ else
         _IOSCAN_OPTS="${_IOSCAN_OPTS}u"
     fi
     log "executing ioscan with options: ${_IOSCAN_OPTS}"
-    ioscan "${_IOSCAN_OPTS}" >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+    ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
     if (( $? != 0 )) 
     then
         _MSG="unable to gather ioscan information"
