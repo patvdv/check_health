@@ -248,15 +248,15 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_strip_newline()
 # DOES: remove newlines
-# EXPECTS: [string] with newlines
-# OUTPUTS: [string] without newlines
+# EXPECTS: [string] with newlines (UNIX)
+# OUTPUTS: [string] without newlines (UNIX)
 # RETURNS: 0
 # REQUIRES: n/a
 function data_strip_newline
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" | tr -d '\n' 2>/dev/null | tr -d '\r' 2>/dev/null
+print "${1}" | tr -d '\r' 2>/dev/null
 
 return 0
 }
