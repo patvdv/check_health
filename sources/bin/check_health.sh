@@ -26,8 +26,8 @@
 #           display_usage(), do_cleanup, fix_symlinks(), read_config()
 #           + include functions
 #           For other pre-requisites see the documentation in display_usage()
-# REQUIRES (OPTIONAL): display_csv(), display_terse(), display_init(),
-#                      notify_eif(), notify_mail(), notify_sms()
+# REQUIRES (OPTIONAL): display_csv(), display_terse(), display_init(), 
+#                      display_zenoss(), notify_eif(), notify_mail(), notify_sms()
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
