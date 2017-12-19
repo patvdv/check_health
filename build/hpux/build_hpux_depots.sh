@@ -84,6 +84,12 @@ swpackage -s hc_display_terse.psf -x media_type=tape -d ../../depots/hc_display_
 swpackage -s hc_display_terse.psf @ /var/opt/depot/kudos
 cd -
 
+# build hc_display_zenoss package
+cd ${BUILD_DIR}/hc_display_zenoss
+swpackage -s hc_display_zenoss.psf -x media_type=tape -d ../../depots/hc_display_zenoss-${BUILD_DATE}.sd
+swpackage -s hc_display_zenoss.psf @ /var/opt/depot/kudos
+cd -
+
 # build hc_notify_sms package
 cd ${BUILD_DIR}/hc_notify_sms
 swpackage -s hc_notify_sms.psf -x media_type=tape -d ../../depots/hc_notify_sms-${BUILD_DATE}.sd

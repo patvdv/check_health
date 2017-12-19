@@ -49,6 +49,7 @@ rpmbuild -bb ${BUILD_DIR}/SPECS/hc-notify-sms.spec
 rpmbuild -bb ${BUILD_DIR}/SPECS/hc-display-init.spec
 rpmbuild -bb ${BUILD_DIR}/SPECS/hc-display-csv.spec
 rpmbuild -bb ${BUILD_DIR}/SPECS/hc-display-terse.spec
+rpmbuild -bb ${BUILD_DIR}/SPECS/hc-display-zenoss.spec
 
 print "List of built packages:"
 ls -l ${BUILD_DIR}/RPMS/*/*
