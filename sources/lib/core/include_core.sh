@@ -91,6 +91,15 @@ DO_DISPLAY_CSV=0
 DO_DISPLAY_INIT=0
 DO_DISPLAY_TERSE=0
 DO_DISPLAY_ZENOSS=0
+DO_DISPLAY_CUSTOM1=0
+DO_DISPLAY_CUSTOM2=0
+DO_DISPLAY_CUSTOM3=0
+DO_DISPLAY_CUSTOM4=0
+DO_DISPLAY_CUSTOM5=0
+DO_DISPLAY_CUSTOM6=0
+DO_DISPLAY_CUSTOM7=0
+DO_DISPLAY_CUSTOM8=0
+DO_DISPLAY_CUSTOM9=0
 DO_NOTIFY_EIF=0
 DO_NOTIFY_MAIL=0
 DO_NOTIFY_SMS=0
@@ -99,6 +108,15 @@ HAS_DISPLAY_CSV=0
 HAS_DISPLAY_INIT=0
 HAS_DISPLAY_TERSE=0
 HAS_DISPLAY_ZENOSS=0
+HAS_DISPLAY_CUSTOM1=0
+HAS_DISPLAY_CUSTOM2=0
+HAS_DISPLAY_CUSTOM3=0
+HAS_DISPLAY_CUSTOM4=0
+HAS_DISPLAY_CUSTOM5=0
+HAS_DISPLAY_CUSTOM6=0
+HAS_DISPLAY_CUSTOM7=0
+HAS_DISPLAY_CUSTOM8=0
+HAS_DISPLAY_CUSTOM9=0
 HAS_NOTIFY_EIF=0
 HAS_NOTIFY_MAIL=0
 HAS_NOTIFY_SMS=0
@@ -125,6 +143,42 @@ do
         *display_zenoss.sh)
             HAS_DISPLAY_ZENOSS=1
             (( ARG_DEBUG != 0 )) && debug "display_zenoss plugin is available"
+            ;;
+        *display_custom1.sh)
+            HAS_DISPLAY_CUSTOM1=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom1 plugin is available"
+            ;;
+        *display_custom2.sh)
+            HAS_DISPLAY_CUSTOM2=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom2 plugin is available"
+            ;;
+        *display_custom3.sh)
+            HAS_DISPLAY_CUSTOM3=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom3 plugin is available"
+            ;;
+        *display_custom4.sh)
+            HAS_DISPLAY_CUSTOM4=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom4 plugin is available"
+            ;;
+        *display_custom5.sh)
+            HAS_DISPLAY_CUSTOM5=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom5 plugin is available"
+            ;;
+        *display_custom6.sh)
+            HAS_DISPLAY_CUSTOM6=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom6 plugin is available"
+            ;;
+        *display_custom7.sh)
+            HAS_DISPLAY_CUSTOM7=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom7 plugin is available"
+            ;;
+        *display_custom8.sh)
+            HAS_DISPLAY_CUSTOM8=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom8 plugin is available"
+            ;;
+        *display_custom9.sh)
+            HAS_DISPLAY_CUSTOM9=1
+            (( ARG_DEBUG != 0 )) && debug "display_custom9 plugin is available"
             ;;
         *notify_mail.sh)
             HAS_NOTIFY_MAIL=1
@@ -184,6 +238,87 @@ then
                 ARG_VERBOSE=0
             else
                 warn "zenoss plugin for '--display' not present"
+            fi
+            ;;
+        custom1) # custom1 format
+            if (( HAS_DISPLAY_CUSTOM1 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM1=1
+                ARG_VERBOSE=0
+            else
+                warn "custom1 plugin for '--display' not present"
+            fi
+            ;;
+        custom2) # custom2 format
+            if (( HAS_DISPLAY_CUSTOM2 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM2=1
+                ARG_VERBOSE=0
+            else
+                warn "custom2 plugin for '--display' not present"
+            fi
+            ;;
+        custom3) # custom3 format
+            if (( HAS_DISPLAY_CUSTOM3 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM3=1
+                ARG_VERBOSE=0
+            else
+                warn "custom3 plugin for '--display' not present"
+            fi
+            ;;
+        custom4) # custom4 format
+            if (( HAS_DISPLAY_CUSTOM4 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM4=1
+                ARG_VERBOSE=0
+            else
+                warn "custom4 plugin for '--display' not present"
+            fi
+            ;;
+        custom5) # custom5 format
+            if (( HAS_DISPLAY_CUSTOM5 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM5=1
+                ARG_VERBOSE=0
+            else
+                warn "custom5 plugin for '--display' not present"
+            fi
+            ;;
+        custom6) # custom6 format
+            if (( HAS_DISPLAY_CUSTOM6 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM6=1
+                ARG_VERBOSE=0
+            else
+                warn "custom6 plugin for '--display' not present"
+            fi
+            ;;
+        custom7) # custom7 format
+            if (( HAS_DISPLAY_CUSTOM7 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM7=1
+                ARG_VERBOSE=0
+            else
+                warn "custom7 plugin for '--display' not present"
+            fi
+            ;;
+        custom8) # custom8 format
+            if (( HAS_DISPLAY_CUSTOM8 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM8=1
+                ARG_VERBOSE=0
+            else
+                warn "custom8 plugin for '--display' not present"
+            fi
+            ;;
+        custom9) # custom9 format
+            if (( HAS_DISPLAY_CUSTOM9 == 1 ))
+            then
+                DO_DISPLAY_CUSTOM9=1
+                ARG_VERBOSE=0
+            else
+                warn "custom9 plugin for '--display' not present"
             fi
             ;;
         *) # stdout default
@@ -365,8 +500,7 @@ return 0
 # DOES: handle HC results
 # EXPECTS: 1=HC name [string], $HC_MSG_FILE temporary file
 # RETURNS: 0
-# REQUIRES: die(), display_csv(), display_terse(), display_zenoss(), notify_mail(), 
-#           notify_sms(), notify_eif(), warn()
+# REQUIRES: die(), display_*(), notify_*(), warn()
 function handle_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -443,6 +577,87 @@ then
             display_zenoss "${HC_NAME}" "${HC_FAIL_ID}"
         else
             warn "display_zenoss plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM1 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM1 == 1 ))
+        then
+            # call plugin
+            display_custom1 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom1 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM2 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM2 == 1 ))
+        then
+            # call plugin
+            display_custom2 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom2 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM3 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM3 == 1 ))
+        then
+            # call plugin
+            display_custom3 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom3 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM4 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM4 == 1 ))
+        then
+            # call plugin
+            display_custom4 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom4 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM5 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM5 == 1 ))
+        then
+            # call plugin
+            display_custom5 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom5 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM6 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM6 == 1 ))
+        then
+            # call plugin
+            display_custom6 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom6 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM7 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM7 == 1 ))
+        then
+            # call plugin
+            display_custom7 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom7 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM8 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM8 == 1 ))
+        then
+            # call plugin
+            display_custom8 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom8 plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_CUSTOM9 == 1 ))
+    then
+        if (( HAS_DISPLAY_CUSTOM9 == 1 ))
+        then
+            # call plugin
+            display_custom9 "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_custom9 plugin is not available, cannot display_results!"
         fi
     else
         # default STDOUT
@@ -607,6 +822,69 @@ case "${REPORT_STYLE}" in
         if (( HAS_DISPLAY_ZENOSS == 1 ))
         then
             DO_DISPLAY_ZENOSS=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom1|CUSTOM1) # custom1 format
+        if (( HAS_DISPLAY_CUSTOM1 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM1=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom2|CUSTOM2) # custom2 format
+        if (( HAS_DISPLAY_CUSTOM2 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM2=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom3|CUSTOM3) # custom3 format
+        if (( HAS_DISPLAY_CUSTOM3 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM3=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom4|CUSTOM4) # custom4 format
+        if (( HAS_DISPLAY_CUSTOM4 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM4=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom5|CUSTOM5) # custom5 format
+        if (( HAS_DISPLAY_CUSTOM5 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM5=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom6|CUSTOM6) # custom6 format
+        if (( HAS_DISPLAY_CUSTOM6 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM6=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom7|CUSTOM7) # custom7 format
+        if (( HAS_DISPLAY_CUSTOM7 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM7=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom8|CUSTOM8) # custom8 format
+        if (( HAS_DISPLAY_CUSTOM8 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM8=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    custom9|CUSTOM9) # custom9 format
+        if (( HAS_DISPLAY_CUSTOM9 == 1 ))
+        then
+            DO_DISPLAY_CUSTOM9=1
             ARG_VERBOSE=0
         fi
         ;;

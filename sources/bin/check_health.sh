@@ -26,8 +26,7 @@
 #           display_usage(), do_cleanup, fix_symlinks(), read_config()
 #           + include functions
 #           For other pre-requisites see the documentation in display_usage()
-# REQUIRES (OPTIONAL): display_csv(), display_terse(), display_init(), 
-#                      display_zenoss(), notify_eif(), notify_mail(), notify_sms()
+# REQUIRES (OPTIONAL): display_*(), notify_*(), report_*()
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-12-15"
+typeset -r SCRIPT_VERSION="2017-12-20"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
