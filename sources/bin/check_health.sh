@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-12-20"
+typeset -r SCRIPT_VERSION="2017-12-22"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -48,19 +48,26 @@ typeset -r CONFIG_FILE="${CONFIG_DIR}/core/check_health.conf"
 typeset -r HOST_CONFIG_FILE="${CONFIG_DIR}/check_host.conf"
 # location of temporary working storage
 typeset -r TMP_DIR="/var/tmp"
-# health check log separator
-typeset -r SEP="|"
 # specify the UNIX user that needs to be used for executing the script
 typeset -r EXEC_USER="root"
 # ------------------------- CONFIGURATION ends here ---------------------------
-# miscellaneous
-typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+# read-only settings (but should not be changed)
 typeset -r SCRIPT_NAME="$(basename $0)"
 typeset -r SCRIPT_DIR="$(dirname $0)"
 typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
+typeset -r SEP="|"
+typeset -r LOG_DIR="/var/opt/hc"
+typeset -r EVENTS_DIR="${LOG_DIR}/events"
+typeset -r STATE_DIR="${LOG_DIR}/state"
+typeset -r STATE_PERM_DIR="${STATE_DIR}/persistent"
+typeset -r STATE_TEMP_DIR="${STATE_DIR}/temporary"
+# miscellaneous
+typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+typeset CMD_LINE=""
+typeset CMD_PARAMETER=""
 typeset CHILD_ERROR=0
 typeset DIR_PREFIX="$(date '+%Y-%m')"
 typeset EXIT_CODE=0
@@ -70,6 +77,7 @@ typeset FPATH=""
 typeset HC_FAIL_ID=""
 typeset HC_FILE_LINE=""
 typeset HC_NOW=""
+typeset HC_TIME_OUT=60
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 typeset LINUX_DISTRO=""
@@ -90,7 +98,7 @@ typeset ARG_HC=""
 typeset ARG_HC_ARGS=""          # no extra arguments to HC plug-in by default
 typeset ARG_LAST=0              # report last events
 typeset ARG_LIST=""             # list all by default
-typeset ARG_LOG_DIR=""          # location of the log directory (~root, oracle etc)
+typeset ARG_LOCK=1              # lock for concurrent script executions is on by default
 typeset ARG_LOG=1               # logging is on by default
 typeset ARG_MONITOR=1           # killing long running HC processes is on by default
 typeset ARG_NOTIFY=""           # notification of problems is off by default
@@ -160,30 +168,6 @@ fi
 if [[ ! -d "${FPATH_PARENT}" ]]
 then
     print -u2 "ERROR: directory in setting FPATH_PARENT does not exist"
-    exit 1
-fi
-# SEP
-if [[ -z "${SEP}" ]]
-then
-    print -u2 "ERROR: you must define a value for the SEP setting in $0"
-    exit 1
-fi
-# HC_TIME_OUT
-if [[ -z "${HC_TIME_OUT}" ]]
-then
-    print -u2 "ERROR: you must define a value for the HC_TIME_OUT setting in $0"
-    exit 1
-fi
-# EVENTS_DIR (auto-created dir)
-if [[ -z "${EVENTS_DIR}" ]]
-then
-    print -u2 "ERROR: you must define a value for the EVENTS_DIR setting in $0"
-    exit 1
-fi
-# STATE_DIR (auto-created dir)
-if [[ -z "${STATE_DIR}" ]]
-then
-    print -u2 "ERROR: you must define a value for the STATE_DIR setting in $0"
     exit 1
 fi
 
@@ -260,18 +244,23 @@ return 0
 function check_lock_dir
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-mkdir ${LOCK_DIR} >/dev/null || {
-    print -u2 "ERROR: unable to acquire lock ${LOCK_DIR}"
-    ARG_VERBOSE=0 warn "unable to acquire lock ${LOCK_DIR}"
-    if [[ -f ${LOCK_DIR}/.pid ]]
-    then
-        typeset LOCK_PID="$(cat ${LOCK_DIR}/.pid)"
-        print -u2 "ERROR: active health checker running on PID: ${LOCK_PID}"
-        ARG_VERBOSE=0 warn "active health checker running on PID: ${LOCK_PID}. Exiting!"
-    fi
-    exit 1
-}
-print $$ >${LOCK_DIR}/.pid
+if (( ARG_LOCK != 0 ))
+then
+    mkdir ${LOCK_DIR} >/dev/null || {
+        print -u2 "ERROR: unable to acquire lock ${LOCK_DIR}"
+        ARG_VERBOSE=0 warn "unable to acquire lock ${LOCK_DIR}"
+        if [[ -f ${LOCK_DIR}/.pid ]]
+        then
+            typeset LOCK_PID="$(cat ${LOCK_DIR}/.pid)"
+            print -u2 "ERROR: active health checker running on PID: ${LOCK_PID}"
+            ARG_VERBOSE=0 warn "active health checker running on PID: ${LOCK_PID}. Exiting!"
+        fi
+        exit 1
+    }
+    print $$ >${LOCK_DIR}/.pid
+else
+    (( ARG_DEBUG != 0 )) && print "DEBUG: locking has been disabled"
+fi
 
 return 0
 }
@@ -341,7 +330,6 @@ then
     ARG_LOG=0
 fi
 # --log-dir
-[[ -z "${ARG_LOG_DIR}" ]] || LOG_DIR="${ARG_LOG_DIR}"
 LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
 if (( ARG_LOG != 0 ))
 then
@@ -441,7 +429,7 @@ Execute/report simple health checks (HC) on UNIX hosts.
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--fix-symlinks] | (--disable-all | enable-all) |
         (--check-host | ((--check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
-            [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--log-dir=<log_directory>]
+            [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]]) ) ]
 
@@ -476,8 +464,8 @@ Parameters:
                   - whether the HC plugin requires a configuration file in ${HC_ETC_DIR}
                   - whether the HC plugin is scheduled by cron
 --list-core     : show the available core plugins (mail,SMS,...)
---log-dir       : specify a log directory location (for both script & health checks log).
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
+--no-lock       : disable locking to allow concurrent script executions
 --no-log        : do not log any messages to the script log file or health check results.
 --no-monitor    : do not stop the execution of a HC after \$HC_TIME_OUT seconds
 --notify        : notify upon HC failure(s). Multiple options may be specified if comma-separated (see --list-core for availble formats)
@@ -488,7 +476,7 @@ Parameters:
 --sms-provider  : name of a supported SMS provider (see \$SMS_PROVIDERS) [requires SMS core plugin]
 --sms-to        : name of person or group to which a sms alert will be send to [requires SMS core plugin]
 --today         : show today's events (HC and their combined STC value)
---version       : show the script version (major/minor/fix).
+--version       : show the timestamp of the script.
 
 EOT
 fi
@@ -607,9 +595,9 @@ return 0
 # parse arguments/parameters
 CMD_LINE="$*"
 [[ -z "${CMD_LINE}" ]] && display_usage && exit 0
-for PARAMETER in ${CMD_LINE}
+for CMD_PARAMETER in ${CMD_LINE}
 do
-    case ${PARAMETER} in
+    case ${CMD_PARAMETER} in
         -check|--check)
             ARG_ACTION=1
             ;;
@@ -618,10 +606,10 @@ do
             ARG_ACTION=4
             ;;
         -config-file=*)
-            ARG_CONFIG_FILE="${PARAMETER#-config-file=}"
+            ARG_CONFIG_FILE="${CMD_PARAMETER#-config-file=}"
             ;;
         --config-file=*)
-            ARG_CONFIG_FILE="${PARAMETER#--config-file=}"
+            ARG_CONFIG_FILE="${CMD_PARAMETER#--config-file=}"
             ;;
         -debug|--debug)
             ARG_DEBUG=1
@@ -629,10 +617,10 @@ do
             set "${DEBUG_OPTS}"
             ;;
         -debug-level=*)
-            ARG_DEBUG_LEVEL="${PARAMETER#-debug-level=}"
+            ARG_DEBUG_LEVEL="${CMD_PARAMETER#-debug-level=}"
             ;;
         --debug-level=*)
-            ARG_DEBUG_LEVEL="${PARAMETER#--debug-level=}"
+            ARG_DEBUG_LEVEL="${CMD_PARAMETER#--debug-level=}"
             ;;
         -detail|--detail)
             ARG_DETAIL=1
@@ -648,10 +636,10 @@ do
             ARG_DISPLAY=""
             ;;
         -display=*)
-            ARG_DISPLAY="${PARAMETER#-display=}"
+            ARG_DISPLAY="${CMD_PARAMETER#-display=}"
             ;;
         --display=*)
-            ARG_DISPLAY="${PARAMETER#--display=}"
+            ARG_DISPLAY="${CMD_PARAMETER#--display=}"
             ;;
         -e|-enable|--enable)
             ARG_ACTION=3
@@ -660,16 +648,16 @@ do
             ARG_ACTION=7
             ;;
         -hc=*)
-            ARG_HC="${PARAMETER#-hc=}"
+            ARG_HC="${CMD_PARAMETER#-hc=}"
             ;;
         --hc=*)
-            ARG_HC="${PARAMETER#--hc=}"
+            ARG_HC="${CMD_PARAMETER#--hc=}"
             ;;
         -hc-args=*)
-            ARG_HC_ARGS="${PARAMETER#-hc-args=}"
+            ARG_HC_ARGS="${CMD_PARAMETER#-hc-args=}"
             ;;
         --hc-args=*)
-            ARG_HC_ARGS="${PARAMETER#--hc-args=}"
+            ARG_HC_ARGS="${CMD_PARAMETER#--hc-args=}"
             ;;
         -f|-fix-symlinks|--fix-symlinks)
             read_config
@@ -681,10 +669,10 @@ do
             exit 0
             ;;
         -id=*)
-            ARG_FAIL_ID="${PARAMETER#-id=}"
+            ARG_FAIL_ID="${CMD_PARAMETER#-id=}"
             ;;
         --id=*)
-            ARG_FAIL_ID="${PARAMETER#--id=}"
+            ARG_FAIL_ID="${CMD_PARAMETER#--id=}"
             ;;
         -last|--last)
             ARG_LAST=1
@@ -693,11 +681,11 @@ do
             ARG_ACTION=9
             ;;
         -list=*)
-            ARG_LIST="${PARAMETER#-list=}"
+            ARG_LIST="${CMD_PARAMETER#-list=}"
             ARG_ACTION=9
             ;;
         --list=*)
-            ARG_LIST="${PARAMETER#--list=}"
+            ARG_LIST="${CMD_PARAMETER#--list=}"
             ARG_ACTION=9
             ;;
         -list-hc|--list-hc|-list-all|--list-all)
@@ -714,26 +702,23 @@ do
             list_core
             exit 0
             ;;
-        -log-dir=*)
-            ARG_LOG_DIR="${PARAMETER#-log-dir=}"
-            ;;
-        --log-dir=*)
-            ARG_LOG_DIR="${PARAMETER#--log-dir=}"
-            ;;
         -mail-to=*)
-            ARG_MAIL_TO="${PARAMETER#-mail-to=}"
+            ARG_MAIL_TO="${CMD_PARAMETER#-mail-to=}"
             ;;
         --mail-to=*)
-            ARG_MAIL_TO="${PARAMETER#--mail-to=}"
+            ARG_MAIL_TO="${CMD_PARAMETER#--mail-to=}"
             ;;
         -notify=*)
-            ARG_NOTIFY="${PARAMETER#-notify=}"
+            ARG_NOTIFY="${CMD_PARAMETER#-notify=}"
             ;;
         --notify=*)
-            ARG_NOTIFY="${PARAMETER#--notify=}"
+            ARG_NOTIFY="${CMD_PARAMETER#--notify=}"
             ;;
         -no-log|--no-log)
             ARG_LOG=0
+            ;;
+        -no-lock|--no-lock)
+            ARG_LOCK=0
             ;;
         -no-monitor|--no-monitor)
             ARG_MONITOR=0
@@ -745,12 +730,12 @@ do
             ARG_ACTION=8
             ;;
         -report=*)
-            ARG_REPORT="${PARAMETER#-report=}"
+            ARG_REPORT="${CMD_PARAMETER#-report=}"
             ARG_LOG=0; ARG_VERBOSE=0
             ARG_ACTION=8
             ;;
         --report=*)
-            ARG_REPORT="${PARAMETER#--report=}"
+            ARG_REPORT="${CMD_PARAMETER#--report=}"
             ARG_LOG=0; ARG_VERBOSE=0
             ARG_ACTION=8
             ;;
@@ -766,16 +751,16 @@ do
             ARG_VERBOSE=0
             ;;
         -sms-provider=*)
-            ARG_SMS_PROVIDER="${PARAMETER#-sms-provider=}"
+            ARG_SMS_PROVIDER="${CMD_PARAMETER#-sms-provider=}"
             ;;
         --sms-provider=*)
-            ARG_SMS_PROVIDER="${PARAMETER#--sms-provider=}"
+            ARG_SMS_PROVIDER="${CMD_PARAMETER#--sms-provider=}"
             ;;
         -sms-to=*)
-            ARG_SMS_TO="${PARAMETER#-sms-to=}"
+            ARG_SMS_TO="${CMD_PARAMETER#-sms-to=}"
             ;;
         --sms-to=*)
-            ARG_SMS_TO="${PARAMETER#--sms-to=}"
+            ARG_SMS_TO="${CMD_PARAMETER#--sms-to=}"
             ;;
         -today|--today)
             ARG_TODAY=1
@@ -811,7 +796,7 @@ discover_core       # parse cmd-line (for core plugins)
 check_user
 
 # catch shell signals
-trap 'do_cleanup; exit' HUP INT QUIT TERM
+trap 'do_cleanup; exit 1' HUP INT QUIT TERM
 
 # set debugging options
 if (( ARG_DEBUG != 0 ))

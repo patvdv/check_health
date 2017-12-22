@@ -7,23 +7,8 @@
 #******************************************************************************
 
 # --- general settings ---
-# maximum timeout for HC calls (seconds)
+# maximum timeout for HC calls/plugins (seconds) [default: 60]
 HC_TIME_OUT=60
-
-# location of log directory, see also --log-dir)
-LOG_DIR="/var/opt/hc"
-
-# location of events directory
-EVENTS_DIR="${LOG_DIR}/events"
-
-# location of state directory
-STATE_DIR="${LOG_DIR}/state"
-
-# location of persistent state directory
-STATE_PERM_DIR="${STATE_DIR}/persistent"
-
-# location of temporary state directory
-STATE_TEMP_DIR="${STATE_DIR}/temporary"
 
 
 #******************************************************************************
