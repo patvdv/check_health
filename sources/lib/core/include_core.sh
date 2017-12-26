@@ -24,6 +24,64 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: archive_hc()
+# DOES: archive log entries for a given HC
+# EXPECTS: HC name [string]
+# RETURNS: 0=no archiving needed; 1=archiving OK; 2=archiving NOK
+# REQUIRES: n/a
+function archive_hc
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset HC_NAME="$1"
+typeset ARCHIVE_FILE=""
+typeset YEAR_MONTH=""
+typeset LOG_COUNT=0
+typeset ARCHIVE_RC=0
+typeset SAVE_HC_LOG="${HC_LOG}.$$"
+typeset TMP_FILE="${TMP_DIR}/.$0.tmp.archive.$$"
+
+# set local trap for cleanup
+trap "rm -f ${TMP_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
+
+# isolate messages from HC, find unique %Y-%m combinations
+grep ".*${SEP}${HC_NAME}${SEP}" ${HC_LOG} 2>/dev/null |\
+	cut -f1 -d"${SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
+	while read YEAR_MONTH
+do
+    # find all messages for that YEAR-MONTH combination
+    grep "${YEAR_MONTH}.*${SEP}${HC_NAME}${SEP}" ${HC_LOG} >${TMP_FILE}
+    LOG_COUNT=$(wc -l ${TMP_FILE} | cut -f1 -d' ')
+    log "# of new entries to archive: ${LOG_COUNT}"
+
+    # combine existing archived messages and resort
+    ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
+    cat ${ARCHIVE_FILE} ${TMP_FILE} | sort -u >${ARCHIVE_FILE}
+    LOG_COUNT=$(wc -l ${ARCHIVE_FILE} | cut -f1 -d' ')
+    log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
+
+    # remove archived messages from the $HC_LOG (but create a backup first!)
+    cp -p ${HC_LOG} ${SAVE_HC_LOG} 2>/dev/null
+    comm -23 ${HC_LOG} ${ARCHIVE_FILE} 2>/dev/null >${TMP_FILE}
+    if [[ -s ${TMP_FILE} ]]
+    then
+        mv ${TMP_FILE} ${HC_LOG} 2>/dev/null
+        LOG_COUNT=$(wc -l ${HC_LOG} | cut -f1 -d' ')
+        log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
+		ARCHIVE_RC=1
+    else
+        warn "a problem occurred. Rolling back archival"
+        mv ${SAVE_HC_LOG} ${HC_LOG} 2>/dev/null
+        ARCHIVE_RC=2
+    fi
+done
+
+# clean up temporary file(s)
+rm -f ${TMP_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
+
+return ${ARCHIVE_RC}
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: debug()
 # DOES: handle debug messages
 # EXPECTS: log message [string]
@@ -391,7 +449,7 @@ if (( DO_NOTIFY_SMS != 0 )) && [[ -z "${ARG_SMS_PROVIDER}" ]]
 then
     die "you cannot specify '--notify=sms' without '--sms-provider'"
 fi
-# --report/--detail/--id/--reverse/--last/--today
+# --report/--detail/--id/--reverse/--last/--today/--with-history
 if (( DO_REPORT_STD != 0 ))
 then
     if (( ARG_DETAIL != 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
@@ -426,6 +484,11 @@ then
     then
         die "you cannot specify '--today' with '--id'"
     fi
+	# switch on history for --last & --today
+    if (( ARG_LAST != 0 )) || (( ARG_TODAY != 0 ))
+    then
+		ARG_HISTORY=1
+    fi	
 fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_LAST != 0 ))
 then
@@ -438,6 +501,10 @@ fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_DETAIL != 0 ))
 then
     die "you cannot specify '--detail' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && (( ARG_HISTORY != 0 ))
+then
+    die "you cannot specify '--with-history' without '--report'"
 fi
 if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
 then

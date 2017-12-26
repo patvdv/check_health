@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-12-15"                               # YYYY-MM-DD
+typeset _VERSION="2017-12-26"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -52,8 +52,18 @@ typeset _HC_LAST_FAIL_ID="-"
 typeset _HC_LAST_EVENT_FAIL_ID=0
 typeset _HC_LAST_EVENT_STC=""
 typeset _ID_NEEDLE=""
+typeset _LOG_STASH=""
 typeset _REPORT_LINE=""
 typeset _SORT_CMD=""
+
+# which files do we need to examine
+if (( ARG_HISTORY != 0 ))
+then
+    set +f  # file globbing must be on
+    _LOG_STASH="${HC_LOG} ${ARCHIVE_DIR}/hc.*.log"
+else
+    _LOG_STASH="${HC_LOG}"
+fi
 
 # --last report
 if (( ARG_LAST != 0 ))
@@ -68,14 +78,14 @@ then
         _HC_LAST_FAIL_ID="-"
         # find last event or block of events (same timestamp)
         # (but unfortunately this is only accurate to events within the SAME second!)
-        _HC_LAST_TIME="$(grep ${_HC_LAST} ${HC_LOG} 2>/dev/null | sort -n | cut -f1 -d${SEP} | uniq | tail -1)"
+        _HC_LAST_TIME="$(grep -h ${_HC_LAST} ${_LOG_STASH} 2>/dev/null | sort -n | cut -f1 -d${SEP} | uniq | tail -1)"
         if [[ -z "${_HC_LAST_TIME}" ]]
         then
             _HC_LAST_TIME="-"
             _HC_LAST_STC="-"
         else
             # find all STC codes for the last event and add them up
-            grep "${_HC_LAST_TIME}${SEP}${HC_LAST}" ${HC_LOG} 2>/dev/null |\
+            grep -h "${_HC_LAST_TIME}${SEP}${HC_LAST}" ${_LOG_STASH} 2>/dev/null |\
             while read -r _REPORT_LINE
             do
                 _HC_LAST_EVENT_STC=$(print "${_REPORT_LINE}" | cut -f3 -d"${SEP}")
@@ -99,7 +109,7 @@ else
     (( ARG_TODAY != 0 )) && _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
 
     # check fail count (look for unique IDs in the 5th field of the HC log)
-    _FAIL_COUNT=$(cut -f5 -d"${SEP}" ${HC_LOG} 2>/dev/null | grep -E -e "${_ID_NEEDLE}" | uniq | wc -l)
+    _FAIL_COUNT=$(cut -f5 -d"${SEP}" ${_LOG_STASH} 2>/dev/null | grep -E -e "${_ID_NEEDLE}" | uniq | wc -l)
     if (( _FAIL_COUNT != 0 ))
     then
         # check for detail or not?
@@ -123,7 +133,7 @@ else
 
             # print failed events
             # no extended grep here and no end $SEP!
-            grep ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}" ${HC_LOG} 2>/dev/null |\
+            grep -h ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}" ${_LOG_STASH} 2>/dev/null |\
                 ${_SORT_CMD} | while read -r _REPORT_LINE
             do
                 _FAIL_F1=$(print "${_REPORT_LINE}" | cut -f1 -d"${SEP}")
@@ -141,7 +151,7 @@ else
             _EVENT_COUNT=1
             _DIR_PREFIX="$(expr substr ${ARG_FAIL_ID} 1 4)-$(expr substr ${ARG_FAIL_ID} 5 2)"
             # no extended grep here!
-            grep ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}${SEP}" ${HC_LOG} 2>/dev/null |\
+            grep -h ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}${SEP}" ${_LOG_STASH} 2>/dev/null |\
                 ${_SORT_CMD} | while read -r _REPORT_LINE
             do
                 _FAIL_F1=$(print "${_REPORT_LINE}" | cut -f1 -d"${SEP}")

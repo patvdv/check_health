@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-12-22"
+typeset -r SCRIPT_VERSION="2017-12-26"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -60,6 +60,8 @@ typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
 typeset -r SEP="|"
 typeset -r LOG_DIR="/var/opt/hc"
+typeset -r LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
+typeset -r ARCHIVE_DIR="${LOG_DIR}/archive"
 typeset -r EVENTS_DIR="${LOG_DIR}/events"
 typeset -r STATE_DIR="${LOG_DIR}/state"
 typeset -r STATE_PERM_DIR="${STATE_DIR}/persistent"
@@ -82,6 +84,9 @@ typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 typeset LINUX_DISTRO=""
 typeset LINUX_RELEASE=""
+typeset ARCHIVE_RC=0
+typeset DISABLE_RC=0
+typeset ENABLE_RC=0
 typeset RUN_RC=0
 typeset SORT_CMD=""
 typeset DEBUG_OPTS=""
@@ -96,6 +101,7 @@ typeset ARG_DISPLAY=""          # display is STDOUT by default
 typeset ARG_FAIL_ID=""
 typeset ARG_HC=""
 typeset ARG_HC_ARGS=""          # no extra arguments to HC plug-in by default
+typeset ARG_HISTORY=0           # include historical events is off by default
 typeset ARG_LAST=0              # report last events
 typeset ARG_LIST=""             # list all by default
 typeset ARG_LOCK=1              # lock for concurrent script executions is on by default
@@ -159,6 +165,18 @@ then
     print -u2 "ERROR: you must define a value for the EXEC_USER setting in $0"
     exit 1
 fi
+# SCRIPT_VERSION
+if [[ -z "${SCRIPT_VERSION}" ]]
+then
+    print -u2 "ERROR: you must define a value for the SCRIPT_VERSION setting in $0"
+    exit 1
+fi
+# TMP_DIR
+if [[ -z "${TMP_DIR}" ]]
+then
+    print -u2 "ERROR: you must define a value for the TMP_DIR setting in $0"
+    exit 1
+fi
 # FPATH_PARENT
 if [[ -z "${FPATH_PARENT}" ]]
 then
@@ -211,6 +229,11 @@ else
 fi
 
 # check for core directories
+[[ -d ${ARCHIVE_DIR} ]] || mkdir -p "${ARCHIVE_DIR}" >/dev/null 2>&1
+if [[ ! -d "${ARCHIVE_DIR}" ]] || [[ ! -w "${ARCHIVE_DIR}" ]]
+then
+    print -u2 "ERROR: unable to access the archive directory at ${ARCHIVE_DIR}"
+fi
 [[ -d ${EVENTS_DIR} ]] || mkdir -p "${EVENTS_DIR}" >/dev/null 2>&1
 if [[ ! -d "${EVENTS_DIR}" ]] || [[ ! -w "${EVENTS_DIR}" ]]
 then
@@ -297,7 +320,7 @@ then
         exit 1
     fi
 fi
-# --check-host,--check/--disable/--enable/--run/--show,--hc
+# --check-host,--check/--disable/--enable/--run/--show/--archive,--hc
 if [[ -n "${ARG_HC}" ]] && (( ARG_ACTION == 0 ))
 then
     print -u2 "ERROR: you must specify an action for the HC (--check/--disable/--enable/--run/--show)"
@@ -305,7 +328,7 @@ then
 fi
 if (( ARG_CHECK_HOST == 0 ))
 then
-    if (( ARG_ACTION < 6 )) && [[ -z "${ARG_HC}" ]]
+    if (( ARG_ACTION < 6 || ARG_ACTION == 10 )) && [[ -z "${ARG_HC}" ]]
     then
         print -u2 "ERROR: you specify a value for parameter '--hc'"
         exit 1
@@ -315,6 +338,15 @@ then
         case "${ARG_HC}" in
             *,*)
                 print -u2 "ERROR: you can only specify one value for '--hc' in combination with '--show'"
+                exit 1
+                ;;
+        esac
+    fi
+    if (( ARG_ACTION == 10 )) || [[ -n "${ARG_HC_ARGS}" ]]
+    then
+        case "${ARG_HC}" in
+            *,*)
+                print -u2 "ERROR: you can only specify one value for '--hc' in combination with '--archive'"
                 exit 1
                 ;;
         esac
@@ -329,8 +361,8 @@ then
     ARG_VERBOSE=0
     ARG_LOG=0
 fi
-# --log-dir
-LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
+
+# check log location
 if (( ARG_LOG != 0 ))
 then
     if [[ ! -d "${LOG_DIR}" ]] || [[ ! -w "${LOG_DIR}" ]]
@@ -428,10 +460,10 @@ Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--fix-symlinks] | (--disable-all | enable-all) |
-        (--check-host | ((--check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
+        (--check-host | ((--archive | --check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
-                    [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]]) ) ]
+                    [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
 
 EOT
 
@@ -440,6 +472,7 @@ then
     cat << EOT
 Parameters:
 
+--archive       : move events from the HC log file into archive log files
 --check         : display HC state.
 --check-host    : execute all configured HC(s) (see check_host.conf)
 --config-file   : custom configuration file for a HC, may only be specified when executing a single HC plugin.
@@ -477,6 +510,7 @@ Parameters:
 --sms-to        : name of person or group to which a sms alert will be send to [requires SMS core plugin]
 --today         : show today's events (HC and their combined STC value)
 --version       : show the timestamp of the script.
+--with-history  : also include events that have been archived already (reporting)
 
 EOT
 fi
@@ -598,6 +632,9 @@ CMD_LINE="$*"
 for CMD_PARAMETER in ${CMD_LINE}
 do
     case ${CMD_PARAMETER} in
+        -archive|--archive)
+            ARG_ACTION=10
+            ;;
         -check|--check)
             ARG_ACTION=1
             ;;
@@ -647,6 +684,15 @@ do
         -enable-all|--enable-all)
             ARG_ACTION=7
             ;;
+        -f|-fix-symlinks|--fix-symlinks)
+            read_config
+            check_config
+            build_fpath
+            check_shell
+            check_user
+            fix_symlinks
+            exit 0
+            ;;
         -hc=*)
             ARG_HC="${CMD_PARAMETER#-hc=}"
             ;;
@@ -659,14 +705,8 @@ do
         --hc-args=*)
             ARG_HC_ARGS="${CMD_PARAMETER#--hc-args=}"
             ;;
-        -f|-fix-symlinks|--fix-symlinks)
-            read_config
-            check_config
-            build_fpath
-            check_shell
-            check_user
-            fix_symlinks
-            exit 0
+        -with-history|--with-history)
+            ARG_HISTORY=1
             ;;
         -id=*)
             ARG_FAIL_ID="${CMD_PARAMETER#-id=}"
@@ -1028,7 +1068,8 @@ case ${ARG_ACTION} in
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
             log "disabling HC: ${HC_DISABLE}"
             touch "${STATE_PERM_DIR}/${HC_DISABLE}.disabled" >/dev/null 2>&1
-            if (( $? == 0 ))
+            DISABLE_RC=$1
+            if (( DISABLE_RC == 0 ))
             then
                 log "successfully disabled HC: ${HC_DISABLE}"
             else
@@ -1046,7 +1087,8 @@ case ${ARG_ACTION} in
             [[ -d ${STATE_PERM_DIR} ]] || \
                 die "state directory does not exist, all HC(s) are enabled"
             rm -f "${STATE_PERM_DIR}/${HC_ENABLE}.disabled" >/dev/null 2>&1
-            if (( $? == 0 ))
+            ENABLE_RC=$?
+            if (( ENABLE_RC == 0 ))
             then
                 log "successfully enabled HC: ${HC_ENABLE}"
             else
@@ -1060,6 +1102,24 @@ case ${ARG_ACTION} in
         ;;
     9)  # list HC plugins
         list_hc "" "${ARG_LIST}"
+        ;;
+    10) # archive log entries
+        exists_hc "${ARG_HC}" && die "cannot find HC: ${ARG_HC}"
+        log "archiving log entries for ${ARG_HC}..."
+        archive_hc "${ARG_HC}"
+        ARCHIVE_RC=$?
+        case ${ARCHIVE_RC} in
+            0)
+                log "no archiving needed for ${ARG_HC}"
+                ;;          
+            1)
+                log "successfully archived log entries for ${ARG_HC}"
+                ;;
+            2)
+                log "failed to archive log entries for ${ARG_HC} [RC=${ARCHIVE_RC}]"
+                EXIT_CODE=1
+                ;;
+        esac
         ;;
 esac
 
