@@ -38,36 +38,40 @@ typeset YEAR_MONTH=""
 typeset LOG_COUNT=0
 typeset ARCHIVE_RC=0
 typeset SAVE_HC_LOG="${HC_LOG}.$$"
-typeset TMP_FILE="${TMP_DIR}/.$0.tmp.archive.$$"
+typeset TMP1_FILE="${TMP_DIR}/.$0.tmp1.archive.$$"
+typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 
 # set local trap for cleanup
-trap "rm -f ${TMP_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
+trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # isolate messages from HC, find unique %Y-%m combinations
 grep ".*${SEP}${HC_NAME}${SEP}" ${HC_LOG} 2>/dev/null |\
-	cut -f1 -d"${SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
-	while read YEAR_MONTH
+    cut -f1 -d"${SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
+    while read YEAR_MONTH
 do
     # find all messages for that YEAR-MONTH combination
-    grep "${YEAR_MONTH}.*${SEP}${HC_NAME}${SEP}" ${HC_LOG} >${TMP_FILE}
-    LOG_COUNT=$(wc -l ${TMP_FILE} | cut -f1 -d' ')
+    grep "${YEAR_MONTH}.*${SEP}${HC_NAME}${SEP}" ${HC_LOG} >${TMP1_FILE}
+    LOG_COUNT=$(wc -l ${TMP1_FILE} | cut -f1 -d' ')
     log "# of new entries to archive: ${LOG_COUNT}"
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
-    cat ${ARCHIVE_FILE} ${TMP_FILE} | sort -u >${ARCHIVE_FILE}
+    cat ${ARCHIVE_FILE} ${TMP1_FILE} | sort -u >${ARCHIVE_FILE}
     LOG_COUNT=$(wc -l ${ARCHIVE_FILE} | cut -f1 -d' ')
     log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
     # remove archived messages from the $HC_LOG (but create a backup first!)
     cp -p ${HC_LOG} ${SAVE_HC_LOG} 2>/dev/null
-    comm -23 ${HC_LOG} ${ARCHIVE_FILE} 2>/dev/null >${TMP_FILE}
-    if [[ -s ${TMP_FILE} ]]
+    # compare with the sorted $HC_LOG
+    sort ${HC_LOG} >${TMP1_FILE}
+    comm -23 ${TMP1_FILE} ${ARCHIVE_FILE} 2>/dev/null >${TMP2_FILE}
+    
+    if [[ -s ${TMP2_FILE} ]]
     then
-        mv ${TMP_FILE} ${HC_LOG} 2>/dev/null
+        mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null
         LOG_COUNT=$(wc -l ${HC_LOG} | cut -f1 -d' ')
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
-		ARCHIVE_RC=1
+        ARCHIVE_RC=1
     else
         warn "a problem occurred. Rolling back archival"
         mv ${SAVE_HC_LOG} ${HC_LOG} 2>/dev/null
@@ -76,7 +80,7 @@ do
 done
 
 # clean up temporary file(s)
-rm -f ${TMP_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
+rm -f ${TMP_FILE} ${TMP2_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
 
 return ${ARCHIVE_RC}
 }
@@ -484,11 +488,11 @@ then
     then
         die "you cannot specify '--today' with '--id'"
     fi
-	# switch on history for --last & --today
+    # switch on history for --last & --today
     if (( ARG_LAST != 0 )) || (( ARG_TODAY != 0 ))
     then
-		ARG_HISTORY=1
-    fi	
+        ARG_HISTORY=1
+    fi  
 fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_LAST != 0 ))
 then
