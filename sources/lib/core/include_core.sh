@@ -52,11 +52,13 @@ do
     # find all messages for that YEAR-MONTH combination
     grep "${YEAR_MONTH}.*${SEP}${HC_NAME}${SEP}" ${HC_LOG} >${TMP1_FILE}
     LOG_COUNT=$(wc -l ${TMP1_FILE} | cut -f1 -d' ')
-    log "# of new entries to archive: ${LOG_COUNT}"
+    log "# of entries in ${YEAR_MONTH} to archive: ${LOG_COUNT}"
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
-    cat ${ARCHIVE_FILE} ${TMP1_FILE} | sort -u >${ARCHIVE_FILE}
+    cat ${ARCHIVE_FILE} ${TMP1_FILE} | sort -u >${TMP2_FILE}
+    mv ${TMP2_FILE} ${ARCHIVE_FILE} 2>/dev/null || {
+        warn "failed to move archive file, aborting"; return 2 }
     LOG_COUNT=$(wc -l ${ARCHIVE_FILE} | cut -f1 -d' ')
     log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
@@ -68,7 +70,8 @@ do
     
     if [[ -s ${TMP2_FILE} ]]
     then
-        mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null
+        mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null || {
+        warn "failed to move HC log file, aborting"; return 2 }
         LOG_COUNT=$(wc -l ${HC_LOG} | cut -f1 -d' ')
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
         ARCHIVE_RC=1
@@ -80,7 +83,7 @@ do
 done
 
 # clean up temporary file(s)
-rm -f ${TMP_FILE} ${TMP2_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
+rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
 
 return ${ARCHIVE_RC}
 }
