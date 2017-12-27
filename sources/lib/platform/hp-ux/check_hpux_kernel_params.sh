@@ -93,18 +93,18 @@ do
             _MSG="${_PARAM_NAME} is set with the right value (${_CURR_VALUE})"
         else
             _MSG="${_PARAM_NAME} has a wrong value (${_CONFIG_VALUE} != ${_CURR_VALUE})"
-            _REPORTED_VALUE="${_CURR_VALUE}"
             _STC=1
         fi
+        _REPORTED_VALUE="${_CURR_VALUE}"
     else
         if [[ "${_CONFIG_VALUE}" = "${_EXPR_VALUE}" ]]
         then
             _MSG="${_PARAM_NAME} is set with the right expression (${_EXPR_VALUE})"
         else
             _MSG="${_PARAM_NAME} has a wrong expression (${_CONFIG_VALUE} != ${_EXPR_VALUE})"
-            _REPORTED_VALUE="${_EXPR_VALUE}"
             _STC=1
         fi
+        _REPORTED_VALUE="${_EXPR_VALUE}"
     fi
 
     # handle unit result
