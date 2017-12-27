@@ -60,7 +60,7 @@ function data_chop
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1%?}" 2>/dev/null
+print -R "${1%?}" 2>/dev/null
 
 return 0
 }
@@ -96,7 +96,7 @@ function data_decomma
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr -d ',' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr -d ',' 2>/dev/null
 
 return 0
 }
@@ -112,7 +112,7 @@ function data_decomma_last
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1%*,}" 2>/dev/null
+print -R "${1%*,}" 2>/dev/null
 
 return 0
 }
@@ -128,7 +128,7 @@ function data_decomma_first
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1#,*}" 2>/dev/null
+print -R "${1#,*}" 2>/dev/null
 
 return 0
 }
@@ -144,7 +144,7 @@ function data_dequote
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr -d '\"' 2>/dev/null | tr -d "'" 2>/dev/null
+print -R "${1}" 2>/dev/null | tr -d '\"' 2>/dev/null | tr -d "'" 2>/dev/null
 
 return 0
 }
@@ -160,7 +160,7 @@ function data_comma2space
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr ',' ' ' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr ',' ' ' 2>/dev/null
 
 return 0
 }
@@ -176,7 +176,7 @@ function data_comma2newline
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr ',' '\n' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr ',' '\n' 2>/dev/null
 
 return 0
 }
@@ -192,7 +192,7 @@ function data_newline2comma
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr '\n' ',' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr '\n' ',' 2>/dev/null
 
 return 0
 }
@@ -208,7 +208,7 @@ function data_newline2hash
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr '\r' '#' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr '\r' '#' 2>/dev/null
 
 return 0
 }
@@ -224,7 +224,7 @@ function data_space2comma
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' ',' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' ',' 2>/dev/null
 
 return 0
 }
@@ -240,7 +240,7 @@ function data_space2hash
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' '#' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' '#' 2>/dev/null
 
 return 0
 }
@@ -256,7 +256,7 @@ function data_strip_newline
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null | tr -d '\n' 2>/dev/null | tr -d '\r' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr -d '\n' 2>/dev/null | tr -d '\r' 2>/dev/null
 
 return 0
 }
@@ -272,7 +272,7 @@ function data_lc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null |  tr '[:upper:]' '[:lower:]' 2>/dev/null
+print -R "${1}" 2>/dev/null |  tr '[:upper:]' '[:lower:]' 2>/dev/null
 
 return 0
 }
@@ -288,7 +288,7 @@ function data_uc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print "${1}" 2>/dev/null |  tr '[:lower:]' '[:upper:]' 2>/dev/null
+print -R "${1}" 2>/dev/null |  tr '[:lower:]' '[:upper:]' 2>/dev/null
 
 return 0
 }
