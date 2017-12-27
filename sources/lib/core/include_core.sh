@@ -58,7 +58,9 @@ do
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
     cat ${ARCHIVE_FILE} ${TMP1_FILE} | sort -u >${TMP2_FILE}
     mv ${TMP2_FILE} ${ARCHIVE_FILE} 2>/dev/null || {
-        warn "failed to move archive file, aborting"; return 2 }
+        warn "failed to move archive file, aborting"
+        return 2
+    }
     LOG_COUNT=$(wc -l ${ARCHIVE_FILE} | cut -f1 -d' ')
     log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
@@ -71,7 +73,9 @@ do
     if [[ -s ${TMP2_FILE} ]]
     then
         mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null || {
-        warn "failed to move HC log file, aborting"; return 2 }
+            warn "failed to move HC log file, aborting"
+            return 2
+        }
         LOG_COUNT=$(wc -l ${HC_LOG} | cut -f1 -d' ')
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
         ARCHIVE_RC=1
