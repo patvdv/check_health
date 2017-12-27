@@ -56,7 +56,7 @@ do
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
-    cat ${ARCHIVE_FILE} ${TMP1_FILE} | sort -u >${TMP2_FILE}
+    cat ${ARCHIVE_FILE} ${TMP1_FILE} 2>/dev/null | sort -u >${TMP2_FILE}
     mv ${TMP2_FILE} ${ARCHIVE_FILE} 2>/dev/null || {
         warn "failed to move archive file, aborting"
         return 2
