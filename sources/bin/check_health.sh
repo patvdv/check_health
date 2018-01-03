@@ -1068,7 +1068,7 @@ case ${ARG_ACTION} in
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
             log "disabling HC: ${HC_DISABLE}"
             touch "${STATE_PERM_DIR}/${HC_DISABLE}.disabled" >/dev/null 2>&1
-            DISABLE_RC=$1
+            DISABLE_RC=$?
             if (( DISABLE_RC == 0 ))
             then
                 log "successfully disabled HC: ${HC_DISABLE}"
