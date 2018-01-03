@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2017-12-26"
+typeset -r SCRIPT_VERSION="2018-01-03"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
