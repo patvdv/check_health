@@ -34,7 +34,7 @@ function check_hpux_kernel_params
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCTUNE_BIN="/usr/sbin/kctune"
-typeset _VERSION="2017-12-22"                           # YYYY-MM-DD
+typeset _VERSION="2018-01-05"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
