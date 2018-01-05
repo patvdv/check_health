@@ -1,0 +1,27 @@
+#******************************************************************************
+# @(#) check_hpux_kernel_usage.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_kernel_usage HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify a general maximum usage threshold (percentage)
+# [ default: 90% ]
+max_kcusage=90
+
+# specify individual kernel parameters and their maximum usage threshold (percentage)
+# definitions here will overrides max_kcusage for these parameters
+# [param:<param_name>:<param_threshold>]
+param:nproc:70
+
+# specify parameters that should be excluded from the check 
+# comma-separated list (as shown by kctune/kcusage)
+# (does not override param:: lines from above)
+# [ default: none ]
+exclude_params=""
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
