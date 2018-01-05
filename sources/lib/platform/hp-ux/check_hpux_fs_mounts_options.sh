@@ -132,6 +132,8 @@ NAME    : $1
 VERSION : $2
 CONFIG  : $3 with formatted stanzas:
             fs:<my_fs1>:<my_fs_opts1>
+          Other options:
+            ignore_missing_fs=yes|no
 PURPOSE : Checks whether file systems are mounted with correct options
 
 EOT
