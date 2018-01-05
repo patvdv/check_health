@@ -22,7 +22,8 @@
 # REQUIRES: data_space2comma(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
-# @(#) 2017-12-22: orginal version [Patrick Van der Veken]
+# @(#) 2017-12-22: original version [Patrick Van der Veken]
+# @(#) 2018-01-05: added validation on config values [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -50,6 +51,8 @@ typeset _CURR_VALUE=""
 typeset _EXPR_VALUE=""
 typeset _REPORTED_VALUE=""
 typeset _DUMMY=""
+typeset _FOUND_PARAM=0
+typeset _LINE_COUNT=1
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -71,14 +74,34 @@ fi
 
 # collect data (mount only)
 ${_KCTUNE_BIN} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-if (( $? != 0 )) 
+if (( $? != 0 ))
 then
     _MSG="unable to gather kctune information (not HP-UX 11.31?)"
     log_hc "$0" 1 "${_MSG}"
     return 0
 fi
 
-# check for each configured parameter
+# check configuration values
+grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
+    while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
+do
+    # check for empties
+    if [[ -z "${_PARAM_NAME}" || -z "${_CONFIG_VALUE}" ]]
+    then
+        warn "missing parameter name and/or value in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+        return 1
+    fi
+    # check if the kernel parameter is valid
+    _FOUND_PARAM=$(awk '{ print $1 }' ${HC_STDOUT_LOG} 2>/dev/null | grep -c -E -e "^${_PARAM_NAME}$")
+    if (( _FOUND_PARAM == 0 ))
+    then
+        warn "parameter '${_PARAM_NAME}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT} is not an existing kernel parameter"
+        return 1
+    fi
+    _LINE_COUNT=$(( _LINE_COUNT + 1 ))
+done
+
+# perform checks
 grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
     while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
 do
