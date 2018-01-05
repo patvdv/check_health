@@ -72,13 +72,19 @@ then
     return 1
 fi
 
-# collect data (mount only)
-${_KCTUNE_BIN} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-if (( $? != 0 ))
+# check & get kctune information
+if [[ ! -x ${_KCTUNE_BIN} ]]
 then
-    _MSG="unable to gather kctune information (not HP-UX 11.31?)"
-    log_hc "$0" 1 "${_MSG}"
-    return 0
+    warn "kctune is not installed here (not HP-UX 11.31?)"
+    return 1
+else
+    ${_KCTUNE_BIN} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+    if (( $? != 0 ))
+    then
+        _MSG="unable to gather kctune information"
+        log_hc "$0" 1 "${_MSG}"
+        return 0
+    fi
 fi
 
 # check configuration values
