@@ -119,6 +119,22 @@ do
         warn "parameter '${_PARAM_NAME}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT} is not an existing kernel parameter"
         return 1
     fi
+    # check if the threshold value is correct (integer)
+    case "${_CONFIG_VALUE}" in
+        [0-9]*)
+            # numeric, OK
+            if (( _CONFIG_VALUE < 1 || _CONFIG_VALUE > 99 ))
+            then
+                warn "incorrect threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+                return 1
+            fi
+            ;;
+        *) 
+            # not numeric
+            warn "invalid threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+            return 1 
+            ;;
+    esac
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
 
@@ -175,11 +191,11 @@ do
         else
             _MSG="${_PARAM_NAME} is below the general threshold (${_CHECK_VALUE} <= ${_MAX_KCUSAGE})"
         fi
+    
+        # handle unit result
+        log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_MAX_KCUSAGE}"
+        _STC=0
     fi
-
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_MAX_KCUSAGE}"
-    _STC=0
 done
 
 return 0
