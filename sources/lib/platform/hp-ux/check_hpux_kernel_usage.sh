@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-12-22: original version [Patrick Van der Veken]
+# @(#) 2018-01-08: extra config checks [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_hpux_kernel_usage
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCUSAGE_BIN="/usr/sbin/kcusage"
-typeset _VERSION="2018-01-05"                           # YYYY-MM-DD
+typeset _VERSION="2018-01-08"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
