@@ -151,10 +151,10 @@ do
 
     if (( _CHECK_VALUE > _CONFIG_VALUE ))
     then
-        _MSG="${_PARAM_NAME} has exceeded its individual threshold (${_CHECK_VALUE} > ${_CONFIG_VALUE})"
+        _MSG="${_PARAM_NAME} has exceeded its individual threshold (${_CHECK_VALUE}% > ${_CONFIG_VALUE}%)"
         _STC=1
     else
-        _MSG="${_PARAM_NAME} is below its individual threshold (${_CHECK_VALUE} <= ${_CONFIG_VALUE})"
+        _MSG="${_PARAM_NAME} is below its individual threshold (${_CHECK_VALUE}% <= ${_CONFIG_VALUE}%)"
     fi
     # push to handled list
     _HANDLED_PARAMS="${_HANDLED_PARAMS}\n${_PARAM_NAME}"
@@ -187,10 +187,10 @@ do
 
         if (( _CHECK_VALUE > _MAX_KCUSAGE ))
         then
-            _MSG="${_PARAM_NAME} has exceeded the general threshold (${_CURR_VALUE} > ${_MAX_KCUSAGE})"
+            _MSG="${_PARAM_NAME} has exceeded the general threshold (${_CHECK_VALUE}% > ${_MAX_KCUSAGE}%)"
             _STC=1
         else
-            _MSG="${_PARAM_NAME} is below the general threshold (${_CHECK_VALUE} <= ${_MAX_KCUSAGE})"
+            _MSG="${_PARAM_NAME} is below the general threshold (${_CHECK_VALUE}% <= ${_MAX_KCUSAGE}%)"
         fi
     
         # handle unit result
