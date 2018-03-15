@@ -10,8 +10,8 @@
 # [default: init]
 display_style=init
 
-# specify the list of HC plugins that need to be executed
-# [hc:HC plugin name]
+# specify the list of HC plugins that need to be executed (plugin configuration file is optional)
+# [hc:HC plugin name:HC plugin configuration file]
 hc:plugin1
 hc:plugin2
 
