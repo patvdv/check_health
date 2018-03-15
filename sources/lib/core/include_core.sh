@@ -577,7 +577,7 @@ return 0
 # @(#) FUNCTION: handle_hc()
 # DOES: handle HC results
 # EXPECTS: 1=HC name [string], $HC_MSG_FILE temporary file
-# RETURNS: 0
+# RETURNS: 0 or $HC_STC_RC
 # REQUIRES: die(), display_*(), notify_*(), warn()
 function handle_hc
 {
@@ -588,6 +588,7 @@ typeset I=0
 typeset MAX_I=0
 typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
+typeset HC_STC_RC=0
 set -A HC_MSG_STC
 set -A HC_MSG_TIME
 set -A HC_MSG_TEXT
@@ -774,6 +775,7 @@ then
         if (( HC_MSG_STC[${I}] != 0 ))
         then
             printf "%s${SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
+            HC_STC_RC=$(( HC_STC_RC + 1 ))
         else
             printf "\n" >>${HC_LOG}
         fi
@@ -843,7 +845,13 @@ then
     fi
 fi
 
-return 0
+# --flip-rc: pass RC of HC plugin back
+if (( ARG_FLIP_RC == 0 ))
+then
+    return 0
+else
+    return ${HC_STC_RC}
+fi
 }
 
 # -----------------------------------------------------------------------------

@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-01-03"
+typeset -r SCRIPT_VERSION="2018-03-15"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -99,6 +99,7 @@ typeset ARG_DEBUG_LEVEL=0       # debug() only by default
 typeset ARG_DETAIL=0            # for --report
 typeset ARG_DISPLAY=""          # display is STDOUT by default
 typeset ARG_FAIL_ID=""
+typeset ARG_FLIP_RC=0           # swapping EXIT RC is off by default
 typeset ARG_HC=""
 typeset ARG_HC_ARGS=""          # no extra arguments to HC plug-in by default
 typeset ARG_HISTORY=0           # include historical events is off by default
@@ -320,6 +321,16 @@ then
         exit 1
     fi
 fi
+# --flip-rc
+if (( ARG_FLIP_RC != 0 ))
+then
+    # do not allow flip RC for multiple checks
+    if [[ "${ARG_HC}" = *,* ]]      # use =, ksh88
+    then
+        print -u2 "ERROR: flipping RC (return code) is not allowed when executing multiple HC's"
+        exit 1
+    fi
+fi
 # --check-host,--check/--disable/--enable/--run/--show/--archive,--hc
 if [[ -n "${ARG_HC}" ]] && (( ARG_ACTION == 0 ))
 then
@@ -461,7 +472,7 @@ Execute/report simple health checks (HC) on UNIX hosts.
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--fix-symlinks] | (--disable-all | enable-all) |
         (--check-host | ((--archive | --check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
-            [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock]
+            [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
 
@@ -475,7 +486,7 @@ Parameters:
 --archive       : move events from the HC log file into archive log files
 --check         : display HC state.
 --check-host    : execute all configured HC(s) (see check_host.conf)
---config-file   : custom configuration file for a HC, may only be specified when executing a single HC plugin.
+--config-file   : custom configuration file for a HC (may only be specified when executing a single HC plugin)
 --debug         : run script in debug mode
 --debug-level   : level of debugging information to show (0,1,2)
 --detail        : show detailed info on failed HC event (will show STDOUT+STDERR logs)
@@ -485,6 +496,8 @@ Parameters:
 --enable        : enable HC(s).
 --enable-all    : enable all HCs.
 --fix-symlinks  : update symbolic links for the KSH autoloader.
+--flip-rc       : exit the health checker with the RC (return code) of the HC plugin instead of its own RC (will be discarded)
+                  This option may only be specified when executing a single HC plugin
 --hc            : list of health checks to be executed (comma-separated) (see also --list-hc)
 --hc-args       : extra arguments to be passed to an individual HC. Arguments must be comma-separated and enclosed
                   in double quotes (example: --hc_args="arg1,arg2=value,arg3").
@@ -692,6 +705,9 @@ do
             check_user
             fix_symlinks
             exit 0
+            ;;
+        -flip-rc|--flip-rc)
+            ARG_FLIP_RC=1
             ;;
         -hc=*)
             ARG_HC="${CMD_PARAMETER#-hc=}"
@@ -1049,6 +1065,8 @@ case ${ARG_ACTION} in
 
             # reset FAIL_ID & HC failure storage (also for failed HCs)
             handle_hc "${HC_RUN}"
+            # exit with return code from handle_hc() (see --flip-rc)
+            EXIT_CODE=$?
             rm -f ${HC_MSG_FILE} >/dev/null 2>&1
         done
         ;;
