@@ -330,6 +330,11 @@ then
         print -u2 "ERROR: flipping RC (return code) is not allowed when executing multiple HC's"
         exit 1
     fi
+    if (( ARG_ACTION != 4 ))
+    then
+        print -u2 "ERROR: you can only use '--flip-rc' in combination with '--run'"
+        exit 1
+    fi
 fi
 # --check-host,--check/--disable/--enable/--run/--show/--archive,--hc
 if [[ -n "${ARG_HC}" ]] && (( ARG_ACTION == 0 ))
