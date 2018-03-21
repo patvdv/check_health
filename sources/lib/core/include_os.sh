@@ -91,7 +91,7 @@ check_platform 'Linux' || {
 
 # default is sysv
 LINUX_INIT="sysv"
-if [[ -r /usr/lib/systemd  ]]
+if [[ -r /usr/lib/systemd && -x /usr/bin/systemctl ]]
 then
     LINUX_INIT="systemd"
 elif [[ -r /usr/share/upstart ]]
