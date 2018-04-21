@@ -1,0 +1,16 @@
+#******************************************************************************
+# @(#) check_linux_ntp_status.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_linux_ntp_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# maximum allowed offset (in milliseconds)
+# [default: 500]
+max_offset=500
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
