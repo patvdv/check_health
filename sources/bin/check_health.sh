@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-03-15"
+typeset -r SCRIPT_VERSION="2018-04-28"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -80,6 +80,7 @@ typeset HC_FAIL_ID=""
 typeset HC_FILE_LINE=""
 typeset HC_NOW=""
 typeset HC_TIME_OUT=60
+typeset HC_MIN_TIME_OUT=30
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 typeset LINUX_DISTRO=""
@@ -111,6 +112,7 @@ typeset ARG_MONITOR=1           # killing long running HC processes is on by def
 typeset ARG_NOTIFY=""           # notification of problems is off by default
 typeset ARG_REVERSE=0           # show report in reverse date order is off by default
 typeset ARG_REPORT=""           # report of HC events is off by default
+typeset ARG_TIME_OUT=0          # custom timeout is off by default
 typeset ARG_TERSE=0             # show terse help is off by default
 typeset ARG_TODAY=0             # report today's events
 typeset ARG_VERBOSE=1           # STDOUT is on by default
@@ -353,7 +355,7 @@ then
     then
         case "${ARG_HC}" in
             *,*)
-                print -u2 "ERROR: you can only specify one value for '--hc' in combination with '--show'"
+                print -u2 "ERROR: you can only specify a value for '--hc' in combination with '--show'"
                 exit 1
                 ;;
         esac
@@ -362,7 +364,7 @@ then
     then
         case "${ARG_HC}" in
             *,*)
-                print -u2 "ERROR: you can only specify one value for '--hc' in combination with '--archive'"
+                print -u2 "ERROR: you can only specify a value for '--hc' in combination with '--archive'"
                 exit 1
                 ;;
         esac
@@ -371,11 +373,33 @@ else
     # host checking has no other messages to display
     ARG_VERBOSE=0
 fi
-# --list
-if (( ARG_ACTION == 9 ))
+# --list/--show-stats
+if (( ARG_ACTION == 9 || ARG_ACTION == 11 ))
 then
     ARG_VERBOSE=0
     ARG_LOG=0
+fi
+# --timeout
+if (( ARG_TIME_OUT > 0 ))
+then
+    if (( ARG_ACTION == 4 ))
+    then
+        # keep timeout to a sensible value
+        if (( ARG_TIME_OUT < HC_MIN_TIME_OUT ))
+        then
+            print -u2 "ERROR: you cannot specify a value for '--timeout' smaller than ${HC_MIN_TIME_OUT} (see \$HC_MIN_TIME_OUT})"
+            exit 1  
+        fi
+        if (( ARG_TIME_OUT < HC_TIME_OUT ))
+        then
+            print -u2 "ERROR: you cannot specify a value for '--timeout' smaller than ${HC_TIME_OUT} (see ${CONFIG_FILE})" 
+            exit 1      
+        fi
+        HC_TIME_OUT=${ARG_TIME_OUT}
+    else
+        print -u2 "ERROR: you can only specify a value for '--timeout' in combination with '--run'"
+        exit 1      
+    fi
 fi
 
 # check log location
@@ -475,8 +499,8 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-core] | [--fix-symlinks] | (--disable-all | enable-all) |
-        (--check-host | ((--archive | --check | --enable | --disable | --run | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
+    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--disable-all | enable-all) |
+        (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks>         [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
@@ -524,8 +548,10 @@ Parameters:
 --reverse       : show the report in reverse date order (newest events first)
 --run           : execute HC(s).
 --show          : show information/documentation on a HC
+--show-stats    : show statistics on HC events (current & archived)
 --sms-provider  : name of a supported SMS provider (see \$SMS_PROVIDERS) [requires SMS core plugin]
 --sms-to        : name of person or group to which a sms alert will be send to [requires SMS core plugin]
+--timeout       : maximum runtime of a HC plugin in seconds (overrides \$HC_TIME_OUT)
 --today         : show today's events (HC and their combined STC value)
 --version       : show the timestamp of the script.
 --with-history  : also include events that have been archived already (reporting)
@@ -811,6 +837,9 @@ do
             ARG_LOG=0
             ARG_VERBOSE=0
             ;;
+        -show-stats|--show-stats)
+            ARG_ACTION=11
+            ;;
         -sms-provider=*)
             ARG_SMS_PROVIDER="${CMD_PARAMETER#-sms-provider=}"
             ;;
@@ -822,6 +851,12 @@ do
             ;;
         --sms-to=*)
             ARG_SMS_TO="${CMD_PARAMETER#--sms-to=}"
+            ;;
+        -timeout=*)
+            ARG_TIME_OUT="${CMD_PARAMETER#-timeout=}"
+            ;;
+        --timeout=*)
+            ARG_TIME_OUT="${CMD_PARAMETER#--timeout=}"
             ;;
         -today|--today)
             ARG_TODAY=1
@@ -1000,7 +1035,7 @@ case ${ARG_ACTION} in
                 RUN_CONFIG_FILE=$(grep -i -E -e "^hc:${HC_RUN}:" ${HOST_CONFIG_FILE} 2>/dev/null | cut -f3 -d':')
                 [[ -n "${RUN_CONFIG_FILE}" ]] && ARG_CONFIG_FILE="${CONFIG_DIR}/${RUN_CONFIG_FILE}"
             fi
-
+            
             # run HC with or without monitor
             if (( ARG_MONITOR == 0 ))
             then
@@ -1144,6 +1179,11 @@ case ${ARG_ACTION} in
                 ;;
         esac
         ;;
+    11) # show HC event statistics
+        show_statistics
+        ;;
+        
+        
 esac
 
 # finish up work

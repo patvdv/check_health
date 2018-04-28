@@ -1326,6 +1326,98 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: show_statistics)
+# DOES: show statistics about HC events
+# EXPECTS: n/a
+# RETURNS: n/a
+# REQUIRES: n/a
+function show_statistics
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _ARCHIVE_FILE=""
+
+# current events
+print
+print -R "--- CURRENT events --"
+print
+print "${HC_LOG}:"
+awk -F"${SEP}" '{
+                    # all entries
+                    total_count[$2]++
+                    # set zero when empty
+                    if (ok_count[$2] == "") { ok_count[$2]=0 }
+                    if (nok_count[$2] == "") { nok_count[$2]=0 }
+                    # count STCs
+                    if ($3 == 0) {
+                        ok_count[$2]++
+                    } else {
+                        nok_count[$2]++
+                    }
+                    # record first entry
+                    if (first_entry[$2] == "" ) {
+                        first_entry[$2]=$1
+                    }
+                    # pile up last entry
+                    last_entry[$2]=$1
+                    last_failid[$2]=$5
+                }
+
+                 END {
+                    for (hc in total_count) {
+                        printf ("\t%s:\n", hc)
+                        printf ("\t\t# entries: %s\n", total_count[hc])
+                        printf ("\t\t# STC==0 : %s\n", ok_count[hc])
+                        printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                        printf ("\t\tfirst    : %s\n", first_entry[hc])
+                        printf ("\t\tlast     : %s\n", last_entry[hc])
+                    }
+                }
+                ' <${HC_LOG} 2>/dev/null
+
+# archived events
+print; print
+print -R "--- ARCHIVED events --"
+print
+find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | while read _ARCHIVE_FILE
+do
+    print "${_ARCHIVE_FILE}:"
+    awk -F"${SEP}" '{
+                        # all entries
+                        total_count[$2]++
+                        # set zero when empty
+                        if (ok_count[$2] == "") { ok_count[$2]=0 }
+                        if (nok_count[$2] == "") { nok_count[$2]=0 }
+                        # count STCs
+                        if ($3 == 0) {
+                            ok_count[$2]++;
+                        } else {
+                            nok_count[$2]++
+                        }
+                        # record first entry
+                        if (first_entry[$2] == "" ) {
+                            first_entry[$2]=$1
+                        }
+                        # pile up last entry
+                        last_entry[$2]=$1
+                    }
+
+                    END {
+                        for (hc in total_count) {
+                            printf ("\t%s:\n", hc)
+                            printf ("\t\t# entries: %s\n", total_count[hc])
+                            printf ("\t\t# STC==0 : %s\n", ok_count[hc])
+                            printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                            printf ("\t\tfirst    : %s\n", first_entry[hc])
+                            printf ("\t\tlast     : %s\n", last_entry[hc])
+                        }
+                    }
+                    ' <${_ARCHIVE_FILE} 2>/dev/null
+done
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: stat_hc()
 # DOES: retrieve status of a HC
 # EXPECTS: HC name [string]
