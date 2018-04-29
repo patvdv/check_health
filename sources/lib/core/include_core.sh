@@ -1372,7 +1372,7 @@ awk -F"${SEP}" '{
                         printf ("\t\tlast     : %s\n", last_entry[hc])
                     }
                 }
-                ' <${HC_LOG} 2>/dev/null
+                ' ${HC_LOG} 2>/dev/null
 
 # archived events
 print; print
@@ -1411,7 +1411,7 @@ do
                             printf ("\t\tlast     : %s\n", last_entry[hc])
                         }
                     }
-                    ' <${_ARCHIVE_FILE} 2>/dev/null
+                    ' ${_ARCHIVE_FILE} 2>/dev/null
 done
 
 return 0

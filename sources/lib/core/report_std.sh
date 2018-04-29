@@ -39,18 +39,11 @@ typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 
 typeset _DIR_PREFIX=""
-typeset _EVENT_COUNT=0
 typeset _FAIL_COUNT=0
-typeset _FAIL_F1=""
-typeset _FAIL_F2=""
-typeset _FAIL_F3=""
-typeset _FAIL_F4=""
 typeset _HC_LAST=""
 typeset _HC_LAST_TIME=""
 typeset _HC_LAST_STC=0
 typeset _HC_LAST_FAIL_ID="-"
-typeset _HC_LAST_EVENT_FAIL_ID=0
-typeset _HC_LAST_EVENT_STC=""
 typeset _ID_NEEDLE=""
 typeset _LOG_STASH=""
 typeset _REPORT_LINE=""
@@ -84,15 +77,25 @@ then
             _HC_LAST_TIME="-"
             _HC_LAST_STC="-"
         else
-            # find all STC codes for the last event and add them up
-            grep -h "${_HC_LAST_TIME}${SEP}${HC_LAST}" ${_LOG_STASH} 2>/dev/null |\
-            while read -r _REPORT_LINE
-            do
-                _HC_LAST_EVENT_STC=$(print "${_REPORT_LINE}" | cut -f3 -d"${SEP}")
-                _HC_LAST_EVENT_FAIL_ID=$(print "${_REPORT_LINE}" | cut -f5 -d"${SEP}")
-                _HC_LAST_STC=$(( _HC_LAST_STC + _HC_LAST_EVENT_STC ))
-                [[ -n "${_HC_LAST_EVENT_FAIL_ID}" ]] && _HC_LAST_FAIL_ID="${_HC_LAST_EVENT_FAIL_ID}"
-            done
+            awk -F "${SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
+                ' 
+                BEGIN {
+                    last_stc     = 0
+                    last_fail_id = "-"
+                }
+                {
+                    if ($1 ~ needle_time && $2 ~ needle_hc) {
+                        last_event_stc = $3
+                        last_stc = last_stc + last_event_stc
+                        last_event_fail_id = $5
+                        if (last_event_fail_id != "") { last_fail_id = last_event_fail_id }
+                    }
+                }
+                END {
+                    print last_fail_id, last_stc
+                
+                }
+                ' ${_LOG_STASH} 2>/dev/null | read _HC_LAST_FAIL_ID _HC_LAST_STC
         fi
         # report on findings
         printf "| %-30s | %-20s | %-14s | %-4s\n" \
@@ -132,38 +135,32 @@ else
             printf "%120s\n" | tr ' ' -
 
             # print failed events
-            # no extended grep here and no end $SEP!
-            grep -h ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}" ${_LOG_STASH} 2>/dev/null |\
-                ${_SORT_CMD} | while read -r _REPORT_LINE
-            do
-                _FAIL_F1=$(print "${_REPORT_LINE}" | cut -f1 -d"${SEP}")
-                _FAIL_F2=$(print "${_REPORT_LINE}" | cut -f2 -d"${SEP}")
-                _FAIL_F3=$(print "${_REPORT_LINE}" | cut -f4 -d"${SEP}")
-                _FAIL_F4=$(print "${_REPORT_LINE}" | cut -f5 -d"${SEP}")
-
-                printf "| %-20s | %-14s | %-30s | %-s\n" \
-                    "${_FAIL_F1}" "${_FAIL_F4}" "${_FAIL_F2}" "${_FAIL_F3}"
-            done
-
+            ${_SORT_CMD} ${_LOG_STASH} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+                '
+                {
+                    if ($5 ~ id_needle) {
+                        printf ("| %-20s | %-14s | %-30s | %-s\n", $1, $5, $2, $4)
+                    }
+                }
+                ' 2>/dev/null
             printf "\n%-s\n" "SUMMARY: ${_FAIL_COUNT} failed HC event(s) found."
         else
             # print failed events (we may have multiple events for 1 FAIL ID)
-            _EVENT_COUNT=1
+            ${_SORT_CMD} ${_LOG_STASH} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+                ' BEGIN {
+                    event_count = 1
+                    dashes = sprintf("%36s",""); gsub (/ /, "-", dashes);
+                }
+                {
+                    if ($5 ~ id_needle) {
+                        printf ("%36sMSG #%03d%36s", dashes, event_count, dashes)
+                        printf ("\nTime    : %-s\nHC      : %-s\nDetail  : %-s\n", $1, $2, $4)
+                        event_count++
+                    }
+                }
+                ' 2>/dev/null
+                
             _DIR_PREFIX="$(expr substr ${ARG_FAIL_ID} 1 4)-$(expr substr ${ARG_FAIL_ID} 5 2)"
-            # no extended grep here!
-            grep -h ".*${SEP}.*${SEP}.*${SEP}.*${SEP}${_ID_NEEDLE}${SEP}" ${_LOG_STASH} 2>/dev/null |\
-                ${_SORT_CMD} | while read -r _REPORT_LINE
-            do
-                _FAIL_F1=$(print "${_REPORT_LINE}" | cut -f1 -d"${SEP}")
-                _FAIL_F2=$(print "${_REPORT_LINE}" | cut -f2 -d"${SEP}")
-                _FAIL_F3=$(print "${_REPORT_LINE}" | cut -f4 -d"${SEP}")
-
-                printf "%36sMSG #%03d%36s" "" ${_EVENT_COUNT} "" | tr ' ' -
-                printf "\nTime    : %-s\nHC      : %-s\nDetail  : %-s\n" \
-                    "${_FAIL_F1}" "${_FAIL_F2}" "${_FAIL_F3}"
-                _EVENT_COUNT=$(( _EVENT_COUNT + 1 ))
-            done
-
             printf "%37sSTDOUT%37s\n" | tr ' ' -;
             # display non-empty STDOUT file(s)
             if [[ -n "$(du -a ${EVENTS_DIR}/${_DIR_PREFIX}/${ARG_FAIL_ID}/*.stdout.log 2>/dev/null | awk '$1*512 > 0 {print $2}')"  ]]
