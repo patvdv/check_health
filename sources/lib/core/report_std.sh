@@ -105,7 +105,7 @@ then
     # disclaimer
     print "Note: this report only shows the overall combined status of all events of each HC within exactly"
     print "      the *same* time stamp (seconds precise). It may therefore fail to report certain FAIL IDs."
-    print "      Use $0 --report to get the exact list of failure events."
+    print "      Use '--report' to get the exact list of failure events."
 # other reports
 else
     _ID_NEEDLE="[0-9][0-9]*"
@@ -136,7 +136,9 @@ else
             printf "%120s\n" | tr ' ' -
 
             # print failed events
-            ${_SORT_CMD} ${_LOG_STASH} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+			# not a useless use of cat here 
+			# (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
+            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
                 '
                 {
                     if ($5 ~ id_needle) {
@@ -147,7 +149,9 @@ else
             printf "\n%-s\n" "SUMMARY: ${_FAIL_COUNT} failed HC event(s) found."
         else
             # print failed events (we may have multiple events for 1 FAIL ID)
-            ${_SORT_CMD} ${_LOG_STASH} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+			# not a useless use of cat here 
+			# (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
+            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
                 ' BEGIN {
                     event_count = 1
                     dashes = sprintf("%36s",""); gsub (/ /, "-", dashes);
