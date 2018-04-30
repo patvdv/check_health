@@ -136,8 +136,8 @@ else
             printf "%120s\n" | tr ' ' -
 
             # print failed events
-			# not a useless use of cat here 
-			# (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
+            # not a useless use of cat here 
+            # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
             cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
                 '
                 {
@@ -149,8 +149,8 @@ else
             printf "\n%-s\n" "SUMMARY: ${_FAIL_COUNT} failed HC event(s) found."
         else
             # print failed events (we may have multiple events for 1 FAIL ID)
-			# not a useless use of cat here 
-			# (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
+            # not a useless use of cat here 
+            # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
             cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
                 ' BEGIN {
                     event_count = 1
