@@ -77,7 +77,9 @@ then
             _HC_LAST_TIME="-"
             _HC_LAST_STC="-"
         else
-            awk -F "${SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
+            # use of cat is not useless here, makes sure END {} gets executed even
+            # if $_LOG STASH contains non-existing files (because of * wildcard)
+            cat ${_LOG_STASH} 2>/dev/null | awk -F "${SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
                 ' 
                 BEGIN {
                     last_stc     = 0
@@ -93,9 +95,8 @@ then
                 }
                 END {
                     print last_fail_id, last_stc
-                
                 }
-                ' ${_LOG_STASH} 2>/dev/null | read _HC_LAST_FAIL_ID _HC_LAST_STC
+                ' 2>/dev/null | read _HC_LAST_FAIL_ID _HC_LAST_STC
         fi
         # report on findings
         printf "| %-30s | %-20s | %-14s | %-4s\n" \
