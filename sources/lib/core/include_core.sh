@@ -883,12 +883,12 @@ typeset DUMMY=""
 typeset HC_CONFIG=""
 typeset HC_DESC=""
 typeset HC_EXEC=""
-typeset REPORT_STYLE=""
+typeset DISPLAY_STYLE=""
 
 [[ -r ${HOST_CONFIG_FILE} ]] || die "unable to read configuration file at ${HOST_CONFIG_FILE}"
 
 # read required config values
-REPORT_STYLE="$(grep -i '^report_style=' ${HOST_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+DISPLAY_STYLE=$(_CONFIG_FILE="${HOST_CONFIG_FILE}" data_get_lvalue_from_config 'display_style')
 case "${REPORT_STYLE}" in
     csv|CSV) # csv format
         if (( HAS_DISPLAY_CSV == 1 ))

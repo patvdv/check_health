@@ -10,10 +10,12 @@
 # [default: init]
 display_style=init
 
-# specify the list of HC plugins that need to be executed (plugin configuration file is optional)
-# [hc:HC plugin name:HC plugin configuration file]
+# specify the list of HC plugins that need to be executed. All parameters are
+# optional except 'HC plugin name'
+# [hc:HC plugin name:HC plugin configuration file:HC title:HC plugin run timeout]
 hc:plugin1
-hc:plugin2
+hc:plugin2::Test plugin
+hc:plugin3:::180
 
 
 #******************************************************************************

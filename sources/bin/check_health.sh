@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-04-28"
+typeset -r SCRIPT_VERSION="2018-05-12"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -89,6 +89,8 @@ typeset ARCHIVE_RC=0
 typeset DISABLE_RC=0
 typeset ENABLE_RC=0
 typeset RUN_RC=0
+typeset RUN_CONFIG_FILE=""
+typeset RUN_TIME_OUT=0
 typeset SORT_CMD=""
 typeset DEBUG_OPTS=""
 # command-line parameters
@@ -1028,12 +1030,20 @@ case ${ARG_ACTION} in
             >${HC_STDOUT_LOG} 2>/dev/null
             >${HC_STDERR_LOG} 2>/dev/null
 
-            # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE
+            # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE & HC_TIME_OUT
             if (( ARG_CHECK_HOST == 1 ))
             then
                 ARG_CONFIG_FILE=""      # reset from previous call
                 RUN_CONFIG_FILE=$(grep -i -E -e "^hc:${HC_RUN}:" ${HOST_CONFIG_FILE} 2>/dev/null | cut -f3 -d':')
                 [[ -n "${RUN_CONFIG_FILE}" ]] && ARG_CONFIG_FILE="${CONFIG_DIR}/${RUN_CONFIG_FILE}"
+                RUN_TIME_OUT=$(grep -i -E -e "^hc:${HC_RUN}:" ${HOST_CONFIG_FILE} 2>/dev/null | cut -f5 -d':')
+                if [[ -n "${RUN_TIME_OUT}" ]]
+                then
+                    (( RUN_TIME_OUT > HC_TIME_OUT )) &&  HC_TIME_OUT=${RUN_TIME_OUT}
+                else
+                    # reset for next HC
+                    HC_TIME_OUT=60
+                fi
             fi
             
             # run HC with or without monitor
@@ -1181,9 +1191,7 @@ case ${ARG_ACTION} in
         ;;
     11) # show HC event statistics
         show_statistics
-        ;;
-        
-        
+        ;;    
 esac
 
 # finish up work
