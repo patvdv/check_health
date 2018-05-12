@@ -19,13 +19,15 @@
 # @(#) MAIN: check_hpux_ioscan
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), data_comma2pipe(), data_dequote(), 
+#           init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-08-28: initial version [Patrick Van der Veken]
 # @(#) 2013-08-29: more verbosity & kernel_mode setting [Patrick Van der Veken]
 # @(#) 2016-06-08: introduced _AGILE_VIEW parameter [Patrick Van der Veken]
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
+# @(#) 2018-05-11: small optimizations [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +39,7 @@ function check_hpux_ioscan
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-Fn"
-typeset _VERSION="2016-12-01"							# YYYY-MM-DD
+typeset _VERSION="2018-05-11"							# YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                  	# uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -80,10 +82,10 @@ _CLASS_LINE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'ioscan
 if [[ -z "${_CLASS_LINE}" ]]
 then
     # default
-    _IOSCAN_CLASSES="ctl|diag|disk|ext_bus|fc|fcp|i2o|ipmi|lan|lvm|olar|${DEBUG_OPTS}vm"
+    _IOSCAN_CLASSES="ctl|diag|disk|ext_bus|fc|fcp|i2o|ipmi|lan|lvm|olar|vm"
 else
-    # convert comma's
-    _IOSCAN_CLASSES="$(print ${_CLASS_LINE} | tr -s ',' '|' | tr -d '\"')"
+    # convert commas and strip quotes
+    _IOSCAN_CLASSES=$(data_comma2pipe $(data_dequote "${_CLASS_LINE}"))
 fi
 _KERNEL_MODE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'kernel_mode')
 if [[ -z "${_KERNEL_MODE}" ]]
@@ -125,7 +127,7 @@ else
     ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
     if (( $? != 0 )) 
     then
-        _MSG="unable to gather ioscan information"
+        _MSG="unable to run command: {${_IOSCAN_BIN}}"
         log_hc "$0" 1 "${_MSG}"
         return 0
     fi
@@ -156,7 +158,6 @@ do
             continue
     esac
     
-    # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0
 done

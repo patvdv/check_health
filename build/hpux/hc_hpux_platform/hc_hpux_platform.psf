@@ -60,6 +60,7 @@ This is the OS/platform plugin package"
 
         directory       ../../sources/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
         file            -m 755 check_hpux_autopath.sh
+        file            -m 755 check_hpux_drd_status.sh		
         file            -m 755 check_hpux_file_age.sh
         file            -m 755 check_hpux_file_change.sh
         file            -m 755 check_hpux_fs_mounts.sh
@@ -73,6 +74,7 @@ This is the OS/platform plugin package"
         file            -m 755 check_hpux_kernel_usage.sh	
         file            -m 755 check_hpux_named_status.sh
         file            -m 755 check_hpux_ntp_status.sh
+        file            -m 755 check_hpux_patch_version.sh
         file            -m 755 check_hpux_ovpa_status.sh
         file            -m 755 check_hpux_postfix_status.sh
         file            -m 755 check_hpux_root_crontab.sh
@@ -99,6 +101,7 @@ This is the OS/platform plugin package"
         file_permissions -u 0222 -o root -g sys
 
         directory       ../../configs/etc/=/etc/opt/hc
+        file            -m 644 check_hpux_drd_status.conf.dist
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist
         file            -m 644 check_hpux_fs_mounts_options.conf.dist
@@ -108,6 +111,7 @@ This is the OS/platform plugin package"
         file            -m 644 check_hpux_kernel_params.conf.dist
         file            -m 644 check_hpux_kernel_usage.conf.dist
         file            -m 644 check_hpux_ntp_status.conf.dist
+        file            -m 755 check_hpux_patch_version.conf.dist
         file            -m 644 check_hpux_root_crontab.conf.dist
         file            -m 644 check_hpux_sg_package_status.conf.dist
         file            -m 644 check_hpux_sg_package_config.conf.dist

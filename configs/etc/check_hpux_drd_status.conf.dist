@@ -1,0 +1,28 @@
+#******************************************************************************
+# @(#) check_hpux_drd_status.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_drd_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# check clone age? (yes|no)
+# [default: yes]
+check_clone=yes
+
+# maximum days before the drd clone gets flagged as 'too old'
+# [default: 30]
+clone_age=30
+
+# check sync age? (yes|no)
+# [default: yes]
+check_sync=yes
+
+# maximum days before the drd sync gets flagged as 'too old'
+# [default: 30]
+sync_age=30
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -166,6 +166,22 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_comma2pipe()
+# DOES: replace commas with a pipe
+# EXPECTS: [string] with commas
+# OUTPUTS: [string] with pipes
+# RETURNS: 0
+# REQUIRES: n/a
+function data_comma2pipe
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" 2>/dev/null | tr ',' '|' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_comma2newline()
 # DOES: replace commas with a space
 # EXPECTS: [string] with commas
@@ -230,6 +246,22 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_pipe2comma()
+# DOES: replace pipes with a comma
+# EXPECTS: [string] with pipes
+# OUTPUTS: [string] with commas
+# RETURNS: 0
+# REQUIRES: n/a
+function data_pipe2comma
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" 2>/dev/null | tr -s '|' 2>/dev/null | tr ' '|',' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_space2hash()
 # DOES: replace spaces with a hash
 # EXPECTS: [string] with spaces
@@ -262,6 +294,70 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_strip_space()
+# DOES: remove spaces
+# EXPECTS: [string] with spaces (all whitespace)
+# OUTPUTS: [string] without spaces (all whitespace)
+# RETURNS: 0
+# REQUIRES: n/a
+function data_strip_space
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" 2>/dev/null | tr -d '[:space:]' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_strip_leading_space()
+# DOES: remove leading spaces
+# EXPECTS: [string] with leading spaces (all whitespace)
+# OUTPUTS: [string] without leading spaces (all whitespace)
+# RETURNS: 0
+# REQUIRES: n/a
+function data_strip_leading_space
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" | sed 's/^[[:blank:]]*//' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_strip_trailing_space()
+# DOES: remove trailing spaces
+# EXPECTS: [string] with trailing spaces (all whitespace)
+# OUTPUTS: [string] without trailing spaces (all whitespace)
+# RETURNS: 0
+# REQUIRES: n/a
+function data_strip_trailing_space
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" | sed 's/[[:blank:]]*$//' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_strip_outer_space()
+# DOES: remove leading + trailing spaces
+# EXPECTS: [string] with leading + trailing spaces (all whitespace)
+# OUTPUTS: [string] without leading + trailing spaces (all whitespace)
+# RETURNS: 0
+# REQUIRES: n/a
+function data_strip_outer_space
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_lc()
 # DOES: switch to lower case
 # EXPECTS: [string]
@@ -272,7 +368,7 @@ function data_lc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print -R "${1}" 2>/dev/null |  tr '[:upper:]' '[:lower:]' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr '[:upper:]' '[:lower:]' 2>/dev/null
 
 return 0
 }
@@ -288,7 +384,7 @@ function data_uc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-print -R "${1}" 2>/dev/null |  tr '[:lower:]' '[:upper:]' 2>/dev/null
+print -R "${1}" 2>/dev/null | tr '[:lower:]' '[:upper:]' 2>/dev/null
 
 return 0
 }
@@ -498,6 +594,53 @@ _RC=$(print "${_IP}" | grep -c -E -e '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{
 
 return ${_RC}
 }
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_date2epoch()
+# DOES: converts a given date into UNIX epoch seconds
+# EXPECTS: date formatted as individual parameters: 
+#          $1 : YYYY
+#          $2 : MM
+#          $3 : DD
+#          $4 : HH 
+#          $5 : MM
+#          $6 : SS
+# OUTPUTS: UNIX epoch seconds [number]
+# RETURNS: 0
+# REQUIRES: n/a
+# REFERENCE: https://groups.google.com/forum/#!topic/comp.unix.shell/aPoPzFWP2Og
+function data_date2epoch
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _YEAR="$1"
+typeset _MONTH="$2"
+typeset _DAY="$3"
+typeset _HOUR="$4"
+typeset _MINUTE="$5"
+typeset _SECOND="$6"
+typeset _DAYS_ACC 
+typeset _YEAR_DAY 
+typeset _EPOCH 
+typeset _LEAP_YEARS
+set -A _DAYS_ACC 0 0 31 59 90 120 151 181 212 243 273 304 334 365
+
+# calculate day of year (counting from 0)
+_YEAR_DAY=$(( (${_DAY} - 1) + ${_DAYS_ACC[${_MONTH}]} ))
+
+# calculate number of leap years
+_LEAP_YEARS=$(( (${_YEAR} - 1968) / 4 ))
+_LEAP_YEARS=$(( ${_LEAP_YEARS} - ${_YEAR} / 100 + ${_YEAR} / 400 + 15 ))
+
+# adjust if we are still in Jan/Feb of leap year
+[[ $((${_YEAR} % 4)) = 0 && ${_MONTH} < 3 ]] && _LEAP_YEARS=$(( ${_LEAP_YEARS} - 1 ))
+
+# calculate the time since epoch
+_EPOCH=$(( ((${_YEAR} - 1970) * 365 + ${_YEAR_DAY} + ${_LEAP_YEARS}) * 86400
+           + ${_HOUR} * 3600 + ${_MINUTE} * 60 + ${_SECOND} ))
+
+print ${_EPOCH}
+}
+
 
 #******************************************************************************
 # END of script

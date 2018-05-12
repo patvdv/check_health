@@ -341,7 +341,7 @@ fi
 # --check-host,--check/--disable/--enable/--run/--show/--archive,--hc
 if [[ -n "${ARG_HC}" ]] && (( ARG_ACTION == 0 ))
 then
-    print -u2 "ERROR: you must specify an action for the HC (--check/--disable/--enable/--run/--show)"
+    print -u2 "ERROR: you must specify an action for the HC (--archive/--check/--disable/--enable/--run/--show)"
     exit 1
 fi
 if (( ARG_CHECK_HOST == 0 ))

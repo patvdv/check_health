@@ -1,0 +1,20 @@
+#******************************************************************************
+# @(#) check_hpux_patch_version.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_patch_version HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# OE version that should be checked (version string as displayed by 'swlist')
+# [default: none]
+required_oe=""
+
+# comma-separated list of SD patches that should be checked
+# [default: none]
+required_patches=""
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
