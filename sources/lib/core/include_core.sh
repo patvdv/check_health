@@ -45,12 +45,12 @@ typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # isolate messages from HC, find unique %Y-%m combinations
-grep ".*${SEP}${HC_NAME}${SEP}" ${HC_LOG} 2>/dev/null |\
-    cut -f1 -d"${SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
+grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} 2>/dev/null |\
+    cut -f1 -d"${LOG_SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
     while read YEAR_MONTH
 do
     # find all messages for that YEAR-MONTH combination
-    grep "${YEAR_MONTH}.*${SEP}${HC_NAME}${SEP}" ${HC_LOG} >${TMP1_FILE}
+    grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} >${TMP1_FILE}
     LOG_COUNT=$(wc -l ${TMP1_FILE} | cut -f1 -d' ')
     log "# of entries in ${YEAR_MONTH} to archive: ${LOG_COUNT}"
 
@@ -583,43 +583,39 @@ function handle_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="$1"
-typeset HC_STC_COUNT=0
-typeset I=0
-typeset MAX_I=0
 typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
+typeset HC_MSG_ENTRY=""
 typeset HC_STC_RC=0
-set -A HC_MSG_STC
-set -A HC_MSG_TIME
-set -A HC_MSG_TEXT
-set -A HC_MSG_CUR_VAL    # optional
-set -A HC_MSG_EXP_VAL    # optional
+typeset ONE_MSG_STC=""
+typeset ONE_MSG_TIME=""
+typeset ONE_MSG_TEXT=""
+typeset ONE_MSG_CUR_VAL=""
+typeset ONE_MSG_EXP_VAL=""
+typeset ALL_MSG_STC=0
 
 if [[ -s ${HC_MSG_FILE} ]]
 then
+    # load messages file into memory 
+    # do not use array: max 1024 items in ksh88; regular variable is only 32-bit memory limited
+    HC_MSG_VAR=$(<${HC_MSG_FILE})
+
     # DEBUG: dump TMP file
     if (( ARG_DEBUG != 0 ))
     then
         debug "begin dumping plugin messages file (${HC_MSG_FILE})"
-        cat ${HC_MSG_FILE} 2>/dev/null
+        print "${HC_MSG_VAR}"
         debug "end dumping plugin messages file (${HC_MSG_FILE})"
     fi
 
-    # process message file into arrays
-    while read HC_MSG_ENTRY
-    do
-        HC_MSG_STC[${I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
-        HC_MSG_TIME[${I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
-        HC_MSG_TEXT[${I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
-
-        HC_MSG_CUR_VAL[${I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $4'})
-        HC_MSG_EXP_VAL[${I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $5'})
-        I=$(( I + 1 ))
-    done <${HC_MSG_FILE} 2>/dev/null
+    # determine ALL_MSG_STC (sum of all STCs)
+    ALL_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 }} END { print stc }' 2>/dev/null)
+    (( ARG_DEBUG != 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
+    $(data_is_numeric ${ALL_MSG_STC}) || die "HC all STC computes to a non-numeric value"
 fi
 
 # display routines
-if (( ${#HC_MSG_STC[*]} > 0 ))
+if [[ -n "${HC_MSG_VAR}" ]]
 then
    if (( DO_DISPLAY_CSV == 1 ))
    then
@@ -742,49 +738,56 @@ then
         # default STDOUT
         if (( ARG_VERBOSE != 0 ))
         then
-            I=0
-            MAX_I=${#HC_MSG_STC[*]}
-            while (( I < MAX_I ))
+            print "${HC_MSG_VAR}" | while read HC_MSG_ENTRY
             do
-                printf "%s" "INFO: ${HC_NAME} [STC=${HC_MSG_STC[${I}]}]: ${HC_MSG_TEXT[${I}]}"
-                if (( HC_MSG_STC[${I}] != 0 ))
+                # split fields (awk is required for mult-char delimiter)
+                ONE_MSG_STC=$(print     "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $1'})
+                ONE_MSG_TIME=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $2'})
+                ONE_MSG_TEXT=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $3'})
+                ONE_MSG_CUR_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $4'})
+                ONE_MSG_EXP_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $5'})      
+                
+                printf "%s" "INFO: ${HC_NAME} [STC=${ONE_MSG_STC}]: ${ONE_MSG_TEXT}"            
+                if (( ONE_MSG_STC != 0 ))
                 then
                     printf " %s\n" "[FAIL_ID=${HC_FAIL_ID}]"
                 else
                     printf "\n"
-                fi
-                I=$(( I + 1 ))
+                fi          
             done
         fi
     fi
 fi
 
 # log & notify routines
-if (( ARG_LOG != 0 )) && (( ${#HC_MSG_STC[*]} > 0 ))
+if (( ARG_LOG != 0 )) && (( ALL_MSG_STC > 0 ))
 then
     # log routine (combined STC=0 or <>0)
-    I=0
-    MAX_I=${#HC_MSG_STC[*]}
-    while (( I < MAX_I ))
+    print "${HC_MSG_VAR}" | while read HC_MSG_ENTRY
     do
-        printf "%s${SEP}%s${SEP}%s${SEP}%s${SEP}" \
-                "${HC_MSG_TIME[${I}]}" \
+        # split fields (awk is required for multi-char delimiter)
+        ONE_MSG_STC=$(print     "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $1'})
+        ONE_MSG_TIME=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $2'})
+        ONE_MSG_TEXT=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $3'})
+        ONE_MSG_CUR_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $4'})
+        ONE_MSG_EXP_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $5'})
+    
+        printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" \
+                "${ONE_MSG_TIME}" \
                 "${HC_NAME}" \
-                ${HC_MSG_STC[${I}]} \
-                "${HC_MSG_TEXT[${I}]}" >>${HC_LOG}
-        if (( HC_MSG_STC[${I}] != 0 ))
+                ${ONE_MSG_STC} \
+                "${ONE_MSG_TEXT}" >>${HC_LOG}
+        if (( ONE_MSG_STC > 0 ))
         then
-            printf "%s${SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
+            printf "%s${LOG_SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
             HC_STC_RC=$(( HC_STC_RC + 1 ))
         else
             printf "\n" >>${HC_LOG}
         fi
-        HC_STC_COUNT=$(( HC_STC_COUNT + HC_MSG_STC[${I}] ))
-        I=$(( I + 1 ))
     done
 
     # notify routine (combined STC > 0)
-    if (( HC_STC_COUNT > 0 ))
+    if (( ALL_MSG_STC > 0 ))
     then
         # save stdout/stderr to HC events location
         if [[ -s ${HC_STDOUT_LOG} ]] || [[ -s ${HC_STDERR_LOG} ]]
@@ -853,7 +856,7 @@ else
     return ${HC_STC_RC}
 fi
 }
-
+            
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: handle_timeout()
 # DOES: kill long running background jobs
@@ -1315,18 +1318,19 @@ typeset HC_MSG_CUR_VAL=""
 typeset HC_MSG_EXP_VAL=""
 
 # assign optional parameters
+[[ -n "$3" ]] &&    HC_MSG_TEXT=$(data_newline2hash "$3")
 [[ -n "$4" ]] && HC_MSG_CUR_VAL=$(data_newline2hash "$4")
 [[ -n "$5" ]] && HC_MSG_EXP_VAL=$(data_newline2hash "$5")
 
 # save the HC failure message for now
-print "${HC_STC}%%${HC_NOW}%%${HC_MSG}%%${HC_MSG_CUR_VAL}%%${HC_MSG_EXP_VAL}" \
+print "${HC_STC}${MSG_SEP}${HC_NOW}${MSG_SEP}${HC_MSG}${MSG_SEP}${HC_MSG_CUR_VAL}${MSG_SEP}${HC_MSG_EXP_VAL}" \
     >>${HC_MSG_FILE}
 
 return 0
 }
 
 # -----------------------------------------------------------------------------
-# @(#) FUNCTION: show_statistics)
+# @(#) FUNCTION: show_statistics
 # DOES: show statistics about HC events
 # EXPECTS: n/a
 # RETURNS: n/a
@@ -1341,7 +1345,7 @@ print
 print -R "--- CURRENT events --"
 print
 print "${HC_LOG}:"
-awk -F"${SEP}" '{
+awk -F"${LOG_SEP}" '{
                     # all entries
                     total_count[$2]++
                     # set zero when empty
@@ -1381,7 +1385,7 @@ print
 find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | while read _ARCHIVE_FILE
 do
     print "${_ARCHIVE_FILE}:"
-    awk -F"${SEP}" '{
+    awk -F"${LOG_SEP}" '{
                         # all entries
                         total_count[$2]++
                         # set zero when empty

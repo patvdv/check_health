@@ -30,7 +30,7 @@
 function notify_mail
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-05-17"                               # YYYY-MM-DD
+typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -42,13 +42,12 @@ typeset _MAIL_HC="$1"
 typeset _MAIL_FAIL_ID="$2"
 
 typeset _HC_BODY=""
-set -A _MAIL_MSG_STC
-set -A _MAIL_MSG_TIME
-set -A _MAIL_MSG_TEXT
-typeset _I=0
-typeset _MAX_I=0
 typeset _HC_STDOUT_LOG_SHORT=""
 typeset _HC_STDERR_LOG_SHORT=""
+typeset _HC_MSG_ENTRY=""
+typeset _MAIL_MSG_STC=""
+typeset _MAIL_MSG_TIME=""
+typeset _MAIL_MSG_TEXT=""
 typeset _MAIL_INFO_TPL="${CONFIG_DIR}/core/templates/mail_info.tpl"
 typeset _MAIL_HEADER_TPL="${CONFIG_DIR}/core/templates/mail_header.tpl"
 typeset _MAIL_BODY_TPL="${CONFIG_DIR}/core/templates/mail_body.tpl"
@@ -69,6 +68,7 @@ typeset _TMP2_MAIL_FILE="${TMP_DIR}/.${SCRIPT_NAME}.mail.tmp2.$$"
 typeset _NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset _SUBJ_MSG="[${HOST_NAME}] HC ${_MAIL_HC} failed (${_NOW})"
 typeset _FROM_MSG="${EXEC_USER}@${HOST_NAME}"
+typeset _dummy=""
 
 # set local trap for cleanup
 trap "[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1; [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
@@ -132,21 +132,22 @@ eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_HEADER_TPL})
 __EOT" >>${_TMP1_MAIL_FILE}
 
-# create body part (max array size: 1023 in ksh88f, plugins spawning more than >1K messages are crazy :-))
-while read HC_MSG_ENTRY
+# create body part (from $HC_MSG_VAR)
+print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
 do
-    _MAIL_MSG_STC[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
-    _MAIL_MSG_TIME[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
-    _MAIL_MSG_TEXT[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
-    _I=$(( _I + 1 ))
-done <${HC_MSG_FILE} 2>/dev/null
-_MAX_I=${#_MAIL_MSG_STC[*]}
-_I=0
-while (( _I < _MAX_I ))    
-do 
-    (( _MAIL_MSG_STC[${_I}] > 0 )) && _HC_BODY=$(printf "%s\n%s\n" "${_HC_BODY}" "${_MAIL_MSG_TEXT[${_I}]}")
-    _I=$(( _I + 1 ))
+    # split fields (awk is required for multi-char delimiter)
+    _MAIL_MSG_STC=$(print     "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
+    _MAIL_MSG_TIME=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
+    _MAIL_MSG_TEXT=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
+    _MAIL_MSG_CUR_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $4'})
+    _MAIL_MSG_EXP_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $5'})
+    
+    if (( _MAIL_MSG_STC > 0 ))
+    then
+        _HC_BODY=$(printf "%s\n%s\n" "${_HC_BODY}" "${_MAIL_MSG_TEXT}")
+    fi
 done
+
 # check for custom template
 [[ -r "${_MAIL_BODY_TPL}-${_MAIL_HC}" ]] && _MAIL_BODY_TPL="${_MAIL_BODY_TPL}-${_MAIL_HC}"
 [[ -r "${_MAIL_BODY_TPL}" ]] || die "cannot read mail body template at ${_MAIL_BODY_TPL}"

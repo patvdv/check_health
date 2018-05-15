@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-05-12"
+typeset -r SCRIPT_VERSION="2018-05-14"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -58,7 +58,8 @@ typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
-typeset -r SEP="|"
+typeset -r LOG_SEP="|"
+typeset -r MSG_SEP="%%"
 typeset -r LOG_DIR="/var/opt/hc"
 typeset -r LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
 typeset -r ARCHIVE_DIR="${LOG_DIR}/archive"
@@ -81,6 +82,7 @@ typeset HC_FILE_LINE=""
 typeset HC_NOW=""
 typeset HC_TIME_OUT=60
 typeset HC_MIN_TIME_OUT=30
+typeset HC_MSG_VAR=""
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 typeset LINUX_DISTRO=""
@@ -1039,7 +1041,7 @@ case ${ARG_ACTION} in
                 RUN_TIME_OUT=$(grep -i -E -e "^hc:${HC_RUN}:" ${HOST_CONFIG_FILE} 2>/dev/null | cut -f5 -d':')
                 if [[ -n "${RUN_TIME_OUT}" ]]
                 then
-                    (( RUN_TIME_OUT > HC_TIME_OUT )) &&  HC_TIME_OUT=${RUN_TIME_OUT}
+                    (( RUN_TIME_OUT > HC_TIME_OUT )) && HC_TIME_OUT=${RUN_TIME_OUT}
                 else
                     # reset for next HC
                     HC_TIME_OUT=60
@@ -1063,6 +1065,7 @@ case ${ARG_ACTION} in
                     else
                         warn "failed to execute HC: ${HC_RUN} [RC=${RUN_RC}]"
                     fi
+                    continue
                 fi
             else
                 # set trap on SIGUSR1
@@ -1097,6 +1100,7 @@ case ${ARG_ACTION} in
                     else
                         warn "failed to execute HC: ${HC_RUN} [RC=${RUN_RC}]"
                     fi
+                    continue
                 else
                     if (( CHILD_ERROR == 0 ))
                     then
@@ -1109,6 +1113,7 @@ case ${ARG_ACTION} in
                         else
                             warn "failed to execute HC as background process"
                         fi
+                        continue
                     fi
                 fi
             fi

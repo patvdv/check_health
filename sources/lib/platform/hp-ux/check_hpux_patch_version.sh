@@ -107,9 +107,9 @@ then
             log_hc "$0" 1 "${_MSG}"
         fi
     else
-        _MSG="unable to run command: {${_SWLLST_BIN}}"
+        _MSG="unable to run command: {${_SWLIST_BIN}}"
         log_hc "$0" 1 "${_MSG}"
-        return 0
+        return 1
     fi
 else
     warn "required OE will not be checked (not configured in ${_CONFIG_FILE})"
@@ -150,7 +150,7 @@ then
     else
         _MSG="unable to run command: {${_SHOW_PATCHES_BIN}}"
         log_hc "$0" 1 "${_MSG}"
-        return 0
+        return 1
     fi
 else
     warn "required patches will not be checked (not configured in ${_CONFIG_FILE})"

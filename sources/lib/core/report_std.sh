@@ -71,7 +71,7 @@ then
         _HC_LAST_FAIL_ID="-"
         # find last event or block of events (same timestamp)
         # (but unfortunately this is only accurate to events within the SAME second!)
-        _HC_LAST_TIME="$(grep -h ${_HC_LAST} ${_LOG_STASH} 2>/dev/null | sort -n | cut -f1 -d${SEP} | uniq | tail -1)"
+        _HC_LAST_TIME="$(grep -h ${_HC_LAST} ${_LOG_STASH} 2>/dev/null | sort -n | cut -f1 -d${LOG_SEP} | uniq | tail -1)"
         if [[ -z "${_HC_LAST_TIME}" ]]
         then
             _HC_LAST_TIME="-"
@@ -79,7 +79,7 @@ then
         else
             # use of cat is not useless here, makes sure END {} gets executed even
             # if $_LOG STASH contains non-existing files (because of * wildcard)
-            cat ${_LOG_STASH} 2>/dev/null | awk -F "${SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
+            cat ${_LOG_STASH} 2>/dev/null | awk -F "${LOG_SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
                 ' 
                 BEGIN {
                     last_stc     = 0
@@ -113,7 +113,7 @@ else
     (( ARG_TODAY != 0 )) && _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
 
     # check fail count (look for unique IDs in the 5th field of the HC log)
-    _FAIL_COUNT=$(cut -f5 -d"${SEP}" ${_LOG_STASH} 2>/dev/null | grep -E -e "${_ID_NEEDLE}" | uniq | wc -l)
+    _FAIL_COUNT=$(cut -f5 -d"${LOG_SEP}" ${_LOG_STASH} 2>/dev/null | grep -E -e "${_ID_NEEDLE}" | uniq | wc -l)
     if (( _FAIL_COUNT != 0 ))
     then
         # check for detail or not?
@@ -138,7 +138,7 @@ else
             # print failed events
             # not a useless use of cat here 
             # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
-            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${LOG_SEP}" -v id_needle="${_ID_NEEDLE}" \
                 '
                 {
                     if ($5 ~ id_needle) {
@@ -151,7 +151,7 @@ else
             # print failed events (we may have multiple events for 1 FAIL ID)
             # not a useless use of cat here 
             # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
-            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${SEP}" -v id_needle="${_ID_NEEDLE}" \
+            cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${LOG_SEP}" -v id_needle="${_ID_NEEDLE}" \
                 ' BEGIN {
                     event_count = 1
                     dashes = sprintf("%36s",""); gsub (/ /, "-", dashes);

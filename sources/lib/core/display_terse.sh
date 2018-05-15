@@ -30,7 +30,7 @@
 function display_terse
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-05-06"								# YYYY-MM-DD
+typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -41,33 +41,29 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _DISPLAY_HC="$1"
 typeset _DISPLAY_FAIL_ID="$2"
 
-set -A _DISPLAY_MSG_STC
-set -A _DISPLAY_MSG_TIME
-set -A _DISPLAY_MSG_TEXT
-typeset _I=0
-typeset _MAX_I=0
+typeset _HC_MSG_ENTRY=""
+typeset _DISPLAY_MSG_STC=""
+typeset _DISPLAY_MSG_TIME=""
+typeset _DISPLAY_MSG_TEXT=""
+typeset _DISPLAY_MSG_CUR_VAL="" 
+typeset _DISPLAY_MSG_EXP_VAL=""
 typeset _ID_BIT=""
 
-# read HC_MSG_FILE into an arrays 
-# note: this is less efficient but provides more flexibility for future extensions
-#       max array size: 1023 in ksh88f, plugins spawning more than >1K messages are crazy :-)
-while read HC_MSG_ENTRY
-do
-    _DISPLAY_MSG_STC[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
-    _DISPLAY_MSG_TIME[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
-    _DISPLAY_MSG_TEXT[${_I}]=$(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
-    _I=$(( _I + 1 ))
-done <${HC_MSG_FILE} 2>/dev/null
-
-# display HC results
-_MAX_I=${#_DISPLAY_MSG_STC[*]}
-_I=0
-if (( _MAX_I > 0 ))
+# parse $HC_MSG_VAR
+if [[ -n "${HC_MSG_VAR}" ]]
 then
     printf "%-30s\t%s\t%-16s\t%s\n" "HC" "STC" "FAIL ID" "Message"
-    while (( _I < _MAX_I ))    
+
+    print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
     do
-        if (( _DISPLAY_MSG_STC[${_I}] != 0 )) 
+        # split fields (awk is required for multi-char delimiter)
+        _DISPLAY_MSG_STC=$(print     "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
+        _DISPLAY_MSG_TIME=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
+        _DISPLAY_MSG_TEXT=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
+        _DISPLAY_MSG_CUR_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $4'})
+        _DISPLAY_MSG_EXP_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $5'})
+
+        if (( _DISPLAY_MSG_STC > 0 )) 
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else
@@ -75,11 +71,10 @@ then
         fi
         printf "%-30s\t%s\t%-16s\t%s\n" \
             "${_DISPLAY_HC}" \
-            "${_DISPLAY_MSG_STC[${_I}]}" \
+            "${_DISPLAY_MSG_STC}" \
             "${_ID_BIT}" \
-            "${_DISPLAY_MSG_TEXT[${_I}]}"           
-        _I=$(( _I + 1 ))
-    done
+            "${_DISPLAY_MSG_TEXT}"     
+    done    
 else
     ARG_LOG=0 ARG_VERBOSE=1 log "INFO: no HC results to display"
 fi

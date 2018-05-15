@@ -31,7 +31,7 @@
 function display_init
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-06-29"                               # YYYY-MM-DD
+typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -51,7 +51,7 @@ typeset -R8 _DISPLAY_CODE=""
 typeset _DISPLAY_ID=""
 
 # check for terminal support (no ((...)) here)
-if [[ $(tput colors 2>/dev/null) -gt 0 ]]
+if (( $(tput colors 2>/dev/null) > 0 ))
 then
     typeset _RED=$(tput setaf 1)
     typeset _GREEN=$(tput setaf 2)
@@ -74,7 +74,7 @@ else
     typeset _NORMAL=""
 fi
 
-# read HC_MSG_FILE for STC
+# parse $HC_MSG_VAR
 if [[ -n "${_DISPLAY_MSG_CODE}" ]]
 then
     case "${_DISPLAY_MSG_CODE}" in
@@ -93,13 +93,14 @@ then
     esac
     _DISPLAY_CODE="${_DISPLAY_MSG_CODE}"
 else
-    if [[ -s ${HC_MSG_FILE} ]]
+    if [[ -n "${HC_MSG_VAR}" ]]
     then
-        while read HC_MSG_ENTRY
+        print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
         do
-            _DISPLAY_MSG_STC=$(( $(print "${HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'}) + _DISPLAY_MSG_STC ))
-        done <${HC_MSG_FILE} 2>/dev/null
-
+            # determine _DISPLAY_MSG_STC (sum of all STCs)
+            _DISPLAY_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 } } END { print stc }' 2>/dev/null)
+        done
+    
         # display HC results
         if (( _DISPLAY_MSG_STC == 0 ))
         then

@@ -20,7 +20,8 @@
 # DOES: send alert via posteifmsg
 # EXPECTS: HC name [string]
 # RETURNS: 0
-# REQUIRES: handle_timeout(), init_hc(), log(), warn()
+# REQUIRES: data_get_lvalue_from_config(), handle_timeout(), init_hc(), log()
+#           warn()
 # INFO: https://www-01.ibm.com/support/knowledgecenter/SSSHTQ_8.1.0/com.ibm.netcool_OMNIbus.doc_8.1.0/omnibus/wip/eifsdk/reference/omn_eif_posteifmsg.html
 #
 # -----------------------------------------------------------------------------
@@ -32,13 +33,14 @@ function notify_eif
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/core/providers/$0.conf"
-typeset _VERSION="2016-03-04"								# YYYY-MM-DD
-typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"				# uname -s match
+typeset _VERSION="2018-05-12"                               # YYYY-MM-DD
+typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
+
 typeset _EIF_MESSAGE="$1 alert with ID ${HC_FAIL_ID}"
 typeset _EIF_CLASS="${SCRIPT_NAME}"
 typeset _EIF_BIN=""
@@ -57,19 +59,19 @@ then
     return 1
 fi
 # read required config values
-_EIF_BIN="$(grep -i '^EIF_BIN=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+_EIF_BIN=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config '_EIF_BIN')
 if [[ -z "${_EIF_BIN}" ]]
 then
     warn "no value set for 'EIF_BIN' in ${_CONFIG_FILE}"
     return 1
 fi
-_EIF_ETC="$(grep -i '^EIF_ETC=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+_EIF_ETC=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config '_EIF_ETC')
 if [[ -z "${_EIF_ETC}" ]]
 then
     warn "no value set for 'EIF_ETC' in ${_CONFIG_FILE}"
     return 1
 fi
-_EIF_SEVERITY="$(grep -i '^EIF_SEVERITY=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+_EIF_SEVERITY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config '_EIF_SEVERITY')
 if [[ -z "${_EIF_SEVERITY}" ]]
 then
     warn "no value set for 'EIF_SEVERITY' in ${_CONFIG_FILE}"
@@ -85,7 +87,7 @@ then
     # $PID is PID of the owner shell
     _OWNER_PID=$$
     (
-        # sleep for $_TIME_OUT seconds. If the sleep subshell is then still alive, send a SIGUSR1 to the owner
+        # sleep for $_TIME_OUT seconds. If the sleep sub-shell is then still alive, send a SIGUSR1 to the owner
         sleep ${_TIME_OUT}
         kill -s USR1 ${_OWNER_PID} >/dev/null 2>&1
     ) &

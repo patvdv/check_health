@@ -390,6 +390,30 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_is_numeric()
+# DOES: check if input is numeric
+# EXPECTS: [string]
+# OUTPUTS: n/a
+# RETURNS: 0=numeric; <>0=not numeric
+# REQUIRES: n/a
+function data_is_numeric
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+case "${1}" in
+    +([0-9])*(.)*([0-9]))
+        # numeric, OK
+        ;;
+    *) 
+        # not numeric
+        return 1 
+        ;;
+esac
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_encode_url
 # DOES: encode URL data
 # EXPECTS: text to be encoded [string]

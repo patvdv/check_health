@@ -20,7 +20,7 @@
 # DOES: send sms alert
 # EXPECTS: 1=HC name [string], 2=HC FAIL_ID [string]
 # RETURNS: 0
-# REQUIRES: init_hc(), log(), warn()
+# REQUIRES: data_get_lvalue_from_config(), init_hc(), log(), warn()
 #
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
@@ -31,15 +31,17 @@ function notify_sms
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/core/providers/$0.conf"
-typeset _VERSION="2017-04-27"								# YYYY-MM-DD
+typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
+
 typeset _SMS_HC="$1"
 typeset _SMS_FAIL_ID="$2"
+
 typeset _SMS_TEXT=""
 typeset _FROM_MSG="${EXEC_USER}@${HOST_NAME}"
 typeset _CURL_BIN=""
@@ -55,7 +57,7 @@ then
     return 1
 fi
 # read required config values
-_SMS_PROVIDERS="$(grep -i '^SMS_PROVIDERS=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+_SMS_PROVIDERS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_PROVIDERS')
 if [[ -z "${_SMS_PROVIDERS}" ]]
 then
     warn "no value set for 'SMS_PROVIDERS' in ${_CONFIG_FILE}"
@@ -71,19 +73,19 @@ then
         case "${_PROVIDER_OPTS}" in
             *kapow*|*KAPOW*|*Kapow*)
                 # read required config values
-                _SMS_KAPOW_SEND_URL="$(grep -i '^SMS_KAPOW_SEND_URL=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+                _SMS_KAPOW_SEND_URL=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_KAPOW_SEND_URL')
                 if [[ -z "${_SMS_KAPOW_SEND_URL}" ]]
                 then
                     warn "no value set for 'SMS_KAPOW_SEND_URL' in ${_CONFIG_FILE}"
                     return 1
-                fi          
-                _SMS_KAPOW_USER="$(grep -i '^SMS_KAPOW_USER=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+                fi
+                _SMS_KAPOW_USER=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_KAPOW_USER')
                 if [[ -z "${_SMS_KAPOW_USER}" ]]
                 then
                     warn "no value set for 'SMS_KAPOW_USER' in ${_CONFIG_FILE}"
                     return 1
-                fi      
-                _SMS_KAPOW_PASS="$(grep -i '^SMS_KAPOW_PASS=' ${_CONFIG_FILE} | cut -f2 -d'=' | tr -d '\"')"
+                fi   
+                _SMS_KAPOW_PASS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_KAPOW_PASS')              
                 if [[ -z "${_SMS_KAPOW_PASS}" ]]
                 then
                     warn "no value set for 'SMS_KAPOW_PASS' in ${_CONFIG_FILE}"
