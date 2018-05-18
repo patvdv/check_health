@@ -243,7 +243,7 @@ else
     _MSG="unable to run command: {${_DRD_BIN}}"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL = 2 ))
+    if (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 ))
     then
         log "$(<${HC_STDOUT_LOG})"
         log "$(<${HC_STDERR_LOG})"
