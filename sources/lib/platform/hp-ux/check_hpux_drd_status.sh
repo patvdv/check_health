@@ -35,7 +35,7 @@ function check_hpux_drd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _DRD_BIN="/opt/drd/bin/drd"
-typeset _VERSION="2018-05-11"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -117,7 +117,7 @@ else
     log "executing {${_DRD_BIN}} ..."
     # drd outputs on STDERR
     ${_DRD_BIN} status >${HC_STDOUT_LOG} 2>&1
-	# RC of drd is unreliable
+    # RC of drd is unreliable
 fi
 
 # check drd status
@@ -242,12 +242,12 @@ then
 else
     _MSG="unable to run command: {${_DRD_BIN}}"
     log_hc "$0" 1 "${_MSG}"
-	# dump debug info
-	(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL = 2 ))
-	then
-		log "$(<${HC_STDOUT_LOG})"
-		log "$(<${HC_STDERR_LOG})"
-	fi
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL = 2 ))
+    then
+        log "$(<${HC_STDOUT_LOG})"
+        log "$(<${HC_STDERR_LOG})"
+    fi
     return 1
 fi
 
