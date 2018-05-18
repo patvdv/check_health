@@ -117,11 +117,11 @@ else
     log "executing {${_DRD_BIN}} ..."
     # drd outputs on STDERR
     ${_DRD_BIN} status >${HC_STDOUT_LOG} 2>&1
-    # RC of drd is unreliable
+    _RC=$?
 fi
 
 # check drd status
-if (( $(grep -c -E -e ".*Information succeeded.*" ${HC_STDOUT_LOG} 2>/dev/null) > 0 ))
+if (( _RC == 0 )) && (( $(grep -c -E -e ".*Information succeeded.*" ${HC_STDOUT_LOG} 2>/dev/null) > 0 ))
 then
     # convert NOW to epoch (pass date values as unquoted parameters)
     #_NOW_EPOCH=$(data_date2epoch "$(date '+%Y')" "$(date '+%m')" "$(date '+%d')" "$(date '+%H')" "$(date '+%M')" "$(date '+%S')")
