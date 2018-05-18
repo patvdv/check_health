@@ -760,7 +760,7 @@ then
 fi
 
 # log & notify routines
-if (( ARG_LOG != 0 )) && (( ALL_MSG_STC > 0 ))
+if (( ARG_LOG != 0 ))
 then
     # log routine (combined STC=0 or <>0)
     print "${HC_MSG_VAR}" | while read HC_MSG_ENTRY
