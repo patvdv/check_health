@@ -19,11 +19,12 @@
 # @(#) MAIN: check_hpux_kernel_params
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
 # @(#) 2017-12-22: original version [Patrick Van der Veken]
 # @(#) 2018-01-05: added validation on config values [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_kernel_params
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCTUNE_BIN="/usr/sbin/kctune"
-typeset _VERSION="2018-01-05"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -83,6 +84,8 @@ else
     then
         _MSG="unable to gather kctune information"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     fi
 fi

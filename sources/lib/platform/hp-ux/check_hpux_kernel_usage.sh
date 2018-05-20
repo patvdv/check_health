@@ -19,12 +19,13 @@
 # @(#) MAIN: check_hpux_kernel_usage
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
 # @(#) 2017-12-22: original version [Patrick Van der Veken]
 # @(#) 2018-01-08: extra config checks [Patrick Van der Veken]
 # @(#) 2018-01-09: bug fix [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_kernel_usage
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCUSAGE_BIN="/usr/sbin/kcusage"
-typeset _VERSION="2018-01-09"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -99,6 +100,8 @@ else
     if (( $? != 0 ))
     then
         _MSG="unable to gather kcusage information"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         log_hc "$0" 1 "${_MSG}"
         return 0
     fi

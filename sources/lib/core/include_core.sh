@@ -32,7 +32,7 @@
 function archive_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset HC_NAME="$1"
+typeset HC_NAME="${1}"
 typeset ARCHIVE_FILE=""
 typeset YEAR_MONTH=""
 typeset LOG_COUNT=0
@@ -69,7 +69,7 @@ do
     # compare with the sorted $HC_LOG
     sort ${HC_LOG} >${TMP1_FILE}
     comm -23 ${TMP1_FILE} ${ARCHIVE_FILE} 2>/dev/null >${TMP2_FILE}
-    
+
     if [[ -s ${TMP2_FILE} ]]
     then
         mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null || {
@@ -123,7 +123,7 @@ function die
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
-if [[ -n "$1" ]]
+if [[ -n "${1}" ]]
 then
     if (( ARG_LOG != 0 ))
     then
@@ -158,6 +158,7 @@ typeset NOTIFY_OPTS=""
 # init global flags for core plugins (no typeset!)
 DO_DISPLAY_CSV=0
 DO_DISPLAY_INIT=0
+DO_DISPLAY_JSON=0
 DO_DISPLAY_TERSE=0
 DO_DISPLAY_ZENOSS=0
 DO_DISPLAY_CUSTOM1=0
@@ -175,6 +176,7 @@ DO_NOTIFY_SMS=0
 DO_REPORT_STD=0
 HAS_DISPLAY_CSV=0
 HAS_DISPLAY_INIT=0
+HAS_DISPLAY_JSON=0
 HAS_DISPLAY_TERSE=0
 HAS_DISPLAY_ZENOSS=0
 HAS_DISPLAY_CUSTOM1=0
@@ -204,6 +206,10 @@ do
         *display_init.sh)
             HAS_DISPLAY_INIT=1
             (( ARG_DEBUG != 0 )) && debug "display_init plugin is available"
+            ;;
+        *display_json.sh)
+            HAS_DISPLAY_JSON=1
+            (( ARG_DEBUG != 0 )) && debug "display_json plugin is available"
             ;;
         *display_terse.sh)
             HAS_DISPLAY_TERSE=1
@@ -289,6 +295,15 @@ then
                 ARG_VERBOSE=0
             else
                 warn "init plugin for '--display' not present"
+            fi
+            ;;
+        json) # json format
+            if (( HAS_DISPLAY_JSON == 1 ))
+            then
+                DO_DISPLAY_JSON=1
+                ARG_VERBOSE=0
+            else
+                warn "json plugin for '--display' not present"
             fi
             ;;
         terse) # terse format
@@ -499,7 +514,7 @@ then
     if (( ARG_LAST != 0 )) || (( ARG_TODAY != 0 ))
     then
         ARG_HISTORY=1
-    fi  
+    fi
 fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_LAST != 0 ))
 then
@@ -526,6 +541,22 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: dump_logs()
+# DOES: current STDOUT+STDERR log via log()
+# EXPECTS: n/a
+# RETURNS: 0
+# REQUIRES: n/a
+function dump_logs
+{
+log "=== STDOUT ==="
+log "$(<${HC_STDOUT_LOG})"
+log "=== STDERR ==="
+log "$(<${HC_STDERR_LOG})"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: exists_hc()
 # DOES: check if a HC (function) exists in $FPATH
 # EXPECTS: health check name [string]
@@ -534,7 +565,7 @@ return 0
 function exists_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset EXISTS_HC="$1"
+typeset EXISTS_HC="${1}"
 typeset FDIR=""
 typeset EXISTS_RC=0
 
@@ -561,7 +592,7 @@ return ${EXISTS_RC}
 function find_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset FIND_HC="$1"
+typeset FIND_HC="${1}"
 typeset FIND_PATH=""
 typeset FDIR=""
 
@@ -582,7 +613,7 @@ return 0
 function handle_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset HC_NAME="$1"
+typeset HC_NAME="${1}"
 typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
 typeset HC_MSG_ENTRY=""
@@ -596,7 +627,7 @@ typeset ALL_MSG_STC=0
 
 if [[ -s ${HC_MSG_FILE} ]]
 then
-    # load messages file into memory 
+    # load messages file into memory
     # do not use array: max 1024 items in ksh88; regular variable is only 32-bit memory limited
     HC_MSG_VAR=$(<${HC_MSG_FILE})
 
@@ -634,6 +665,15 @@ then
             display_init "${HC_NAME}" "${HC_FAIL_ID}"
         else
             warn "display_init plugin is not available, cannot display_results!"
+        fi
+    elif (( DO_DISPLAY_JSON == 1 ))
+    then
+        if (( HAS_DISPLAY_JSON == 1 ))
+        then
+            # call plugin
+            display_json "${HC_NAME}" "${HC_FAIL_ID}"
+        else
+            warn "display_json plugin is not available, cannot display_results!"
         fi
     elif (( DO_DISPLAY_TERSE == 1 ))
     then
@@ -738,22 +778,40 @@ then
         # default STDOUT
         if (( ARG_VERBOSE != 0 ))
         then
-            print "${HC_MSG_VAR}" | while read HC_MSG_ENTRY
+            print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
             do
-                # split fields (awk is required for mult-char delimiter)
-                ONE_MSG_STC=$(print     "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $1'})
-                ONE_MSG_TIME=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $2'})
-                ONE_MSG_TEXT=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $3'})
-                ONE_MSG_CUR_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $4'})
-                ONE_MSG_EXP_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $5'})      
-                
-                printf "%s" "INFO: ${HC_NAME} [STC=${ONE_MSG_STC}]: ${ONE_MSG_TEXT}"            
+                # magically unquote if needed
+                if [[ -n "${ONE_MSG_TEXT}" ]]
+                then
+                    data_contains_string "${ONE_MSG_TEXT}" "${MAGIC_QUOTE}"
+                    if (( $? > 0 ))
+                    then
+                        ONE_MSG_TEXT=$(data_magic_unquote "${ONE_MSG_TEXT}")
+                    fi
+                fi
+                if [[ -n "${ONE_MSG_CUR_VAL}" ]]
+                then
+                    data_contains_string "${ONE_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+                    if (( $? > 0 ))
+                    then
+                        ONE_MSG_CUR_VAL=$(data_magic_unquote "${ONE_MSG_CUR_VAL}")
+                    fi
+                fi
+                if [[ -n "${ONE_MSG_EXP_VAL}" ]]
+                then
+                    data_contains_string "${ONE_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+                    if (( $? > 0 ))
+                    then
+                        ONE_MSG_EXP_VAL=$(data_magic_unquote "${ONE_MSG_EXP_VAL}")
+                    fi
+                fi
+                printf "%s" "INFO: ${HC_NAME} [STC=${ONE_MSG_STC}]: ${ONE_MSG_TEXT}"
                 if (( ONE_MSG_STC != 0 ))
                 then
                     printf " %s\n" "[FAIL_ID=${HC_FAIL_ID}]"
                 else
                     printf "\n"
-                fi          
+                fi
             done
         fi
     fi
@@ -763,15 +821,33 @@ fi
 if (( ARG_LOG != 0 ))
 then
     # log routine (combined STC=0 or <>0)
-    print "${HC_MSG_VAR}" | while read HC_MSG_ENTRY
+    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
     do
-        # split fields (awk is required for multi-char delimiter)
-        ONE_MSG_STC=$(print     "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $1'})
-        ONE_MSG_TIME=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $2'})
-        ONE_MSG_TEXT=$(print    "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $3'})
-        ONE_MSG_CUR_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $4'})
-        ONE_MSG_EXP_VAL=$(print "${HC_MSG_ENTRY}" | awk -F "${MSG_SEP}" '{ print $5'})
-    
+        # magically unquote if needed
+        if [[ -n "${ONE_MSG_TEXT}" ]]
+        then
+            data_contains_string "${ONE_MSG_TEXT}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                ONE_MSG_TEXT=$(data_magic_unquote "${ONE_MSG_TEXT}")
+            fi
+        fi
+        if [[ -n "${ONE_MSG_CUR_VAL}" ]]
+        then
+            data_contains_string "${ONE_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                ONE_MSG_CUR_VAL=$(data_magic_unquote "${ONE_MSG_CUR_VAL}")
+            fi
+            fi
+        if [[ -n "${ONE_MSG_EXP_VAL}" ]]
+        then
+            data_contains_string "${ONE_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                ONE_MSG_EXP_VAL=$(data_magic_unquote "${ONE_MSG_EXP_VAL}")
+            fi
+        fi
         printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" \
                 "${ONE_MSG_TIME}" \
                 "${HC_NAME}" \
@@ -794,20 +870,20 @@ then
         then
             # organize logs in sub-directories: YYYY/MM
             mkdir -p "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}" >/dev/null 2>&1 || \
-                die "failed to create event directory at $1"
+                die "failed to create event directory at ${1}"
             if [[ -f ${HC_STDOUT_LOG} ]]
             then
                 # cut off the path and the .$$ part from the file location
                 HC_STDOUT_LOG_SHORT="${HC_STDOUT_LOG##*/}"
                 mv ${HC_STDOUT_LOG} "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDOUT_LOG_SHORT%.*}" >/dev/null 2>&1 || \
-                die "failed to move ${HC_STDOUT_LOG} to event directory at $1"
+                die "failed to move ${HC_STDOUT_LOG} to event directory at ${1}"
             fi
             if [[ -f ${HC_STDERR_LOG} ]]
             then
                 # cut off the path and the .$$ part from the file location
                 HC_STDERR_LOG_SHORT="${HC_STDERR_LOG##*/}"
                 mv ${HC_STDERR_LOG} "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDERR_LOG_SHORT%.*}" >/dev/null 2>&1 || \
-                die "failed to move ${HC_STDERR_LOG} to event directory at $1"
+                die "failed to move ${HC_STDERR_LOG} to event directory at ${1}"
             fi
         fi
 
@@ -856,7 +932,7 @@ else
     return ${HC_STC_RC}
 fi
 }
-            
+
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: handle_timeout()
 # DOES: kill long running background jobs
@@ -897,6 +973,13 @@ case "${REPORT_STYLE}" in
         if (( HAS_DISPLAY_CSV == 1 ))
         then
             DO_DISPLAY_CSV=1
+            ARG_VERBOSE=0
+        fi
+        ;;
+    json|JSON) # json format
+        if (( HAS_DISPLAY_JSON == 1 ))
+        then
+            DO_DISPLAY_JSON=1
             ARG_VERBOSE=0
         fi
         ;;
@@ -1008,8 +1091,8 @@ return 0
 function init_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset HC_PLATFORMS="$2"
-typeset HC_VERSION="$3"
+typeset HC_PLATFORMS="${2}"
+typeset HC_VERSION="${3}"
 typeset HC_OK=0
 
 # check platform (don't use a pattern comparison here (~! mksh/pdksh))
@@ -1020,10 +1103,10 @@ HC_OK=$(print "${HC_PLATFORMS}" | grep -c "${OS_NAME}" 2>/dev/null)
 case "${HC_VERSION}" in
     [0-2][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9])
         # OK
-        (( ARG_DEBUG != 0 )) && debug "HC plugin $1 has version ${HC_VERSION}"
+        (( ARG_DEBUG != 0 )) && debug "HC plugin ${1} has version ${HC_VERSION}"
         ;;
     *)
-        die "version of the HC plugin $1 is not in YYYY-MM-DD format (${HC_VERSION})"
+        die "version of the HC plugin ${1} is not in YYYY-MM-DD format (${HC_VERSION})"
         ;;
 esac
 
@@ -1039,7 +1122,7 @@ return 0
 function is_scheduled
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset CRON_HC="$1"
+typeset CRON_HC="${1}"
 typeset CRON_COUNT=0
 typeset CRON_SYS_LOCATIONS='/etc/crontab /etc/cron.d/*'
 typeset CRON_ANACRON_LOCATIONS='/etc/anacrontab /etc/cron.*'
@@ -1077,7 +1160,7 @@ return ${CRON_COUNT}
 function list_core
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset FACTION="$1"
+typeset FACTION="${1}"
 typeset FCONFIG=""
 typeset FDIR=""
 typeset FNAME=""
@@ -1099,6 +1182,8 @@ do
     # exclude core helper librar(y|ies)
     ls -1 ${FDIR}/*.sh 2>/dev/null | grep -v "include_" | sort 2>/dev/null | while read -r FFILE
     do
+        # reset state
+        FSTATE="enabled"
         # find function name but skip helper functions in the plug-in file (function _name)
         FNAME=$(grep -E -e "^function[[:space:]]+[^_]" "${FFILE}" 2>&1)
         # look for version string (cut off comments but don't use [:space:] in tr)
@@ -1163,8 +1248,8 @@ return 0
 function list_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset FACTION="$1"
-typeset FNEEDLE="$2"
+typeset FACTION="${1}"
+typeset FNEEDLE="${2}"
 typeset FCONFIG=""
 typeset FDIR=""
 typeset FNAME=""
@@ -1215,6 +1300,7 @@ do
         else
             FSTATE="enabled"
         fi
+        # reset state when unlinked
         [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
         # check scheduling
         is_scheduled "${FNAME#function *}"
@@ -1278,7 +1364,7 @@ function log
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
-if [[ -n "$1" ]]
+if [[ -n "${1}" ]]
 then
     if (( ARG_LOG != 0 ))
     then
@@ -1310,20 +1396,47 @@ return 0
 function log_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset HC_NAME="$1"
-typeset HC_STC=$2
-typeset HC_MSG="$3"
+typeset HC_NAME="${1}"
+typeset HC_STC=${2}
+typeset HC_MSG="${3}"
 typeset HC_NOW="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"
 typeset HC_MSG_CUR_VAL=""
 typeset HC_MSG_EXP_VAL=""
 
-# assign optional parameters
-[[ -n "$3" ]] &&    HC_MSG_TEXT=$(data_newline2hash "$3")
-[[ -n "$4" ]] && HC_MSG_CUR_VAL=$(data_newline2hash "$4")
-[[ -n "$5" ]] && HC_MSG_EXP_VAL=$(data_newline2hash "$5")
+# assign optional parameters; magically quote if necessary
+if [[ -n "${3}" ]]
+then
+    data_contains_string "${3}" "${MSG_SEP}"
+    if (( $? > 0 ))
+    then
+        HC_MSG_TEXT=$(data_magic_quote "${3}")
+    else
+        HC_MSG_TEXT="${3}"
+    fi
+fi
+if [[ -n "${4}" ]]
+then
+    data_contains_string "${4}" "${MSG_SEP}"
+    if (( $? > 0 ))
+    then
+        HC_CUR_VAL=$(data_magic_quote "${4}")
+    else
+        HC_CUR_VAL="${4}"
+    fi
+fi
+if [[ -n "${5}" ]]
+then
+    data_contains_string "${5}" "${MSG_SEP}"
+    if (( $? > 0 ))
+    then
+        HC_MSG_EXP_VAL=$(data_magic_quote "${5}")
+    else
+        HC_MSG_EXP_VAL="${5}"
+    fi
+fi
 
 # save the HC failure message for now
-print "${HC_STC}${MSG_SEP}${HC_NOW}${MSG_SEP}${HC_MSG}${MSG_SEP}${HC_MSG_CUR_VAL}${MSG_SEP}${HC_MSG_EXP_VAL}" \
+print "${HC_STC}${MSG_SEP}${HC_NOW}${MSG_SEP}${HC_MSG_TEXT}${MSG_SEP}${HC_MSG_CUR_VAL}${MSG_SEP}${HC_MSG_EXP_VAL}" \
     >>${HC_MSG_FILE}
 
 return 0
@@ -1430,7 +1543,7 @@ return 0
 function stat_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset STAT_HC="$1"
+typeset STAT_HC="${1}"
 typeset STAT_RC=1   # default: enabled
 
 [[ -f "${STATE_PERM_DIR}/${STAT_HC}.disabled" ]] && STAT_RC=0
@@ -1450,7 +1563,7 @@ function warn
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
-if [[ -n "$1" ]]
+if [[ -n "${1}" ]]
 then
     if (( ARG_LOG != 0 ))
     then

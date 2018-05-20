@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-05-14"
+typeset -r SCRIPT_VERSION="2018-05-20"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -58,8 +58,9 @@ typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
-typeset -r LOG_SEP="|"
-typeset -r MSG_SEP="%%"
+typeset -r LOG_SEP="|"			# single character only
+typeset -r MSG_SEP="%"		 	# single character only
+typeset -r MAGIC_QUOTE="!_!"	# magic quote
 typeset -r LOG_DIR="/var/opt/hc"
 typeset -r LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
 typeset -r ARCHIVE_DIR="${LOG_DIR}/archive"

@@ -19,11 +19,12 @@
 # @(#) MAIN: check_hpux_hpvm_vpar_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-06-01: initial version [Patrick Van der Veken]
 # @(#) 2017-06-08: return 1 on error [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_hpvm_vpar_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _HPVMSTATUS_BIN="/opt/hpvm/bin/hpvmstatus"
-typeset _VERSION="2017-06-08"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -75,8 +76,10 @@ fi
 
 ${_HPVMSTATUS_BIN} -M >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? != 0 )) && {
-    _MSG="unable to run {hpmvmstatus}"
+    _MSG="unable to run command: {${_HPVMSTATUS_BIN}}"
     log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 0
 }   
 

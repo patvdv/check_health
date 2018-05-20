@@ -19,12 +19,13 @@
 # @(#) MAIN: check_hpux_sg_package_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2016-03-08: initial version [Patrick Van der Veken]
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -80,8 +81,10 @@ then
 else
     cmviewcl -v -f line -l package 2>>${HC_STDERR_LOG} | tr '|' ':' >>${HC_STDOUT_LOG}
     (( $? != 0)) && {
-        _MSG="unable to run 'cmviewcl'"
+        _MSG="unable to run command: {cmviewcl}"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     }
 fi

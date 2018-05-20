@@ -30,7 +30,7 @@
 function display_csv
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 typeset _DISPLAY_SEP=";"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -53,24 +53,47 @@ typeset _ID_BIT=""
 # parse $HC_MSG_VAR
 if [[ -n "${HC_MSG_VAR}" ]]
 then
-     printf "%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s\n" "Health Check" "STC" "Message" "FAIL ID" \
+    printf "%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s\n" "Health Check" "STC" "Message" "FAIL ID" \
         "Current Value" "Expected Value"
 
-    print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
+    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
-        # split fields (awk is required for multi-char delimiter)
-        _DISPLAY_MSG_STC=$(print     "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $1'})
-        _DISPLAY_MSG_TIME=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $2'})
-        _DISPLAY_MSG_TEXT=$(print    "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $3'})
-        _DISPLAY_MSG_CUR_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $4'})
-        _DISPLAY_MSG_EXP_VAL=$(print "${_HC_MSG_ENTRY}" | awk -F "%%" '{ print $5'})
-
+        # magically unquote if needed
+        if [[ -n "${_DISPLAY_MSG_TEXT}" ]]
+        then
+            data_contains_string "${_DISPLAY_MSG_TEXT}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                _DISPLAY_MSG_TEXT=$(data_magic_unquote "${_DISPLAY_MSG_TEXT}")
+            fi
+        fi
+        if [[ -n "${_DISPLAY_MSG_CUR_VAL}" ]]
+        then
+            data_contains_string "${_DISPLAY_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                _DISPLAY_MSG_CUR_VAL=$(data_magic_unquote "${_DISPLAY_MSG_CUR_VAL}")
+            fi
+        fi
+        if [[ -n "${_DISPLAY_MSG_EXP_VAL}" ]]
+        then
+            data_contains_string "${_DISPLAY_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+            if (( $? > 0 ))
+            then
+                _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
+            fi
+        fi  
         if (( _DISPLAY_MSG_STC > 0 )) 
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else
             _ID_BIT=""
         fi
+        # escape stuff
+        _DISPLAY_MSG_TEXT=$(data_escape_csv "${_DISPLAY_MSG_TEXT}")
+        _DISPLAY_MSG_CUR_VAL=$(data_escape_csv "${_DISPLAY_MSG_CUR_VAL}")
+        _DISPLAY_MSG_EXP_VAL=$(data_escape_csv "${_DISPLAY_MSG_EXP_VAL}")
+
         printf "%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s\n" \
             "${_DISPLAY_HC}" \
             "${_DISPLAY_MSG_STC}" \

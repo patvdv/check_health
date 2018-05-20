@@ -19,13 +19,14 @@
 # @(#) MAIN: check_linux_vz_ct_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
 # @(#) 2017-05-07: made checks more detailed for hc_log() [Patrick Van der Veken]
 # @(#) 2017-06-08: return 1 on error [Patrick Van der Veken]
 # @(#) 2018-04-30: fixes on variable names Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_linux_vz_ct_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VZLIST_BIN="/usr/sbin/vzlist"
-typeset _VERSION="2018-04-30"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -78,8 +79,10 @@ fi
 # get container stati
 ${_VZLIST_BIN} -a -H -o ctid,status,onboot >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? != 0 )) && {
-    _MSG="unable to run {vzlist}"
+    _MSG="unable to run command: {vzlist}"
     log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 0
 }
 

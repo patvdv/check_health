@@ -76,8 +76,8 @@ function data_contains_string
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
-typeset _HAYSTACK="$1"
-typeset _NEEDLE="$2"
+typeset _HAYSTACK="${1}"
+typeset _NEEDLE="${2}"
 typeset _RC=0
 
 [[ "${_HAYSTACK#*${_NEEDLE}}" = "${_HAYSTACK}" ]] || _RC=1
@@ -86,10 +86,80 @@ return ${_RC}
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_magic_quote()
+# DOES: magically quotes a needle in a string (default needle is: %)
+# EXPECTS: to be magically quoted [string]; $2=needle [string] 
+# OUTPUTS: magically quoted [string]
+# RETURNS: n/a
+# REQUIRES: n/a
+function data_magic_quote
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SEP="${2:-%}"
+typeset _MAGIC="${MAGIC:-!_!}"
+
+print -R "${1}" 2>/dev/null | sed "s/${_SEP}/${_MAGIC}/g" 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_magic_unquote()
+# DOES: magically unquotes a needle in a string (default needle is: %)
+# EXPECTS: to be magically unquoted [string]; $2=needle [string] 
+# OUTPUTS: magically unquoted [string]
+# RETURNS: n/a
+# REQUIRES: n/a
+function data_magic_unquote
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SEP="${2:-%}"
+typeset _MAGIC="${MAGIC:-!_!}"
+
+print -R "${1}" 2>/dev/null | sed "s/${_MAGIC}/${_SEP}/g" 2>/dev/null
+
+return 0
+}
+
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_escape_csv()
+# DOES: escapes semi-colons
+# EXPECTS: to be escaped [string]
+# OUTPUTS: escaped [string]
+# RETURNS: n/a
+# REQUIRES: n/a
+function data_escape_csv
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" 2>/dev/null | sed 's#\([;]\)#\\\1#g' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_escape_json()
+# DOES: escapes double quotes and backslashes
+# EXPECTS: to be escaped [string]
+# OUTPUTS: escaped [string]
+# RETURNS: n/a
+# REQUIRES: n/a
+function data_escape_json
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _NEEDLE='[\"]'
+
+print -R "${1}" 2>/dev/null | sed 's#\(["\]\)#\\\1#g' 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_decomma()
-# DOES: remove comma's
-# EXPECTS: [string] with comma's
-# OUTPUTS: [string] without comma's
+# DOES: remove commas
+# EXPECTS: [string] with commas
+# OUTPUTS: [string] without commas
 # RETURNS: 0
 # REQUIRES: n/a
 function data_decomma
@@ -478,7 +548,7 @@ return 0
 function data_dot2ip 
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _DOT="$1"
+typeset _DOT="${1}"
 typeset _IP=0
 typeset _OLD_IFS="${IFS}"
 
@@ -507,7 +577,7 @@ return 0
 function data_ip2dot 
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _IP="$1"
+typeset _IP="${1}"
 typeset _W="" 
 typeset _X="" 
 typeset _Y="" 
@@ -534,7 +604,7 @@ return 0
 function data_bits2mask
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _BITS=$1
+typeset _BITS=${1}
 typeset _MAX=4294967296
 typeset _OFFSET=0
 
@@ -590,7 +660,7 @@ return 0
 function data_mask2bits
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _MASK="$1"
+typeset _MASK="${1}"
 typeset -i _I=32
 
 while (( _I > 0 ))
@@ -611,7 +681,7 @@ return 0
 function data_is_ipv4
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _IP="$1"
+typeset _IP="${1}"
 typeset _RC=0
 
 _RC=$(print "${_IP}" | grep -c -E -e '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' 2>/dev/null)
@@ -636,12 +706,12 @@ return ${_RC}
 function data_date2epoch
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset _YEAR="$1"
-typeset _MONTH="$2"
-typeset _DAY="$3"
-typeset _HOUR="$4"
-typeset _MINUTE="$5"
-typeset _SECOND="$6"
+typeset _YEAR="${1}"
+typeset _MONTH="${2}"
+typeset _DAY="${3}"
+typeset _HOUR="${4}"
+typeset _MINUTE="${5}"
+typeset _SECOND="${6}"
 typeset _DAYS_ACC 
 typeset _YEAR_DAY 
 typeset _EPOCH 

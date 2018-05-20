@@ -21,10 +21,11 @@
 # EXPECTS: see _show_usage()
 # REQUIRES: data_space2comma(), data_get_lvalue_from_config(), data_date2epoch(),
 #           data_lc(), data_strip_space(), data_strip_outer_space(),
-#           init_hc(), log_hc(), warn()
+#           dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -243,11 +244,7 @@ else
     _MSG="unable to run command: {${_DRD_BIN}}"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    if (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 ))
-    then
-        log "$(<${HC_STDOUT_LOG})"
-        log "$(<${HC_STDERR_LOG})"
-    fi
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
 fi
 

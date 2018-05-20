@@ -1,8 +1,8 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) display_terse.sh
+# @(#) display_json.sh
 #******************************************************************************
-# @(#) Copyright (C) 2017 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+# @(#) Copyright (C) 2018 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
 # This program is a free software; you can redistribute it and/or modify
 # it under the same terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: display_terse
-# DOES: display HC results in a terse way
+# @(#) MAIN: display_json
+# DOES: display HC results in JSON format (semi-colon as separator)
 # EXPECTS: 1=HC name [string], 2=HC FAIL_ID [string]
 # RETURNS: 0
 # REQUIRES: init_hc()
@@ -27,11 +27,12 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function display_terse
+function display_json
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
+typeset _DISPLAY_SEP=";"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -52,8 +53,6 @@ typeset _ID_BIT=""
 # parse $HC_MSG_VAR
 if [[ -n "${HC_MSG_VAR}" ]]
 then
-    printf "%-30s\t%s\t%-16s\t%s\n" "HC" "STC" "FAIL ID" "Message"
-
     print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
         # magically unquote if needed
@@ -80,30 +79,35 @@ then
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
             fi
-        fi      
+        fi  
         if (( _DISPLAY_MSG_STC > 0 )) 
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else
             _ID_BIT=""
         fi
-        printf "%-30s\t%s\t%-16s\t%s\n" \
+        # escape stuff
+        _DISPLAY_MSG_TEXT=$(data_escape_json "${_DISPLAY_MSG_TEXT}")
+        _DISPLAY_MSG_CUR_VAL=$(data_escape_json "${_DISPLAY_MSG_CUR_VAL}")
+        _DISPLAY_MSG_EXP_VAL=$(data_escape_json "${_DISPLAY_MSG_EXP_VAL}")
+        
+
+        printf '{"hc":"%s","stc":"%s","time":"%s","fail_id":"%s","text":"%s","current_value":"%s","expected_value":"%s"}\n' \
             "${_DISPLAY_HC}" \
             "${_DISPLAY_MSG_STC}" \
+            "${_DISPLAY_MSG_TIME}" \
             "${_ID_BIT}" \
-            "${_DISPLAY_MSG_TEXT}"     
-    done    
+            "${_DISPLAY_MSG_TEXT}" \
+            "${_DISPLAY_MSG_CUR_VAL}" \
+            "${_DISPLAY_MSG_EXP_VAL}"
+    done
 else
     ARG_LOG=0 ARG_VERBOSE=1 log "INFO: no HC results to display"
 fi
-
-# notice of other messages
-print
-ARG_LOG=0 ARG_VERBOSE=1 log "all other messages have been suppressed (except fatal errors)"
 
 return 0
 }
 
 #******************************************************************************
 # END of script
-#**************************************************************************
+#******************************************************************************

@@ -20,10 +20,12 @@
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_space2comma(), data_get_lvalue_from_config(), data_dequote(),
-#           init_hc(), log_hc(), warn()
+#           dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +39,7 @@ typeset _SWLIST_BIN="/usr/sbin/swlist"
 typeset _SWLIST_OPTS=""
 typeset _SHOW_PATCHES_BIN="/usr/contrib/bin/show_patches"
 typeset _SHOW_PATCHES_OPTS=""
-typeset _VERSION="2018-05-11"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -109,6 +111,8 @@ then
     else
         _MSG="unable to run command: {${_SWLIST_BIN}}"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 1
     fi
 else
@@ -150,6 +154,8 @@ then
     else
         _MSG="unable to run command: {${_SHOW_PATCHES_BIN}}"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 1
     fi
 else

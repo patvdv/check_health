@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_ioscan
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), data_comma2pipe(), data_dequote(), 
+# REQUIRES: data_space2comma(), data_comma2pipe(), data_dequote(), dump_logs(),
 #           init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
@@ -28,6 +28,7 @@
 # @(#) 2016-06-08: introduced _AGILE_VIEW parameter [Patrick Van der Veken]
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2018-05-11: small optimizations [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,8 +40,8 @@ function check_hpux_ioscan
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-Fn"
-typeset _VERSION="2018-05-11"							# YYYY-MM-DD
-typeset _SUPPORTED_PLATFORMS="HP-UX"                  	# uname -s match
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -129,6 +130,8 @@ else
     then
         _MSG="unable to run command: {${_IOSCAN_BIN}}"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     fi
 fi
@@ -179,7 +182,7 @@ cat <<- EOT
 NAME    : $1
 VERSION : $2
 CONFIG  : $3 with:
-			ioscan_classes=<list_of_device_classes_to_check>
+            ioscan_classes=<list_of_device_classes_to_check>
             kernel_mode=<yes|no>
             agile_view=<yes|no>
 PURPOSE : Checks whether 'ioscan' returns errors or not (NO_HW, ERROR)

@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2013-08-29: initial version [Patrick Van der Veken]
+# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_hpux_autopath
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _AUTOPATH_BIN="/sbin/autopath"
 typeset _AUTOPATH_NEEDLE="Failed"
-typeset _VERSION="2013-08-29"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -71,6 +72,8 @@ ${_AUTOPATH_BIN} display >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? != 0 )) && {
     _MSG="unable to run {${_AUTOPATH_BIN}}"
     log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 0
 }
     
