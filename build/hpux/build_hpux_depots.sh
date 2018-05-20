@@ -78,6 +78,12 @@ swpackage -s hc_display_init.psf -x media_type=tape -d ../../depots/hc_display_i
 swpackage -s hc_display_init.psf @ /var/opt/depot/kudos
 cd -
 
+# build hc_display_json package
+cd ${BUILD_DIR}/hc_display_json
+swpackage -s hc_display_json.psf -x media_type=tape -d ../../depots/hc_display_json-${BUILD_DATE}.sd
+swpackage -s hc_display_json.psf @ /var/opt/depot/kudos
+cd -
+
 # build hc_display_terse package
 cd ${BUILD_DIR}/hc_display_terse
 swpackage -s hc_display_terse.psf -x media_type=tape -d ../../depots/hc_display_terse-${BUILD_DATE}.sd
