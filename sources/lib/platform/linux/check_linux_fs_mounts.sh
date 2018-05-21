@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2013-05-17: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -31,7 +32,7 @@
 function check_linux_fs_mounts
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2013-05-17"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -69,7 +70,7 @@ cat /etc/fstab |\
     awk '{print $2}' |\
 while read _FS
 do
-    _FS_COUNT=$(grep -c -E -e ".*on[ \t]+${_FS}[ \t]+.*" ${HC_STDOUT_LOG})
+    _FS_COUNT=$(grep -c -E -e ".*on[ \t]+${_FS}[ \t]+.*" ${HC_STDOUT_LOG}) 2>/dev/null
     case ${_FS_COUNT} in
         0)
             _MSG="${_FS} is not mounted"
@@ -89,7 +90,7 @@ do
 done
 
 # add /etc/fstab to STDOUT log
-cat /etc/fstab >>${HC_STDOUT_LOG} 
+cat /etc/fstab >>${HC_STDOUT_LOG} 2>/dev/null
 
 return 0
 }

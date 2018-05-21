@@ -19,10 +19,11 @@
 # @(#) MAIN: check_linux_hplog
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-22: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: added dump_logs() & STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_hplog
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _STATE_FILE="${STATE_PERM_DIR}/discovered.hplog"
-typeset _VERSION="2017-04-22"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -90,7 +91,7 @@ then
 else
     # build the complex search regex
     _HPLOG_SEVERITIES="^"
-    print "${_SEVERITIES_LINE}" | tr ',' '\n' | while read -r _SEVERITY_ENTRY
+    print "${_SEVERITIES_LINE}" | tr ',' '\n' 2>/dev/null | while read -r _SEVERITY_ENTRY
     do
         _HPLOG_SEVERITIES="${_HPLOG_SEVERITIES}(([0-9]+)\s*${_SEVERITY_ENTRY})|"    
     done
@@ -110,6 +111,8 @@ ${_HPLOG_BIN} -v >${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? != 0 )) && {
     _MSG="unable to run ${_HPLOG_BIN}"
     log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 0
 }
 
@@ -143,7 +146,7 @@ then
     _MSG="found ${_STC_COUNT} new HPLOG messages {${_HPLOG_BIN} -v}"
     _STC=1
     # add results to state file (must be sorted; re-use TMP_FILE)
-    sort -u ${_TMP1_FILE} ${_TMP2_FILE} > ${_STATE_FILE}
+    sort -u ${_TMP1_FILE} ${_TMP2_FILE} >${_STATE_FILE} 2>/dev/null
     (( $? > 0 )) && {
         warn "failed to sort temporary state file"
         return 1       

@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2013-09-19: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_root_crontab
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2013-09-19"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -85,7 +86,7 @@ if [[ -d /etc/cron.d ]]
 then
     cat /etc/cron.d/* | while read _CRON_LINE
     do
-        if [[ $(print "${_CRON_LINE}" | awk '{print $6}') == "root" ]]
+        if [[ $(print "${_CRON_LINE}" | awk '{print $6}' 2>/dev/null) == "root" ]]
         then
             print "${_CRON_LINE}" >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
         fi
@@ -96,7 +97,7 @@ fi
 grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CRON_ENTRY
 do
     _CRON_MATCH=$(grep -v '^#' ${HC_STDOUT_LOG} 2>/dev/null |\
-        grep -c -E -e "${_CRON_ENTRY}")
+        grep -c -E -e "${_CRON_ENTRY}" 2>/dev/null)
     case ${_CRON_MATCH} in
         0)
             _MSG="'${_CRON_ENTRY}' is not configured in cron"

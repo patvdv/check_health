@@ -25,6 +25,7 @@
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2017-05-05: fix fall-back for sysv->pgrep [Patrick Van der Veken]
 # @(#) 2017-05-08: set init/systemd based on distro [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@
 function check_linux_sshd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-05-08"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -74,7 +75,7 @@ esac
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_SSHD_SYSTEMD_SERVICE} || _STC=1
+        systemctl --quiet is-active ${_SSHD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -83,7 +84,7 @@ case "${LINUX_INIT}" in
     'sysv')
         if [[ -x ${_SSHD_INIT_SCRIPT} ]]
         then
-            if (( $(${_SSHD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running') == 0 ))
+            if (( $(${_SSHD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
@@ -100,7 +101,7 @@ esac
 # 2) try the pgrep way (note: old pgreps do not support '-c')
 if (( _RC != 0 ))
 then
-    (( $(pgrep -P 1 -u root sshd 2>>${HC_STDERR_LOG} | wc -l) == 0 )) && _STC=1
+    (( $(pgrep -P 1 -u root sshd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
 
 # evaluate results

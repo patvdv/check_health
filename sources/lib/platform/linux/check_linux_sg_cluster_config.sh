@@ -19,10 +19,11 @@
 # @(#) MAIN: check_linux_sg_cluster_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: added dump_logs() & other fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_sg_cluster_config
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-04-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # rubbish that cmgetconf outputs to STDOUT instead of STDERR
@@ -79,7 +80,7 @@ then
 fi
 
 # look for cluster instance names
-grep -E -e '^\[' ${_CONFIG_FILE} 2>/dev/null | cut -f1 -d']' | cut -f2 -d'[' |\
+grep -E -e '^\[' ${_CONFIG_FILE} 2>/dev/null | cut -f1 -d']' 2>/dev/null | cut -f2 -d'[' 2>/dev/null |\
 while read _CLUSTER_INSTANCE
 do
     _CLUSTER_INSTANCES="${_CLUSTER_INSTANCES} ${_CLUSTER_INSTANCE}"
@@ -103,6 +104,8 @@ else
     [[ -s ${_CLUSTER_RUN_FILE}.${_CLUSTER_INSTANCE} ]] || {
         _MSG="unable to gather cluster configuration"
         log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     }
     done
@@ -142,11 +145,11 @@ do
     while read _CLUSTER_ENTRY
     do
         # split entry to get the compressed version
-        _CLUSTER_CFG_ENTRY=$(print "${_CLUSTER_ENTRY}" | cut -f2 -d'|')
+        _CLUSTER_CFG_ENTRY=$(print "${_CLUSTER_ENTRY}" | cut -f2 -d'|' 2>/dev/null)
         # get parameter name from non-compressed version
-        _CLUSTER_PARAM=$(print "${_CLUSTER_ENTRY}" | cut -f1 -d'|' | awk '{ print $1 }')
+        _CLUSTER_PARAM=$(print "${_CLUSTER_ENTRY}" | cut -f1 -d'|' 2>/dev/null | awk '{ print $1 }' 2>/dev/null)
         # get parameter value from non-compressed version
-        _CLUSTER_VALUE=$(print "${_CLUSTER_ENTRY}" | cut -f1 -d'|' | awk '{ print substr($2,1,30)}')
+        _CLUSTER_VALUE=$(print "${_CLUSTER_ENTRY}" | cut -f1 -d'|' 2>/dev/null | awk '{ print substr($2,1,30)}' 2>/dev/null)
         # is it present?
         _CLUSTER_MATCH=$(grep -c "${_CLUSTER_CFG_ENTRY}" ${_CLUSTER_RUN_FILE}.${_CLUSTER_INSTANCE} 2>/dev/null)
         if (( _CLUSTER_MATCH == 0 ))

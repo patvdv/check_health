@@ -25,6 +25,7 @@
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
 # @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_linux_sg_cluster_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -78,7 +79,7 @@ then
     warn "${_SG_DAEMON} is not installed here"
     return 1
 else
-    cmviewcl -v -f line 2>>${HC_STDERR_LOG} | tr '|' ':' >>${HC_STDOUT_LOG}
+    cmviewcl -v -f line 2>>${HC_STDERR_LOG} | tr '|' ':' >>${HC_STDOUT_LOG} 2>/dev/null
     (( $? != 0 )) && {
         _MSG="unable to run command: {cmviewcl}"
         log_hc "$0" 1 "${_MSG}"
@@ -90,17 +91,18 @@ fi
 
 # do cluster status checks
 # (replace ':' by '|' for cmcviewcl output)
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' | while read _SG_ENTRY
+grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null |\
+    while read _SG_ENTRY
 do
     # field split
-    _SG_CFG_PARAM="$(print ${_SG_ENTRY} | cut -f1 -d'=')"   # field 1
-    _SG_CFG_VALUE="$(print ${_SG_ENTRY} | cut -f2 -d'=')"   # field 2
+    _SG_CFG_PARAM="$(print ${_SG_ENTRY} | cut -f1 -d'=' 2>/dev/null)"   # field 1
+    _SG_CFG_VALUE="$(print ${_SG_ENTRY} | cut -f2 -d'=' 2>/dev/null)"   # field 2
 
     # check run-time values (anchored grep here!)
     _SG_MATCH=$(grep -i "^${_SG_CFG_PARAM}" ${HC_STDOUT_LOG} 2>/dev/null)
     if [[ -n "${_SG_MATCH}" ]]
     then
-        _SG_RUN_VALUE=$(print "${_SG_MATCH}" | cut -f2 -d'=')   # field 2
+        _SG_RUN_VALUE=$(print "${_SG_MATCH}" | cut -f2 -d'=' 2>/dev/null)   # field 2
     
         if [[ "${_SG_CFG_VALUE}" = "${_SG_RUN_VALUE}" ]]
         then

@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2013-09-07: initial version [Patrick Van der Veken]
 # @(#) 2017-04-06: bugfix in temperature checking [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_hpasmcli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-04-06"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -157,7 +158,7 @@ then
     ${_HPASMCLI_BIN} -s 'SHOW FANS' >${_TMP_FILE} 2>${_TMP_FILE}
     (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW FANS' exited non-zero"
     # look for failures
-    grep -E -e '^#' ${_TMP_FILE} 2>/dev/null | grep -vi 'normal' |\
+    grep -E -e '^#' ${_TMP_FILE} 2>/dev/null | grep -vi 'normal' 2>/dev/null |\
         while read _ASM_LINE
     do
         _FAN_UNIT="$(print ${_ASM_LINE} | cut -f1 -d' ')"
@@ -241,15 +242,15 @@ then
     grep -E -e '^#' ${_TMP_FILE} 2>/dev/null |\
         while read _ASM_LINE
     do
-        _TEMP_FIELD="$(print ${_ASM_LINE} | cut -f3 -d' ')"
+        _TEMP_FIELD="$(print ${_ASM_LINE} | cut -f3 -d' ' 2>/dev/null)"
         _TEMP_VALUE="${_TEMP_FIELD%%C/*}"
-        _THRES_FIELD="$(print ${_ASM_LINE} | cut -f4 -d' ')"
+        _THRES_FIELD="$(print ${_ASM_LINE} | cut -f4 -d' ' 2>/dev/null)"
         _THRES_VALUE="${_THRES_FIELD%%C/*}"
         if [[ "${_TEMP_VALUE}" != "-" ]] && [[ "${_THRES_VALUE}" != "-" ]]
         then
             if (( _TEMP_VALUE >= _THRES_VALUE ))
             then
-                _TEMP_UNIT="$(print ${_ASM_LINE} | cut -f1 -d' ')"
+                _TEMP_UNIT="$(print ${_ASM_LINE} | cut -f1 -d' ' 2>/dev/null)"
                 _MSG="failure in 'SHOW TEMP', unit ${_TEMP_UNIT}"
                 _MSG="${_MSG} has ${_TEMP_VALUE} >= ${_THRES_VALUE}"
                 _STC_COUNT=$(( _STC_COUNT + 1 ))

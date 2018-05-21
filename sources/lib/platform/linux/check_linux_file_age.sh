@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2013-05-27: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_file_age
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2013-05-27"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -102,7 +103,7 @@ do
         _MSG="unable to read or access requested file at ${_FILE_PATH}"
         _STC=1        
     else
-        _AGE_CHECK=$(find "${_FILE_DIR}" -type f -name "${_FILE_NAME}" -mmin -"${_FILE_AGE}")
+        _AGE_CHECK=$(find "${_FILE_DIR}" -type f -name "${_FILE_NAME}" -mmin -"${_FILE_AGE}" 2>/dev/null)
         if (( $? != 0 ))
         then
             warn "unable to execute file age test for ${_FILE_PATH}"

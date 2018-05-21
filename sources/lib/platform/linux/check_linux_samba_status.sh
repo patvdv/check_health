@@ -26,6 +26,7 @@
 # @(#) 2016-12-01: added systemd code [Patrick Van der Veken]
 # @(#) 2017-05-08: fix fall-back for sysv->pgrep [Patrick Van der Veken]
 # @(#) 2017-07-23: fix for systemd service names [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_linux_samba_status
 typeset _SMB_INIT_SCRIPT="/etc/init.d/samba"
 typeset _SMB_SYSTEMD_SERVICE="smb.service"
 typeset _NMB_SYSTEMD_SERVICE="nmb.service"
-typeset _VERSION="2017-07-23"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -65,9 +66,9 @@ linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
         # check running NMB
-        systemctl --quiet is-active ${_NMB_SYSTEMD_SERVICE} || _STC=1
+        systemctl --quiet is-active ${_NMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
         # check running SMB
-        systemctl --quiet is-active ${_SMB_SYSTEMD_SERVICE} || _STC=$(( _STC + 2 ))
+        systemctl --quiet is-active ${_SMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=$(( _STC + 2 ))
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -77,12 +78,12 @@ case "${LINUX_INIT}" in
         # check running NMB/SMB
         if [[ -x ${_SMB_INIT_SCRIPT} ]]
         then
-            if (( $(${_SMB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i -E -e 'NMB.*is running.*') == 0 ))
+            if (( $(${_SMB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i -E -e 'NMB.*is running.*' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
             # check running SMB
-            if (( $(${_SMB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i -E -e 'SMB.*is running.*') == 0 ))
+            if (( $(${_SMB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i -E -e 'SMB.*is running.*' 2>/dev/null) == 0 ))
             then
                 _STC=$(( _STC + 2 ))
             fi
@@ -99,8 +100,8 @@ esac
 # 2) try the pgrep way (note: old pgreps do not support '-c')
 if (( _RC != 0 ))
 then
-    (( $(pgrep -u root nmbd 2>>${HC_STDERR_LOG}| wc -l) == 0 )) && _STC=1
-    (( $(pgrep -u root smbd 2>>${HC_STDERR_LOG} | wc -l) == 0 )) && _STC=$(( _STC + 2 ))
+    (( $(pgrep -u root nmbd 2>>${HC_STDERR_LOG}| wc -l 2>/dev/null) == 0 )) && _STC=1
+    (( $(pgrep -u root smbd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=$(( _STC + 2 ))
 fi
 
 # evaluate results

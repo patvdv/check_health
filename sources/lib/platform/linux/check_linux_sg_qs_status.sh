@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-05-01: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -31,7 +32,7 @@
 function check_linux_sg_qs_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-05-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-1"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _QS_BIN="/opt/qs/bin/qsc"
 typeset _QS_AUTH_FILE="/opt/qs/conf/qs_authfile"
@@ -64,7 +65,7 @@ then
 fi
 
 # ---- process state ----
-(( $(pgrep -u root -f ${_QS_BIN} 2>>${HC_STDERR_LOG} | wc -l) == 0 )) && _STC=1
+(( $(pgrep -u root -f ${_QS_BIN} 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 
 # evaluate results
 case ${_STC} in

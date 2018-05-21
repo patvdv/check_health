@@ -25,6 +25,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_burp_backup
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _BURP_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2016-12-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -145,9 +146,9 @@ do
         then
             _BACKUP_RUN="$(print ${_BACKUP_STATS} | awk '{print $1}')"
             # output format: YYYYMMDD HHMM
-            _BACKUP_DATE=$(print "${_BACKUP_STATS}" | awk '{gsub(/-/,"",$2); gsub(/:/,"",$3); print $2" "substr($3,0,4)}')
+            _BACKUP_DATE=$(print "${_BACKUP_STATS}" | awk '{gsub(/-/,"",$2); gsub(/:/,"",$3); print $2" "substr($3,0,4)}' 2>/dev/null)
             # convert to UNIX seconds
-            _CUR_BACKUP_TIME=$(date -d "${_BACKUP_DATE}" '+%s')
+            _CUR_BACKUP_TIME=$(date -d "${_BACKUP_DATE}" '+%s' 2>/dev/null)
         else
             warn "no backup found for client ${_BURP_CLIENT}. Check client impersonation?"
             _COUNT=$(( _COUNT + 1 ))
@@ -155,7 +156,7 @@ do
         fi
 
         # get backup warnings
-        _BACKUP_WARNINGS="$(${_BURP_BIN} -c ${_BURP_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z backup_stats 2>>${HC_STDERR_LOG} | grep '^warnings' 2>/dev/null | cut -f2 -d':')"
+        _BACKUP_WARNINGS="$(${_BURP_BIN} -c ${_BURP_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z backup_stats 2>>${HC_STDERR_LOG} | grep '^warnings' 2>/dev/null | cut -f2 -d':' 2>/dev/null)"
         if [[ -z "${_BACKUP_WARNINGS}" ]]
         then
             warn "could not get stats for backup ${_BACKUP_RUN} of client ${_BURP_CLIENT}"

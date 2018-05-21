@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2016-04-01: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_hpssacli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2016-04-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -160,9 +161,9 @@ then
     print "=== SSA controller(s) ===" >>${HC_STDOUT_LOG}
     cat ${_TMP_FILE} >>${HC_STDOUT_LOG}
     # get all slot numbers for multiple raid controllers
-    cat ${_TMP_FILE} | grep "in Slot [0-9]" | while read _SSA_LINE
+    cat ${_TMP_FILE} | grep "in Slot [0-9]" 2>/dev/null | while read _SSA_LINE
     do
-        _SLOT_NUM="$(print ${_SSA_LINE} | cut -f6 -d' ')"
+        _SLOT_NUM="$(print ${_SSA_LINE} | cut -f6 -d' ' 2>/dev/null)"
         case "${_DO_SSA_LOGL}" in
             +([0-9])*([0-9]))
                 # numeric OK

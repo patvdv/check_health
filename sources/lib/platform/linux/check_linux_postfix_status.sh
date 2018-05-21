@@ -25,6 +25,7 @@
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2017-05-08: suppress errors on postfix call + fix fall-back 
 # @(#)             for sysv->pgrep[Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_postfix_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
 typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
-typeset _VERSION="2017-05-08"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -63,7 +64,7 @@ done
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_POSTFIX_SYSTEMD_SERVICE} || _STC=1
+        systemctl --quiet is-active ${_POSTFIX_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -73,7 +74,7 @@ case "${LINUX_INIT}" in
         # check running SysV
         if [[ -x ${_POSTFIX_INIT_SCRIPT} ]]
         then
-            if (( $(${_POSTFIX_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running') == 0 ))
+            if (( $(${_POSTFIX_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
@@ -93,7 +94,7 @@ then
     _POSTFIX_BIN="$(which postfix 2>>${HC_STDERR_LOG})"
     if [[ -x ${_POSTFIX_BIN} && -n "${_POSTFIX_BIN}" ]]
     then
-        if (( $(${_POSTFIX_BIN} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running') == 0 ))
+        if (( $(${_POSTFIX_BIN} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
         then
             _STC=1
         fi

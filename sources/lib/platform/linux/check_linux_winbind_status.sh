@@ -25,6 +25,7 @@
 # @(#) 2013-05-17: initial version [Patrick Van der Veken]
 # @(#) 2016-12-01: added systemd code [Patrick Van der Veken]
 # @(#) 2017-05-08: fix fall-back for sysv->pgrep [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_winbind_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _WINBIND_INIT_SCRIPT="/etc/init.d/winbind"
 typeset _WINBIND_SYSTEMD_SERVICE="winbind.service"
-typeset _VERSION="2017-05-08"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -62,7 +63,7 @@ done
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_WINBIND_SYSTEMD_SERVICE} || _STC=1
+        systemctl --quiet is-active ${_WINBIND_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -71,7 +72,7 @@ case "${LINUX_INIT}" in
     'sysv')
         if [[ -x ${_WINBIND_INIT_SCRIPT} ]]
         then
-            if (( $(${_WINBIND_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'running') == 0 ))
+            if (( $(${_WINBIND_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'running' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
@@ -88,7 +89,7 @@ esac
 # 2) try the pgrep way (note: old pgreps do not support '-c')
 if (( _RC != 0 ))
 then
-    (( $(pgrep -u root winbind 2>>${HC_STDERR_LOG} | wc -l) == 0 )) && _STC=1
+    (( $(pgrep -u root winbind 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
 
 # evaluate & log results

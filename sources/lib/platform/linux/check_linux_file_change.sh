@@ -24,6 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-05-18: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-05-18"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -227,12 +228,12 @@ do
     fi
     
     # read entry from state file
-    _STATE_FILE_LINE=$(grep -E -e "^${_FILE_TO_CHECK}\|" ${_STATE_FILE})
+    _STATE_FILE_LINE=$(grep -E -e "^${_FILE_TO_CHECK}\|" ${_STATE_FILE} 2>/dev/null)
     if [[ -n "${_STATE_FILE_LINE}" ]]
     then
         # field 1 is the file name
-        _STATE_FILE_TYPE=$(print "${_STATE_FILE_LINE}" | cut -f2 -d'|')
-        _STATE_FILE_CKSUM=$(print "${_STATE_FILE_LINE}" | cut -f3 -d'|')        
+        _STATE_FILE_TYPE=$(print "${_STATE_FILE_LINE}" | cut -f2 -d'|' 2>/dev/null)
+        _STATE_FILE_CKSUM=$(print "${_STATE_FILE_LINE}" | cut -f3 -d'|' 2>/dev/null)        
     else
         _IS_NEW=1
     fi
@@ -244,7 +245,7 @@ do
             openssl-sha256)
                 if (( _USE_OPENSSL == 1 ))
                 then
-                    _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' | tr -d ' ')
+                    _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
                     _FILE_TYPE="openssl-sha256"
                 else
                     _MSG="cannot compute checksum [${_FILE_TYPE}] for ${_FILE_TO_CHECK}"
@@ -254,7 +255,7 @@ do
             cksum-crc32)
                 if (( _USE_CKSUM == 1 ))
                 then
-                    _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ')
+                    _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
                     _FILE_TYPE="cksum-crc32"
                 else
                     _MSG="cannot compute checksum [${_FILE_TYPE}] for ${_FILE_TO_CHECK}"
@@ -270,11 +271,11 @@ do
         # new file
         if (( _USE_OPENSSL == 1 ))
         then
-            _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' | tr -d ' ')
+            _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
             _FILE_TYPE="openssl-sha256"
         elif (( _USE_CKSUM == 1 ))
         then
-            _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ')
+            _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
             _FILE_TYPE="cksum-crc32"
         else
             _MSG="cannot compute checksum (openssl/cksum) for ${_FILE_TO_CHECK}"

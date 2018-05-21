@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2018-03-20: initial version [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR + other small fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -34,7 +35,7 @@ function check_linux_ntp_status
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
-typeset _VERSION="2018-03-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -80,7 +81,7 @@ fi
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} || _STC=1
+        systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -90,7 +91,7 @@ case "${LINUX_INIT}" in
         # check running SysV
         if [[ -x ${_NTPD_INIT_SCRIPT} ]]
         then
-            if (( $(${_NTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running') == 0 ))
+            if (( $(${_NTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
@@ -107,13 +108,13 @@ esac
 # evaluate results
 case ${_STC} in
     0)
-        _MSG="postfix is running"
+        _MSG="ntpd is running"
         ;;
     1)
-        _MSG="postfix is not running"
+        _MSG="ntpd is not running"
         ;;
     *)
-        _MSG="could not determine status of postfix"
+        _MSG="could not determine status of n"
         ;;
 esac
 log_hc "$0" ${_STC} "${_MSG}"
@@ -131,7 +132,7 @@ else
 fi
 
 # 1) active server
-_NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }')"
+_NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }') 2>/dev/null"
 case ${_NTP_PEER} in
     \*127.127.1.0*)
         _MSG="NTP is synchronizing against its internal clock"
@@ -151,11 +152,11 @@ log_hc "$0" ${_STC} "${_MSG}"
 # 2) offset value
 if (( _STC == 0 ))
 then
-    _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }')"
+    _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }') 2>/dev/null"
     case ${_CURR_OFFSET} in
         +([-0-9])*(.)*([0-9]))
             # numeric, OK (negatives are OK too!)
-            if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }') != 0 ))
+            if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
             then
                 _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
                 _STC=1      

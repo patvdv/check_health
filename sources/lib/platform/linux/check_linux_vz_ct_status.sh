@@ -27,6 +27,7 @@
 # @(#) 2017-06-08: return 1 on error [Patrick Van der Veken]
 # @(#) 2018-04-30: fixes on variable names Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_linux_vz_ct_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VZLIST_BIN="/usr/sbin/vzlist"
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -91,8 +92,8 @@ grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CT_ENTRY
 do
     # field split
     _CT_ID="$(print ${_CT_ENTRY} | cut -f1 -d';')"
-    _CT_CFG_STATUS=$(data_lc $(print "${_CT_ENTRY}" | cut -f2 -d';'))
-    _CT_CFG_BOOT=$(data_lc $(print "${_CT_ENTRY}" | cut -f3 -d';'))
+    _CT_CFG_STATUS=$(data_lc $(print "${_CT_ENTRY}" | cut -f2 -d';' 2>/dev/null))
+    _CT_CFG_BOOT=$(data_lc $(print "${_CT_ENTRY}" | cut -f3 -d';' 2>/dev/null))
     
     # check config
     case "${_CT_ID}" in
@@ -138,8 +139,8 @@ do
     if [[ -n "${_CT_MATCH}" ]]
     then
         # field split
-        _CT_RUN_STATUS=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' | cut -f3 -d';'))
-        _CT_RUN_BOOT=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' | cut -f4 -d';'))
+        _CT_RUN_STATUS=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' 2>/dev/null | cut -f3 -d';' 2>/dev/null))
+        _CT_RUN_BOOT=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' 2>/dev/null | cut -f4 -d';' 2>/dev/null))
         
         if [[ "${_CT_RUN_STATUS}" = "${_CT_CFG_STATUS}" ]]
         then
