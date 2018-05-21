@@ -67,7 +67,7 @@ then
             # system-release-cpe is present since Fedora 9 [cpe:/o:centos:linux:6:GA]
             LINUX_RELEASE=$(cut -f5 -d':' </etc/system-release-cpe 2>/dev/null)
         else
-             LINUX_RELEASE=$(print "${LINUX_RELEASE##*release }")
+            LINUX_RELEASE=$(print "${LINUX_RELEASE##*release }")
         fi
     else
         LINUX_DISTRO="${OS_NAME}"
