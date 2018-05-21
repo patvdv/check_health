@@ -57,13 +57,18 @@ then
     elif [[ -f /etc/SuSE-release ]]
     then
         LINUX_DISTRO="SuSE"
-        LINUX_RELEASE=$(grep 'VERSION' /etc/SuSE-release 2>/dev/null | cut -f2 -d'=' | tr -d ' ')
-        [[ -n "${LINUX_RELEASE}" ]] || LINUX_RELEASE=$(grep 'CPE_NAME' /etc/os-release 2>/dev/null | cut -f2 -d'=' | cut -f5 -d':')
+        LINUX_RELEASE=$(grep 'VERSION' /etc/SuSE-release 2>/dev/null | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
+        [[ -n "${LINUX_RELEASE}" ]] || LINUX_RELEASE=$(grep 'CPE_NAME' /etc/os-release 2>/dev/null | cut -f2 -d'=' 2>/dev/null | cut -f5 -d':' 2>/dev/null)
     elif [[ -f /etc/redhat-release ]]
     then
         LINUX_DISTRO="Redhat"
-        # system-release-cpe is present since Fedora 9 [cpe:/o:centos:linux:6:GA]
-        LINUX_RELEASE=$(cut -f5 -d':' </etc/system-release-cpe 2>/dev/null)
+        if [[ -f /etc/system-release-cpe ]]
+        then
+            # system-release-cpe is present since Fedora 9 [cpe:/o:centos:linux:6:GA]
+            LINUX_RELEASE=$(cut -f5 -d':' </etc/system-release-cpe 2>/dev/null)
+        else
+             LINUX_RELEASE=$(print "${LINUX_RELEASE##*release }")
+        fi
     else
         LINUX_DISTRO="${OS_NAME}"
         LINUX_RELEASE="unknown"
