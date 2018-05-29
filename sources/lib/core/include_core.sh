@@ -28,12 +28,13 @@
 # DOES: archive log entries for a given HC
 # EXPECTS: HC name [string]
 # RETURNS: 0=no archiving needed; 1=archiving OK; 2=archiving NOK
-# REQUIRES: n/a
+# REQUIRES: ${HC_LOG}
 function archive_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="${1}"
 typeset ARCHIVE_FILE=""
+typeset ARCHIVE_RC=0
 typeset YEAR_MONTH=""
 typeset LOG_COUNT=0
 typeset ARCHIVE_RC=0
@@ -46,22 +47,23 @@ trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1
 
 # isolate messages from HC, find unique %Y-%m combinations
 grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} 2>/dev/null |\
-    cut -f1 -d"${LOG_SEP}" | cut -f1 -d' ' | cut -f1-2 -d'-' | sort -u |\
+    cut -f1 -d"${LOG_SEP}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null |\
+    cut -f1-2 -d'-' 2>/dev/null | sort -u 2>/dev/null |\
     while read YEAR_MONTH
 do
     # find all messages for that YEAR-MONTH combination
     grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} >${TMP1_FILE}
-    LOG_COUNT=$(wc -l ${TMP1_FILE} | cut -f1 -d' ')
+    LOG_COUNT=$(wc -l ${TMP1_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
     log "# of entries in ${YEAR_MONTH} to archive: ${LOG_COUNT}"
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
-    cat ${ARCHIVE_FILE} ${TMP1_FILE} 2>/dev/null | sort -u >${TMP2_FILE}
+    cat ${ARCHIVE_FILE} ${TMP1_FILE} 2>/dev/null | sort -u >${TMP2_FILE} 2>/dev/null
     mv ${TMP2_FILE} ${ARCHIVE_FILE} 2>/dev/null || {
         warn "failed to move archive file, aborting"
         return 2
     }
-    LOG_COUNT=$(wc -l ${ARCHIVE_FILE} | cut -f1 -d' ')
+    LOG_COUNT=$(wc -l ${ARCHIVE_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
     log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
     # remove archived messages from the $HC_LOG (but create a backup first!)
@@ -76,7 +78,7 @@ do
             warn "failed to move HC log file, aborting"
             return 2
         }
-        LOG_COUNT=$(wc -l ${HC_LOG} | cut -f1 -d' ')
+        LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null )
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
         ARCHIVE_RC=1
     else
@@ -90,6 +92,29 @@ done
 rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
 
 return ${ARCHIVE_RC}
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: count_log_errors()
+# DOES: check hc log file(s) for rogue entries. Log entries may get scrambled
+#       if the append operation in handle_hc() does not happen fully atomically.
+#       This means that log entries are written without line separator (same line)
+#       There is no proper way to avoid this without an extra file locking utility
+# EXPECTS: path to log file to check
+# OUTPUTS: number of errors [number]
+# RETURNS: 0
+# REQUIRES: n/a
+function count_log_errors
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset LOG_STASH="${1}"
+typeset ERROR_COUNT=0
+
+ERROR_COUNT=$(cat ${LOG_STASH} 2>/dev/null | awk -F"${LOG_SEP}" 'BEGIN { num = 0 } { if (NF>'"${NUM_LOG_FIELDS}"') { num++ }} END { print num }' 2>/dev/null)
+
+print ${ERROR_COUNT}
+
+return 0
 }
 
 # -----------------------------------------------------------------------------
@@ -109,7 +134,6 @@ done
 
 return 0
 }
-
 
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: die()
@@ -528,10 +552,6 @@ if (( DO_REPORT_STD == 0 )) && (( ARG_DETAIL != 0 ))
 then
     die "you cannot specify '--detail' without '--report'"
 fi
-if (( DO_REPORT_STD == 0 )) && (( ARG_HISTORY != 0 ))
-then
-    die "you cannot specify '--with-history' without '--report'"
-fi
 if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
 then
     die "you cannot specify '--id' without '--report'"
@@ -602,6 +622,167 @@ do
 done
 
 return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: fix_logs()
+# DOES: fix hc log file(s) with rogue entries
+# EXPECTS: n/a
+# REQUIRES: n/a
+# RETURNS: 0=no fix needed; 1=fix OK; 2=fix NOK
+# NOTE: this routine rewrites the HC log(s). Since we cannot use file locking,
+#       some log entries may be lost if the HC is accessing the HC log during
+#       the rewrite operation!!
+function fix_logs
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset FIX_FILE=""
+typeset FIX_RC=0
+typeset LOG_STASH=""
+typeset ERROR_COUNT=0
+typeset STASH_COUNT=0
+typeset TMP_COUNT=0
+typeset SAVE_TMP_FILE="${TMP_DIR}/.$0.save.log.$$"
+typeset TMP_FILE="${TMP_DIR}/.$0.tmp.log.$$"
+
+if (( ARG_HISTORY != 0 ))
+then
+    set +f  # file globbing must be on
+    LOG_STASH="${HC_LOG} ${ARCHIVE_DIR}/hc.*.log"
+else
+    LOG_STASH="${HC_LOG}"
+fi
+
+# set local trap for clean-up
+trap "[[ -f ${TMP_FILE} ]] && rm -f ${TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
+
+# check and rewrite log file(s)
+find ${LOG_STASH} -type f -print 2>/dev/null | while read FIX_FILE
+do
+    log "fixing log file ${FIX_FILE} ..."
+
+    # count before rewrite
+    STASH_COUNT=$(wc -l ${FIX_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+
+    # does it have errors?
+    ERROR_COUNT=$(count_log_errors ${FIX_FILE})
+
+    # rewrite if needed
+    if (( ERROR_COUNT > 0 ))
+    then
+        >${TMP_FILE} 2>/dev/null
+        cat ${FIX_FILE} 2>/dev/null | awk -F"${LOG_SEP}" -v OFS="${LOG_SEP}" '
+
+            BEGIN { max_log_fields = '"${NUM_LOG_FIELDS}"'
+                    max_fields = (max_log_fields - 1) * 2
+                    glue_field = max_log_fields - 1
+            }
+
+            # Fix log lines that were smashed together because of unatomic appends
+            # This can lead to 4 distinct cases that we need to rewrite based on
+            # whether a FAIL_ID is present in each part of the log line.
+            # Following examples are based on a log file with 5 standard fields:
+            #   case 1: NO  (FAIL_ID) +  NO  (FAIL_ID) ->  9 fields
+            #   case 2: NO  (FAIL_ID) +  YES (FAIL_ID) -> 10 fields
+            #   case 3: YES (FAIL_ID) +  NO  (FAIL_ID) -> 10 fields
+            #   case 4: YES (FAIL_ID) +  YES (FAIL_ID) -> 11 fields
+
+            {
+                if (NF > max_log_fields) {
+                    # rogue line that needs rewriting
+                    if (NF < max_fields) {
+                        # case 1
+                        for (i=1;i<max_log_fields-1;i++) {
+                            printf ("%s%s", $i, OFS)
+                        }
+                        printf ("\n")
+                        if ($NF ~ //) {
+                            for (i=max_log_fields-1;i<NF;i++) {
+                                printf ("%s%s", $i, OFS)
+                            }
+                        } else {
+                            for (i=max_log_fields-1;i<=NF;i++) {
+                                printf ("%s%s", $i, OFS)
+                            }
+                        }
+                    } else {
+                        if ($max_fields == "") {
+                            # case 2+3
+                            # is the glue field a DATE or FAIL_ID?
+                            if ($glue_field ~ /[:-]/) {
+                                # it is a DATE (belongs to next line)
+                                for (i=1;i<max_log_fields-1;i++) {
+                                    printf ("%s%s", $i, OFS)
+                                }
+                                printf ("\n")
+                                for (i=max_log_fields-1;i<NF;i++) {
+                                    printf ("%s%s", $i, OFS)
+                                }
+                            } else {
+                                # it is a FAIL_ID (belongs to this line)
+                                for (i=1;i<max_log_fields;i++) {
+                                    printf ("%s%s", $i, OFS)
+                                }
+                                printf ("\n")
+                                for (i=max_log_fields;i<NF;i++) {
+                                    printf ("%s%s", $i, OFS)
+                                }
+                            }
+                        } else {
+                            # case 4
+                            for (i=1;i<max_log_fields;i++) {
+                                printf ("%s%s", $i, OFS)
+                            }
+                            printf ("\n")
+                            for (i=max_log_fields;i<NF;i++) {
+                                printf ("%s%s", $i, OFS)
+                            }
+                        }
+                    }
+                    printf ("\n")
+                } else {
+                    # correct log line, no rewrite needed
+                    print $0
+                }
+            }' >${TMP_FILE} 2>/dev/null
+
+        # count after rewrite
+        TMP_COUNT=$(wc -l ${TMP_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+
+        # bail out when we do not have enough records
+        if (( TMP_COUNT <= STASH_COUNT ))
+        then
+            warn "found inconsistent record count (${TMP_COUNT}<${STASH_COUNT}), aborting"
+            return 2
+        fi
+
+        # swap log file (but create a backup first!)
+        cp -p ${FIX_FILE} ${SAVE_TMP_FILE} 2>/dev/null
+        if (( $? == 0 ))
+        then
+            mv ${TMP_FILE} ${FIX_FILE} 2>/dev/null
+            if (( $? > 0 ))
+            then
+                warn "failed to move/update log file, rolling back"
+                mv ${SAVE_TMP_FILE} ${FIX_FILE} 2>/dev/null
+                return 2
+            fi
+            FIX_RC=1
+        else
+            warn "failed to create a backup of original log file, aborting"
+            return 2
+        fi
+
+        # clean up temporary file(s)
+        rm -f ${SAVE_TMP_FILE} ${TMP_FILE} >/dev/null 2>&1
+    else
+        log "no fixing needed for ${FIX_FILE}"
+    fi
+
+    ERROR_COUNT=0
+done
+
+return ${FIX_RC}
 }
 
 # -----------------------------------------------------------------------------

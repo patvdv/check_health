@@ -20,7 +20,7 @@
 # DOES: report HC events on STDOUT
 # EXPECTS: n/a
 # RETURNS: 0
-# REQUIRES: init_hc(), list_hc(), $EVENTS_DIR, $HC_LOG
+# REQUIRES: count_log_errors(), init_hc(), list_hc(), $EVENTS_DIR, $HC_LOG
 #
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-04-29"                               # YYYY-MM-DD
+typeset _VERSION="2018-05-27"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -40,11 +40,14 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 
 typeset _DIR_PREFIX=""
 typeset _FAIL_COUNT=0
+typeset _ERROR_COUNT=0
+typeset _ERROR_TOTAL_COUNT=0
 typeset _HC_LAST=""
 typeset _HC_LAST_TIME=""
 typeset _HC_LAST_STC=0
 typeset _HC_LAST_FAIL_ID="-"
 typeset _ID_NEEDLE=""
+typeset _CHECK_FILE=""
 typeset _LOG_STASH=""
 typeset _REPORT_LINE=""
 typeset _SORT_CMD=""
@@ -80,13 +83,13 @@ then
             # use of cat is not useless here, makes sure END {} gets executed even
             # if $_LOG STASH contains non-existing files (because of * wildcard)
             cat ${_LOG_STASH} 2>/dev/null | awk -F "${LOG_SEP}" -v needle_time="${_HC_LAST_TIME}" -v needle_hc="${_HC_LAST}" \
-                ' 
+                '
                 BEGIN {
                     last_stc     = 0
                     last_fail_id = "-"
                 }
                 {
-                    if ($1 ~ needle_time && $2 ~ needle_hc) {
+                    if (($1 ~ needle_time && $2 ~ needle_hc) && NF <= '"${NUM_LOG_FIELDS}"') {
                         last_event_stc = $3
                         last_stc = last_stc + last_event_stc
                         last_event_fail_id = $5
@@ -103,7 +106,7 @@ then
             "${_HC_LAST}" "${_HC_LAST_TIME}" "${_HC_LAST_FAIL_ID}" "${_HC_LAST_STC}"
     done
     # disclaimer
-    print "Note: this report only shows the overall combined status of all events of each HC within exactly"
+    print "NOTE: this report only shows the overall combined status of all events of each HC within exactly"
     print "      the *same* time stamp (seconds precise). It may therefore fail to report certain FAIL IDs."
     print "      Use '--report' to get the exact list of failure events."
 # other reports
@@ -136,12 +139,12 @@ else
             printf "%120s\n" | tr ' ' -
 
             # print failed events
-            # not a useless use of cat here 
+            # not a useless use of cat here
             # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
             cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${LOG_SEP}" -v id_needle="${_ID_NEEDLE}" \
                 '
                 {
-                    if ($5 ~ id_needle) {
+                    if ($5 ~ id_needle && NF <= '"${NUM_LOG_FIELDS}"') {
                         printf ("| %-20s | %-14s | %-30s | %-s\n", $1, $5, $2, $4)
                     }
                 }
@@ -149,7 +152,7 @@ else
             printf "\n%-s\n" "SUMMARY: ${_FAIL_COUNT} failed HC event(s) found."
         else
             # print failed events (we may have multiple events for 1 FAIL ID)
-            # not a useless use of cat here 
+            # not a useless use of cat here
             # (sort baulks if $_LOG STASH contains non-existing files (because of * wildcard))
             cat ${_LOG_STASH} 2>/dev/null | ${_SORT_CMD} 2>/dev/null | awk -F"${LOG_SEP}" -v id_needle="${_ID_NEEDLE}" \
                 ' BEGIN {
@@ -157,14 +160,14 @@ else
                     dashes = sprintf("%36s",""); gsub (/ /, "-", dashes);
                 }
                 {
-                    if ($5 ~ id_needle) {
+                    if ($5 ~ id_needle && NF <= '"${NUM_LOG_FIELDS}"') {
                         printf ("%36sMSG #%03d%36s", dashes, event_count, dashes)
                         printf ("\nTime    : %-s\nHC      : %-s\nDetail  : %-s\n", $1, $2, $4)
                         event_count++
                     }
                 }
                 ' 2>/dev/null
-                
+
             _DIR_PREFIX="$(expr substr ${ARG_FAIL_ID} 1 4)-$(expr substr ${ARG_FAIL_ID} 5 2)"
             printf "%37sSTDOUT%37s\n" | tr ' ' -;
             # display non-empty STDOUT file(s)
@@ -190,6 +193,19 @@ else
         printf "\n%-s\n" "SUMMARY: 0 failed HC events found."
     fi
 fi
+
+# check consistency of log(s)
+find ${_LOG_STASH} -type f -print 2>/dev/null | while read _CHECK_FILE
+do
+    _ERROR_COUNT=$(count_log_errors ${_CHECK_FILE})
+    if (( _ERROR_COUNT > 0 ))
+    then
+        print "NOTE: found ${_ERROR_COUNT} rogue entr(y|ies) in log file ${_CHECK_FILE}"
+        _ERROR_TOTAL_COUNT=$(( _ERROR_TOTAL_COUNT + _ERROR_COUNT ))
+    fi
+    _ERROR_COUNT=0
+done
+(( _ERROR_TOTAL_COUNT > 0 )) &&  print "NOTE: fix log errors with ${SCRIPT_NAME} --fix-logs [--with-history]"
 
 return 0
 }

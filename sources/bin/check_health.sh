@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-05-20"
+typeset -r SCRIPT_VERSION="2018-05-29"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -58,9 +58,10 @@ typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
-typeset -r LOG_SEP="|"			# single character only
-typeset -r MSG_SEP="%"		 	# single character only
-typeset -r MAGIC_QUOTE="!_!"	# magic quote
+typeset -r LOG_SEP="|"          # single character only
+typeset -r MSG_SEP="%"          # single character only
+typeset -t NUM_LOG_FIELDS=6     # current number of fields in $HC_LOG + 1
+typeset -r MAGIC_QUOTE="!_!"    # magic quote
 typeset -r LOG_DIR="/var/opt/hc"
 typeset -r LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
 typeset -r ARCHIVE_DIR="${LOG_DIR}/archive"
@@ -91,6 +92,7 @@ typeset LINUX_RELEASE=""
 typeset ARCHIVE_RC=0
 typeset DISABLE_RC=0
 typeset ENABLE_RC=0
+typeset FIX_FC=0
 typeset RUN_RC=0
 typeset RUN_CONFIG_FILE=""
 typeset RUN_TIME_OUT=0
@@ -384,6 +386,12 @@ then
     ARG_VERBOSE=0
     ARG_LOG=0
 fi
+# --fix-logs
+if (( ARG_ACTION == 12 )) && [[ -n "${ARG_HC}" ]]
+then
+    print -u2 "ERROR: you can only use '--fix-logs' in combination with '--with-history'"
+    exit 1
+fi
 # --timeout
 if (( ARG_TIME_OUT > 0 ))
 then
@@ -393,17 +401,17 @@ then
         if (( ARG_TIME_OUT < HC_MIN_TIME_OUT ))
         then
             print -u2 "ERROR: you cannot specify a value for '--timeout' smaller than ${HC_MIN_TIME_OUT} (see \$HC_MIN_TIME_OUT})"
-            exit 1  
+            exit 1
         fi
         if (( ARG_TIME_OUT < HC_TIME_OUT ))
         then
-            print -u2 "ERROR: you cannot specify a value for '--timeout' smaller than ${HC_TIME_OUT} (see ${CONFIG_FILE})" 
-            exit 1      
+            print -u2 "ERROR: you cannot specify a value for '--timeout' smaller than ${HC_TIME_OUT} (see ${CONFIG_FILE})"
+            exit 1
         fi
         HC_TIME_OUT=${ARG_TIME_OUT}
     else
         print -u2 "ERROR: you can only specify a value for '--timeout' in combination with '--run'"
-        exit 1      
+        exit 1
     fi
 fi
 
@@ -504,8 +512,8 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--disable-all | enable-all) |
-        (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks>         [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
+    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--disable-all | enable-all) | [--fix-logs [--with-history]] |
+        (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
@@ -529,6 +537,7 @@ Parameters:
 --display       : display HC results in a formatted way. Default is STDOUT (see --list-core for available formats)
 --enable        : enable HC(s).
 --enable-all    : enable all HCs.
+--fix-logs      : fix rogue log entries (can be used with --with-history)
 --fix-symlinks  : update symbolic links for the KSH autoloader.
 --flip-rc       : exit the health checker with the RC (return code) of the HC plugin instead of its own RC (will be discarded)
                   This option may only be specified when executing a single HC plugin
@@ -680,16 +689,34 @@ CMD_LINE="$*"
 [[ -z "${CMD_LINE}" ]] && display_usage && exit 0
 for CMD_PARAMETER in ${CMD_LINE}
 do
+    # ARG_ACTION is a toggle, do not allow double toggles
     case ${CMD_PARAMETER} in
         -archive|--archive)
-            ARG_ACTION=10
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else"
+                exit 1
+            else
+                ARG_ACTION=10
+            fi
+            ARG_LOCK=1
             ;;
         -check|--check)
             ARG_ACTION=1
             ;;
         -c|-check-host|--check-host)
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=4
+            fi
             ARG_CHECK_HOST=1
-            ARG_ACTION=4
             ;;
         -config-file=*)
             ARG_CONFIG_FILE="${CMD_PARAMETER#-config-file=}"
@@ -712,10 +739,22 @@ do
             ARG_DETAIL=1
             ;;
         -d|-disable|--disable)
-            ARG_ACTION=2
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=2
+            fi
             ;;
         -disable-all|--disable-all)
-            ARG_ACTION=6
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=6
+            fi
             ;;
         -display|--display)
             # STDOUT as default
@@ -728,10 +767,22 @@ do
             ARG_DISPLAY="${CMD_PARAMETER#--display=}"
             ;;
         -e|-enable|--enable)
-            ARG_ACTION=3
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=3
+            fi
             ;;
         -enable-all|--enable-all)
-            ARG_ACTION=7
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=7
+            fi
             ;;
         -f|-fix-symlinks|--fix-symlinks)
             read_config
@@ -741,6 +792,16 @@ do
             check_user
             fix_symlinks
             exit 0
+            ;;
+        -fix-logs|--fix-logs)
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=12
+            fi
+            ARG_LOCK=1
             ;;
         -flip-rc|--flip-rc)
             ARG_FLIP_RC=1
@@ -770,15 +831,33 @@ do
             ARG_LAST=1
             ;;
         -list|--list)
-            ARG_ACTION=9
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=9
+            fi
             ;;
         -list=*)
             ARG_LIST="${CMD_PARAMETER#-list=}"
-            ARG_ACTION=9
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=9
+            fi
             ;;
         --list=*)
             ARG_LIST="${CMD_PARAMETER#--list=}"
-            ARG_ACTION=9
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=9
+            fi
             ;;
         -list-hc|--list-hc|-list-all|--list-all)
             print -u2 "WARN: deprecated option. Use --list | --list=<needle>"
@@ -816,34 +895,69 @@ do
             ARG_MONITOR=0
             ;;
         -report|--report)   # compatability support <2017-12-15
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=8
+            fi
             # STDOUT as default
             ARG_REPORT="std"
             ARG_LOG=0; ARG_VERBOSE=0
-            ARG_ACTION=8
             ;;
         -report=*)
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=8
+            fi
             ARG_REPORT="${CMD_PARAMETER#-report=}"
             ARG_LOG=0; ARG_VERBOSE=0
-            ARG_ACTION=8
             ;;
         --report=*)
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=8
+            fi
             ARG_REPORT="${CMD_PARAMETER#--report=}"
             ARG_LOG=0; ARG_VERBOSE=0
-            ARG_ACTION=8
             ;;
         -reverse|--reverse)
             ARG_REVERSE=1
             ;;
         -r|-run|--run)
-            ARG_ACTION=4
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=4
+            fi
             ;;
         -s|-show|--show)
-            ARG_ACTION=5
-            ARG_LOG=0
-            ARG_VERBOSE=0
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=5
+            fi
+            ARG_LOG=0; ARG_VERBOSE=0
             ;;
         -show-stats|--show-stats)
-            ARG_ACTION=11
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=11
+            fi
             ;;
         -sms-provider=*)
             ARG_SMS_PROVIDER="${CMD_PARAMETER#-sms-provider=}"
@@ -921,8 +1035,8 @@ fi
 log "*** start of ${SCRIPT_NAME} [${CMD_LINE}] ***"
 (( ARG_LOG != 0 )) && log "logging takes places in ${LOG_FILE}"
 
-# check/create lock file & write PID file (only for --run)
-(( ARG_ACTION == 4 )) && check_lock_dir
+# check/create lock file & write PID file (only for --run/--archive/--fix-logs)
+(( ARG_ACTION == 4 || ARG_ACTION == 11 || ARG_ACTION == 12 )) && check_lock_dir
 
 # general HC log
 HC_LOG="${LOG_DIR}/hc.log"
@@ -1048,7 +1162,7 @@ case ${ARG_ACTION} in
                     HC_TIME_OUT=60
                 fi
             fi
-            
+
             # run HC with or without monitor
             if (( ARG_MONITOR == 0 ))
             then
@@ -1185,7 +1299,7 @@ case ${ARG_ACTION} in
         case ${ARCHIVE_RC} in
             0)
                 log "no archiving needed for ${ARG_HC}"
-                ;;          
+                ;;
             1)
                 log "successfully archived log entries for ${ARG_HC}"
                 ;;
@@ -1197,7 +1311,24 @@ case ${ARG_ACTION} in
         ;;
     11) # show HC event statistics
         show_statistics
-        ;;    
+        ;;
+    12)
+        # fix rogue log entries
+        fix_logs
+        FIX_RC=$?
+        case ${FIX_RC} in
+            0)
+                :   # feedback via fix_logs()
+                ;;
+            1)
+                log "successfully fixed log entries"
+                ;;
+            2)
+                log "failed to fix log entries [RC=${FIX_RC}]"
+                EXIT_CODE=1
+                ;;
+        esac
+        ;;
 esac
 
 # finish up work
