@@ -133,7 +133,7 @@ $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_HEADER_TPL})
 __EOT" >>${_TMP1_MAIL_FILE}
 
 # create body part (from $HC_MSG_VAR)
-print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _MAIL_MSG_TIME _DISP_MAIL_MSG_TEXTLAY_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
+print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _MAIL_MSG_TIME _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
 do
     # magically unquote if needed
     if [[ -n "${_MAIL_MSG_TEXT}" ]]
