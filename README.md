@@ -12,7 +12,7 @@ Health checker for UNIX/Linux is a small framework of monitoring scripts. It is 
 
 ## Build
 
-Use the build templates & scripts in the `build/ directory to roll your own packages.
+Use the build templates & scripts in the `build/` directory to roll your own packages.
 
 ## Installation
 

@@ -1,0 +1,31 @@
+#******************************************************************************
+# @(#) check_linux_process_limits.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_process_limits HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# -- user stanzas --
+# format:
+# user:<user name>;<limit name>;<soft threshold in %>;<hard threshold in %>
+# note: <limit name> must exactly match the descriptor in /proc/<PID>/limits
+#       thresholds are optional (will not be checked when not specified)
+user;postfix;Max open files;;75
+
+# -- process stanzas --
+# format:
+# process:<process name>;<limit name>;<soft threshold in %>;<hard threshold in %>
+# note: <limit name> must exactly match the descriptor in /proc/<PID>/limits
+#       thresholds are optional (will not be checked when not specified)
+process;nfsd;Max open files;100;80
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

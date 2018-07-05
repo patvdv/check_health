@@ -32,7 +32,7 @@
 function check_linux_sg_qs_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-1"                           # YYYY-MM-DD
+typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _QS_BIN="/opt/qs/bin/qsc"
 typeset _QS_AUTH_FILE="/opt/qs/conf/qs_authfile"

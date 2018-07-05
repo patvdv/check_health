@@ -5,7 +5,7 @@ Version:        %{build_timestamp}
 Release:        1
 
 Summary:        The KUDOS Health Checker (HC) for UNIX
-Group:          Tools/MonitoringGroup:          Tools/Monitoring
+Group:          Tools/Monitoring
 
 License:        GNU General Public License either version 2 of the License, or (at your option) any later version
 URL:            http://www.kudos.be

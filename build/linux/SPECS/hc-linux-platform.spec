@@ -44,6 +44,7 @@ cp ../SOURCES/lib/platform/linux/check_linux_hpasmcli.sh $RPM_BUILD_ROOT/opt/hc/
 cp ../SOURCES/lib/platform/linux/check_linux_hpacucli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpacucli.sh
 cp ../SOURCES/lib/platform/linux/check_linux_hplog.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hplog.sh
 cp ../SOURCES/lib/platform/linux/check_linux_hpssacli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
+cp ../SOURCES/lib/platform/linux/check_linux_process_limits.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_process_limits.sh
 cp ../SOURCES/lib/platform/linux/check_linux_root_crontab.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
 cp ../SOURCES/lib/platform/linux/check_linux_sg_cluster_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
 cp ../SOURCES/lib/platform/linux/check_linux_sg_cluster_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
@@ -60,6 +61,7 @@ cp ../SOURCES/etc/check_linux_hpacucli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/chec
 cp ../SOURCES/etc/check_linux_hplog.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hplog.conf.dist
 cp ../SOURCES/etc/check_linux_hpssacli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpssacli.conf.dist
 cp ../SOURCES/etc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
+cp ../SOURCES/etc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
 cp ../SOURCES/etc/check_linux_root_crontab.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_root_crontab.conf.dist
 cp ../SOURCES/etc/check_linux_sg_cluster_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_config.conf.dist
 cp ../SOURCES/etc/check_linux_sg_cluster_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
@@ -123,6 +125,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_hpacucli.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_hplog.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_hpssacli.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_process_limits.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_root_crontab.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
@@ -139,6 +142,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_hplog.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_hpssacli.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_ntp_status.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_process_limits.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_root_crontab.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_sg_cluster_config.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_sg_cluster_status.conf.dist
@@ -151,6 +155,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Tue Jul 10 2018 <patrick@kudos.be> - 0.1.1
+- Added check_linux_process_limits
 * Sat Apr 21 2018 <patrick@kudos.be> - 0.1.0
 - Added check_linux_ntp_status
 * Thu May 18 2017 <patrick@kudos.be> - 0.0.9
