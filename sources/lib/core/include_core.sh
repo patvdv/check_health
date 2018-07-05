@@ -1600,9 +1600,9 @@ then
     data_contains_string "${4}" "${MSG_SEP}"
     if (( $? > 0 ))
     then
-        HC_CUR_VAL=$(data_magic_quote "${4}")
+        HC_MSG_CUR_VAL=$(data_magic_quote "${4}")
     else
-        HC_CUR_VAL="${4}"
+        HC_MSG_CUR_VAL="${4}"
     fi
 fi
 if [[ -n "${5}" ]]

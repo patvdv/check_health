@@ -288,12 +288,12 @@ then
         if (( _CURR_VALUE > (_LIMIT_VALUE * _LIMIT_THRESHOLD / 100) ))
         then
             _MSG="(${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' has been surpassed (${_CURR_VALUE} > ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
-            log_hc "$0" 1 "${_MSG}"
+            log_hc "$0" 1 "${_MSG}" ${_CURR_VALUE} $(( _LIMIT_VALUE * _LIMIT_THRESHOLD / 100 ))
         else
             if (( _LOG_HEALTHY > 0 ))
             then
                 _MSG="(${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' is safe (${_CURR_VALUE} <= ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
-                log_hc "$0" 0 "${_MSG}"
+                log_hc "$0" 0 "${_MSG}" ${_CURR_VALUE} $(( _LIMIT_VALUE * _LIMIT_THRESHOLD / 100 ))
             fi
         fi
     fi
