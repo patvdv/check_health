@@ -1438,8 +1438,10 @@ typeset FVERSION=""
 typeset FCONFIG=""
 typeset FSTATE=""
 typeset FFILE=""
-typeset HAS_FCONFIG=0
+typeset FHEALTHY=""
 typeset FSCHEDULED=0
+typeset HAS_FCONFIG=0
+typeset HAS_FHEALTHY=""
 typeset DISABLE_FFILE=""
 typeset HC_VERSION=""
 
@@ -1454,8 +1456,8 @@ fi
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
-    printf "%-30s\t%-8s\t%s\t\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?"
-    printf "%80s\n" | tr ' ' -
+    printf "%-30s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
+    printf "%100s\n" | tr ' ' -
 fi
 print "${FPATH}" | tr ':' '\n' | grep -v "core$" | sort 2>/dev/null | while read -r FDIR
 do
@@ -1470,8 +1472,27 @@ do
         if (( HAS_FCONFIG != 0 ))
         then
             FCONFIG="Yes"
+            if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
+            then
+                # check for log_healthy parameter
+                HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf" data_get_lvalue_from_config 'log_healthy')
+                case "${HAS_FHEALTHY}" in
+                    no|NO|No)
+                        FHEALTHY="No"
+                        ;;
+                    yes|YES|Yes)
+                        FHEALTHY="Yes"
+                        ;;
+                    *)
+                        FHEALTHY="N/A"
+                        ;;
+                esac
+            else
+                FHEALTHY="N/A"          
+            fi
         else
             FCONFIG="No"
+            FHEALTHY="N/A"
         fi
         # check state
         DISABLE_FFILE="$(print ${FFILE##*/} | sed 's/\.sh$//')"
@@ -1495,12 +1516,13 @@ do
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
-            printf "%-30s\t%-8s\t%s\t%s\t%s\n" \
+            printf "%-30s\t%-8s\t%s\t%s\t%s\t%s\n" \
                 "${FNAME#function *}" \
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
                 "${FCONFIG}" \
-                "${FSCHEDULED}"
+                "${FSCHEDULED}" \
+                "${FHEALTHY}"
         else
             printf "%s\n" "${FNAME#function *}"
         fi
@@ -1529,6 +1551,12 @@ then
     print
     print "current FPATH: ${FPATH}"
 fi
+
+# legend
+print
+print "Config?: plugin has a default configuration files (Yes/No)"
+print "Sched? : plugin is scheduled through cron (Yes/No)"
+print "H+?    : plugin will log/show passed health checks too (Yes/No/Not applicable)"
 
 return 0
 }

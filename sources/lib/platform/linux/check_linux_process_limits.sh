@@ -2,7 +2,7 @@
 #******************************************************************************
 # @(#) check_linux_process_limits.sh
 #******************************************************************************
-# @(#) Copyright (C) 2016 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+# @(#) Copyright (C) 2018 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
 # This program is a free software; you can redistribute it and/or modify
 # it under the same terms of the GNU General Public License as published by
@@ -46,7 +46,8 @@ typeset _STC=0
 typeset _DUMMY=""
 typeset _LINE_COUNT=1
 typeset _LOG_HEALTHY=0
-typeset _OPEN_FILES=0
+typeset _MAX_OPEN_FILES=0
+typeset _MAX_PROCESSES=0
 typeset _PROCESS=""
 typeset _PROCESS_LIMIT=""
 typeset _PROCESS_SOFT_THRESHOLD=0
@@ -129,33 +130,36 @@ do
         fi
     fi
 
-    # collect ps info
-    (( ARG_DEBUG != 0 )) && debug "collecting information for process class ${_PROCESS}"
-    _PROCESS_PS=$(_get_psinfo_by_process "${_PROCESS}")
-    if [[ -z "${_PROCESS_PS}" ]]
-    then
-        warn "could not find any matching processes for process ${_PROCESS}"
-        continue
-    fi
-    print "${_PROCESS_PS}" | while read _PROCESS_PS_PID _PROCESS_PS_USER
-    do
-	    (( ARG_DEBUG != 0 )) && debug "checking process ${_PROCESS_PS_PID}"
-        # get current values and check thresholds
-        case "${_PROCESS_LIMIT}" in
-            "Max open files"|"MAX OPEN FILES"|"max open files")
-                _OPEN_FILES=$(_get_open_files ${_PROCESS_PS_PID})
-                # SOFT limit
-                _check_limit "${_PROCESS_LIMIT}" soft ${_PROCESS_PS_PID} ${_PROCESS_PS_USER} ${_PROCESS} ${_PROCESS_SOFT_THRESHOLD} ${_OPEN_FILES} ${_LOG_HEALTHY}
-                # HARD limit
-                _check_limit "${_PROCESS_LIMIT}" hard ${_PROCESS_PS_PID} ${_PROCESS_PS_USER} ${_PROCESS} ${_PROCESS_HARD_THRESHOLD} ${_OPEN_FILES} ${_LOG_HEALTHY}
-                ;;
-            *)
-                # no other limits are supported yet ;-)
-                warn "'${_PROCESS_LIMIT}' is an unsupported limit check"
+    # which limit to check?
+    case "${_PROCESS_LIMIT}" in
+        "Max open files")
+            # collect ps info
+            (( ARG_DEBUG != 0 )) && debug "${_PROCESS_LIMIT}: collecting information for process class ${_PROCESS}"
+            _PROCESS_PS=$(_get_psinfo_by_process "${_PROCESS}")
+            if [[ -z "${_PROCESS_PS}" ]]
+            then
+                warn "${_PROCESS_LIMIT}: could not find any matching processes for process ${_PROCESS}"
                 continue
-                ;;
-        esac
-    done
+            fi
+            print "${_PROCESS_PS}" | while read _PROCESS_PS_PID _PROCESS_PS_USER
+            do
+                (( ARG_DEBUG != 0 )) && debug "${_PROCESS_LIMIT}: checking process ${_PROCESS_PS_PID}"
+                # get current values and check thresholds
+                _MAX_OPEN_FILES=$(_get_open_files ${_PROCESS_PS_PID})
+                # SOFT limit
+                _check_limit "${_PROCESS_LIMIT}" soft ${_PROCESS_PS_PID} ${_PROCESS_PS_USER} \
+                    ${_PROCESS} ${_PROCESS_SOFT_THRESHOLD} ${_MAX_OPEN_FILES} ${_LOG_HEALTHY}
+                # HARD limit
+                _check_limit "${_PROCESS_LIMIT}" hard ${_PROCESS_PS_PID} ${_PROCESS_PS_USER} \
+                    ${_PROCESS} ${_PROCESS_HARD_THRESHOLD} ${_MAX_OPEN_FILES} ${_LOG_HEALTHY}
+            done
+            ;;
+        *)
+            # no other limits are supported yet ;-)
+            warn "'${_PROCESS_LIMIT}' is an unsupported limit check"
+            continue
+            ;;
+    esac
 
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
@@ -190,33 +194,46 @@ do
         fi
     fi
 
-    # collect ps info
-    (( ARG_DEBUG != 0 )) && debug "collecting information for user ${_USER}"
-    _USER_PS=$(_get_psinfo_by_user "${_USER}")
-    if [[ -z "${_USER_PS}" ]]
-    then
-        warn "could not find any matching processes for user ${_USER}"
-        continue
-    fi
-    print "${_USER_PS}" | while read _USER_PS_PID _USER_PS_COMM
-    do
-	    (( ARG_DEBUG != 0 )) && debug "checking process ${_USER_PS_PID}"
-        # get current values and check thresholds
-        case "${_USER_LIMIT}" in
-            "Max open files"|"MAX OPEN FILES"|"max open files")
-                _OPEN_FILES=$(_get_open_files ${_USER_PS_PID})
-                # SOFT limit
-                _check_limit "${_USER_LIMIT}" soft ${_USER_PS_PID} ${_USER} ${_USER_PS_COMM} ${_USER_SOFT_THRESHOLD} ${_OPEN_FILES} ${_LOG_HEALTHY}
-                # HARD limit
-                _check_limit "${_USER_LIMIT}" hard ${_USER_PS_PID} ${_USER} ${_USER_PS_COMM} ${_USER_HARD_THRESHOLD} ${_OPEN_FILES} ${_LOG_HEALTHY}
-                ;;
-            *)
-                # no other limits are supported yet ;-)
-                warn "'${_USER_LIMIT}' is an unsupported limit check"
+    # which limit to check?
+    case "${_USER_LIMIT}" in
+        "Max open files")
+            # collect ps info
+            (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
+            _USER_PS=$(_get_psinfo_by_user "${_USER}")
+            if [[ -z "${_USER_PS}" ]]
+            then
+                warn "${_USER_LIMIT}: could not find any matching processes for user ${_USER}"
                 continue
-                ;;
-        esac
-    done
+            fi
+            print "${_USER_PS}" | while read _USER_PS_PID _USER_PS_COMM
+            do
+                (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: checking process ${_USER_PS_PID}"
+                # get current values and check thresholds
+                _MAX_OPEN_FILES=$(_get_open_files ${_USER_PS_PID})
+                # SOFT limit
+                _check_limit "${_USER_LIMIT}" soft ${_USER_PS_PID} ${_USER} ${_USER_PS_COMM} \
+                    ${_USER_SOFT_THRESHOLD} ${_MAX_OPEN_FILES} ${_LOG_HEALTHY}
+                # HARD limit
+                _check_limit "${_USER_LIMIT}" hard ${_USER_PS_PID} ${_USER} ${_USER_PS_COMM} \
+                    ${_USER_HARD_THRESHOLD} ${_MAX_OPEN_FILES} ${_LOG_HEALTHY}
+            done
+            ;;
+        "Max processes")
+            (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
+            _MAX_PROCESSES=$(_get_processes ${_USER})
+            # SOFT limit
+            _check_limit "${_USER_LIMIT}" soft 0 ${_USER} "" ${_USER_SOFT_THRESHOLD} \
+                ${_MAX_PROCESSES} ${_LOG_HEALTHY}
+            # HARD limit
+            _check_limit "${_USER_LIMIT}" hard 0 ${_USER} "" ${_USER_HARD_THRESHOLD} \
+                ${_MAX_PROCESSES} ${_LOG_HEALTHY}
+            ;;
+        *)
+            # no other limits are supported yet ;-)
+            warn "'${_USER_LIMIT}' is an unsupported limit check"
+            continue
+            ;;
+    esac
 
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
@@ -254,45 +271,79 @@ function _check_limit
 {
 typeset _LIMIT_NAME="${1}"
 typeset _LIMIT_TYPE="${2}"
-typeset _LIMIT_PID=${3}
+typeset _LIMIT_PID=${3}         # can be 0
 typeset _LIMIT_USER="${4}"
-typeset _LIMIT_PROCESS="${5}"
+typeset _LIMIT_PROCESS="${5}"   # can be ""
 typeset _LIMIT_THRESHOLD=${6}
 typeset _CURR_VALUE=${7}
 typeset _LOG_HEALTHY=${8}
+typeset _LIMIT_COMMAND=""
 typeset _LIMIT_ENTRY=""
+typeset _LIMIT_FIELD=0
+typeset _MSG_BIT=""
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+
+# check for empties
+(( _LIMIT_PID == 0 )) && _LIMIT_PID="N/A"
+[[ -z "${_LIMIT_PROCESS}" ]] && _LIMIT_PROCESS="N/A"
 
 if [[ -n "${_LIMIT_THRESHOLD}" ]]
 then
-    _LIMIT_ENTRY=$(grep -i "${_LIMIT_NAME}" /proc/${_LIMIT_PID}/limits 2>/dev/null)
-    if [[ -z "${_LIMIT_ENTRY}" ]]
-    then
-        warn "unable to gather limits information (${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS})"
-        return 1
-    fi
-
-    case "${_LIMIT_TYPE}" in
-        soft)
-            _LIMIT_VALUE=$(print "${_LIMIT_ENTRY}" | sed -s "s/${_LIMIT_NAME}//g" 2>/dev/null | awk '{ print $1}' 2>/dev/null)
+    # get limit value
+    case "${_LIMIT_NAME}" in
+        "Max open files")
+            _LIMIT_ENTRY=$(grep -i "${_LIMIT_NAME}" /proc/${_LIMIT_PID}/limits 2>/dev/null)
+            if [[ -z "${_LIMIT_ENTRY}" ]]
+            then
+                warn "${_LIMIT_TYPE}: unable to gather limits information (${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS})"
+                return 1
+            fi
+            case "${_LIMIT_TYPE}" in
+                soft)
+                    _LIMIT_FIELD=1
+                    ;;
+                hard)
+                    _LIMIT_FIELD=2
+                    ;;
+            esac
+            _LIMIT_VALUE=$(print "${_LIMIT_ENTRY}" | sed -s "s/${_LIMIT_NAME}//g" 2>/dev/null |\
+                awk -v f="${_LIMIT_FIELD}" '{ print $f}' 2>/dev/null)
+            _MSG_BIT="${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}"
             ;;
-        hard)
-            _LIMIT_VALUE=$(print "${_LIMIT_ENTRY}" | sed -s "s/${_LIMIT_NAME}//g" 2>/dev/null | awk '{ print $2}' 2>/dev/null)
-            ;;
+        "Max processes")            
+            case "${_LIMIT_TYPE}" in
+                soft)
+                    _LIMIT_COMMAND="ulimit -a"
+                    ;;
+                hard)
+                    _LIMIT_COMMAND="ulimit -Ha"
+                    ;;      
+            esac
+            _LIMIT_VALUE=$(su - ${_LIMIT_USER} -c "${_LIMIT_COMMAND}" 2>/dev/null |\
+                grep -i "max user processes" 2>/dev/null | sed -s "s/max user processes//g" 2>/dev/null |\
+                awk '{ print $2}' 2>/dev/null)
+            if [[ -z "${_LIMIT_VALUE}" ]]
+            then
+                warn "${_LIMIT_TYPE}: unable to gather limits information (${_LIMIT_USER})"
+                return 1
+            fi
+            _MSG_BIT="${_LIMIT_USER}"           
+            ;;          
     esac
+    # check limit value -> threshold
     if [[ "${_LIMIT_VALUE}" = "unlimited" ]]
     then
-        log "limit (${_LIMIT_TYPE} on '${_LIMIT_NAME}' is unlimited (${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS})"
+        log "limit (${_LIMIT_TYPE} on '${_LIMIT_NAME}' is unlimited (${_MSG_BIT})"
         return 0
     else
         if (( _CURR_VALUE > (_LIMIT_VALUE * _LIMIT_THRESHOLD / 100) ))
         then
-            _MSG="(${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' has been surpassed (${_CURR_VALUE} > ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
+            _MSG="(${_MSG_BIT}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' has been surpassed (${_CURR_VALUE} > ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
             log_hc "$0" 1 "${_MSG}" ${_CURR_VALUE} $(( _LIMIT_VALUE * _LIMIT_THRESHOLD / 100 ))
         else
             if (( _LOG_HEALTHY > 0 ))
             then
-                _MSG="(${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' is safe (${_CURR_VALUE} <= ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
+                _MSG="(${_MSG_BIT}) limit (${_LIMIT_TYPE}) on '${_LIMIT_NAME}' is safe (${_CURR_VALUE} <= ${_LIMIT_VALUE} @${_LIMIT_THRESHOLD}%)"
                 log_hc "$0" 0 "${_MSG}" ${_CURR_VALUE} $(( _LIMIT_VALUE * _LIMIT_THRESHOLD / 100 ))
             fi
         fi
@@ -315,6 +366,16 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+function _get_processes
+{
+(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+
+ps -U ${1} --no-headers 2>/dev/null | wc -l 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 function _show_usage
 {
 cat <<- EOT
@@ -325,7 +386,10 @@ CONFIG  : $3 with:
           and formatted stanzas:
             user:<user_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
             process:<process_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
-PURPOSE : Checks the value(s) of the process limits from /proc/*/limits
+PURPOSE : Checks the value(s) of the process limits from /proc/*/limits or ulimit
+          Currenty following checks are supported:
+            * Max open files (/proc/*/limits)
+            * Max processes (ulimit)
 
 EOT
 
