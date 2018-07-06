@@ -1553,10 +1553,13 @@ then
 fi
 
 # legend
-print
-print "Config?: plugin has a default configuration files (Yes/No)"
-print "Sched? : plugin is scheduled through cron (Yes/No)"
-print "H+?    : plugin will log/show passed health checks too (Yes/No/Not applicable)"
+if [[ "${FACTION}" != "list" ]]
+then
+    print
+    print "Config?: plugin has a default configuration files (Yes/No)"
+    print "Sched? : plugin is scheduled through cron (Yes/No)"
+    print "H+?    : plugin will log/show passed health checks too (Yes/No/Not applicable)"
+fi
 
 return 0
 }
