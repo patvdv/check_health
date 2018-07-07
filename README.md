@@ -1,4 +1,5 @@
-![logo](./hc.png) # Health checker for UNIX/Linux
+![logo](./hc.png) 
+# Health checker for UNIX/Linux
 
 Health checker for UNIX/Linux is a small framework of monitoring scripts. It is meant to be used for low latency & low frequency checks, it is easy to extend where necessary (plugins) and it can be integrated with other toolsets.
 
@@ -106,4 +107,10 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 
 ## References
 
+### Documentation
+
 More documentation can be found at http://www.kudos.be/Projects/Health_checker.html
+
+### Logo
+
+The logo was kindly provided by *Komiser Back*.
