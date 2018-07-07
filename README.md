@@ -1,6 +1,7 @@
-<img align="right" src="hc.jpg">
 # Health checker for UNIX/Linux
 
+<img align="right" width="421" height="298" src="hc.jpg">
+ 
 Health checker for UNIX/Linux is a small framework of monitoring scripts. It is meant to be used for low latency & low frequency checks, it is easy to extend where necessary (plugins) and it can be integrated with other toolsets.
 
 ## Requirements
