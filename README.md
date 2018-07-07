@@ -1,4 +1,4 @@
-<img style="float: right;" src="hc.jpg">
+<img align="right" src="hc.jpg">
 # Health checker for UNIX/Linux
 
 Health checker for UNIX/Linux is a small framework of monitoring scripts. It is meant to be used for low latency & low frequency checks, it is easy to extend where necessary (plugins) and it can be integrated with other toolsets.
