@@ -93,6 +93,7 @@ _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_h
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1
+        ;;
     *)
         # do not override hc_arg 
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
