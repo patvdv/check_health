@@ -23,8 +23,8 @@
 #
 # @(#) HISTORY:
 # @(#) 2016-04-08: initial version [Patrick Van der Veken]
-# @(#) 2016-12-01: more standardized error handling  [Patrick Van der Veken]
-# @(#) 2018-07-10: added log_healthy hc_arg  [Patrick Van der Veken]
+# @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
+# @(#) 2018-07-10: added log_healthy hc_arg [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************

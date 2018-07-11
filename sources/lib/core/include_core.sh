@@ -825,8 +825,8 @@ then
     (( ARG_DEBUG != 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
     $(data_is_numeric ${ALL_MSG_STC}) || die "HC all STC computes to a non-numeric value"
 else
-	# nothing to do
-	return 0
+    # nothing to do
+    return 0
 fi
 
 # display routines
