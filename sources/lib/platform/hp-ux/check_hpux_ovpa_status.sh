@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2016-04-08: initial version [Patrick Van der Veken]
 # @(#) 2016-12-01: more standardized error handling  [Patrick Van der Veken]
+# @(#) 2018-07-10: added log_healthy hc_arg  [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@
 function check_hpux_ovpa_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2016-12-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-07-10"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _OVPA_BIN="/opt/perf/bin/perfstat"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -44,6 +45,7 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _OVPA_MATCH=0
 typeset _OVPA_VERSION=""
 typeset _OVPA_DAEMONS=""
@@ -52,12 +54,28 @@ typeset _OVPA_DAEMONS=""
 for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
+        log_healthy)
+            _LOG_HEALTHY=1
+            ;;
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
+# log_healthy
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+            
 # check & get ovpa status
 if [[ ! -x ${_OVPA_BIN} ]] 
 then
@@ -96,9 +114,12 @@ do
             ;;
     esac
     
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
-    _STC=0
+    # handle result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+        _STC=0
+    fi
 done
 
 return 0

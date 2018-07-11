@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2018-07-10: original version [Patrick Van der Veken]
+# @(#) 2018-07-11: better log_healthy handling [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-07-10"                           # YYYY-MM-DD
+typeset _VERSION="2018-07-11"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -45,6 +46,7 @@ typeset _MSG=""
 typeset _STC=0
 typeset _DUMMY=""
 typeset _LINE_COUNT=1
+typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _MAX_OPEN_FILES=0
 typeset _MAX_PROCESSES=0
@@ -70,6 +72,9 @@ trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
+        log_healthy)
+            _LOG_HEALTHY=1
+            ;;
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
             ;;
@@ -84,22 +89,28 @@ then
     return 1
 fi
 # read required configuration values
-_LOG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
-case "${_LOG_HEALTHY}" in
-    no|NO|No)
-        _LOG_HEALTHY=0
-        log "not logging/showing passed health checks"
-        ;;
-    *)
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
         _LOG_HEALTHY=1
-        if (( ARG_LOG > 0 ))
-        then
-            log "logging/showing passed health checks"
-        else
-            log "showing passed health checks (but not logging)"
-        fi
+    *)
+        # do not override hc_arg 
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+
+# log_healthy
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check PROCESS stanzas
 grep -i '^process' ${_CONFIG_FILE} 2>/dev/null |\

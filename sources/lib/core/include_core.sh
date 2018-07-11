@@ -799,7 +799,7 @@ typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
 typeset HC_MSG_ENTRY=""
 typeset HC_STC_RC=0
-typeset ONE_MSG_STC=""
+typeset ONE_MSG_STC=0
 typeset ONE_MSG_TIME=""
 typeset ONE_MSG_TEXT=""
 typeset ONE_MSG_CUR_VAL=""
@@ -824,6 +824,9 @@ then
     ALL_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 }} END { print stc }' 2>/dev/null)
     (( ARG_DEBUG != 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
     $(data_is_numeric ${ALL_MSG_STC}) || die "HC all STC computes to a non-numeric value"
+else
+	# nothing to do
+	return 0
 fi
 
 # display routines
