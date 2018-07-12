@@ -1496,7 +1496,7 @@ do
         # check for log_healthy support through --hc-args (plugin)
         elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
         then
-            FHEALTHY="Yes"
+            FHEALTHY="S"
         else
             FCONFIG="No"
             FHEALTHY="N/S"
@@ -1565,7 +1565,7 @@ then
     print
     print "Config?: plugin has a default configuration file (Yes/No)"
     print "Sched? : plugin is scheduled through cron (Yes/No)"
-    print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Not supported)"
+    print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Supported/Not supported)"
 fi
 
 return 0
