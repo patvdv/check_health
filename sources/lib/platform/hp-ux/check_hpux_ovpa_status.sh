@@ -54,9 +54,6 @@ typeset _OVPA_DAEMONS=""
 for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
-        log_healthy)
-            _LOG_HEALTHY=1
-            ;;
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
             ;;
@@ -64,6 +61,7 @@ do
 done
 
 # log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
 if (( _LOG_HEALTHY > 0 ))
 then
     if (( ARG_LOG > 0 ))
@@ -129,10 +127,11 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks the status of OVPA processes (OpenView Performance Agent)
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3
+PURPOSE     : Checks the status of OVPA processes (OpenView Performance Agent)
+LOG HEALTHY : Supported
 
 EOT
 

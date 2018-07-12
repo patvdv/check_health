@@ -1477,7 +1477,7 @@ do
             FCONFIG="Yes"
             if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
             then
-                # check for log_healthy parameter
+                # check for log_healthy parameter (config file)
                 HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf" data_get_lvalue_from_config 'log_healthy')
                 case "${HAS_FHEALTHY}" in
                     no|NO|No)
@@ -1487,15 +1487,19 @@ do
                         FHEALTHY="Yes"
                         ;;
                     *)
-                        FHEALTHY="N/A"
+                        FHEALTHY="N/S"
                         ;;
                 esac
             else
-                FHEALTHY="N/A"          
+                FHEALTHY="N/S"          
             fi
+        # check for log_healthy support through --hc-args (plugin)
+        elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
+        then
+            FHEALTHY="Yes"
         else
             FCONFIG="No"
-            FHEALTHY="N/A"
+            FHEALTHY="N/S"
         fi
         # check state
         DISABLE_FFILE="$(print ${FFILE##*/} | sed 's/\.sh$//')"
@@ -1559,9 +1563,9 @@ fi
 if [[ "${FACTION}" != "list" ]]
 then
     print
-    print "Config?: plugin has a default configuration files (Yes/No)"
+    print "Config?: plugin has a default configuration file (Yes/No)"
     print "Sched? : plugin is scheduled through cron (Yes/No)"
-    print "H+?    : plugin will log/show passed health checks too (Yes/No/Not applicable)"
+    print "H+?    : plugin can log/show passed health checks (Yes/No/Not supported)"
 fi
 
 return 0

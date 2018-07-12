@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-05-29"
+typeset -r SCRIPT_VERSION="2018-07-12"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -115,6 +115,7 @@ typeset ARG_LAST=0              # report last events
 typeset ARG_LIST=""             # list all by default
 typeset ARG_LOCK=1              # lock for concurrent script executions is on by default
 typeset ARG_LOG=1               # logging is on by default
+typeset ARG_LOG_HEALTHY=0       # logging of healthy health checks is off by default
 typeset ARG_MONITOR=1           # killing long running HC processes is on by default
 typeset ARG_NOTIFY=""           # notification of problems is off by default
 typeset ARG_REVERSE=0           # show report in reverse date order is off by default
@@ -414,7 +415,12 @@ then
         exit 1
     fi
 fi
-
+# --log-healthy
+if (( ARG_LOG_HEALTHY > 0 && ARG_ACTION != 4 ))
+then
+    print -u2 "ERROR: you can only use '--log-healthy' in combination with '--run'"
+    exit 1
+fi
 # check log location
 if (( ARG_LOG != 0 ))
 then
@@ -514,7 +520,7 @@ Execute/report simple health checks (HC) on UNIX hosts.
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--disable-all | enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
-            [--display=<method>] ([--debug] [--debug-level=<level>]) [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
+            [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
 
@@ -553,6 +559,8 @@ Parameters:
                   - whether the HC plugin requires a configuration file in ${HC_ETC_DIR}
                   - whether the HC plugin is scheduled by cron
 --list-core     : show the available core plugins (mail,SMS,...)
+--log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
+                  (can be overridden by --no-log to disable all logging)
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
 --no-lock       : disable locking to allow concurrent script executions
 --no-log        : do not log any messages to the script log file or health check results.
@@ -872,6 +880,9 @@ do
             check_user
             list_core
             exit 0
+            ;;
+        -log-healthy|--log-healthy)
+            ARG_LOG_HEALTHY=1
             ;;
         -mail-to=*)
             ARG_MAIL_TO="${CMD_PARAMETER#-mail-to=}"

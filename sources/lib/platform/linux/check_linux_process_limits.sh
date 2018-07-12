@@ -23,7 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2018-07-10: original version [Patrick Van der Veken]
-# @(#) 2018-07-11: better log_healthy handling [Patrick Van der Veken]
+# @(#) 2018-07-12: better log_healthy handling [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +33,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-07-11"                           # YYYY-MM-DD
+typeset _VERSION="2018-07-12"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -72,9 +72,6 @@ trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
-        log_healthy)
-            _LOG_HEALTHY=1
-            ;;
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
             ;;
@@ -101,6 +98,7 @@ case "${_CFG_HEALTHY}" in
 esac
 
 # log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
 if (( _LOG_HEALTHY > 0 ))
 then
     if (( ARG_LOG > 0 ))
@@ -391,17 +389,18 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            log_healthy=<yes|no>
-          and formatted stanzas:
-            user:<user_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
-            process:<process_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
-PURPOSE : Checks the value(s) of the process limits from /proc/*/limits or ulimit
-          Currenty following checks are supported:
-            * Max open files (/proc/*/limits)
-            * Max processes (ulimit)
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with:
+                log_healthy=<yes|no>
+                and formatted stanzas:
+                    user:<user_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
+                    process:<process_name>:<limit_name>:<soft_limit_threshold_%>:<hard_limit_threshold_%>
+PURPOSE     : Checks the value(s) of the process limits from /proc/*/limits or ulimit
+              Currenty following checks are supported:
+                * Max open files (/proc/*/limits)
+                * Max processes (ulimit)
+LOG HEALTHY : Supported
 
 EOT
 
