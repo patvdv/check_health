@@ -1565,7 +1565,7 @@ then
     print
     print "Config?: plugin has a default configuration file (Yes/No)"
     print "Sched? : plugin is scheduled through cron (Yes/No)"
-    print "H+?    : plugin can log/show passed health checks (Yes/No/Not supported)"
+    print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Not supported)"
 fi
 
 return 0
