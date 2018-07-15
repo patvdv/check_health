@@ -132,7 +132,7 @@ else
 fi
 
 # 1) active server
-_NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }') 2>/dev/null"
+_NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }' 2>/dev/null)"
 case ${_NTP_PEER} in
     \*127.127.1.0*)
         _MSG="NTP is synchronizing against its internal clock"
@@ -152,7 +152,7 @@ log_hc "$0" ${_STC} "${_MSG}"
 # 2) offset value
 if (( _STC == 0 ))
 then
-    _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }') 2>/dev/null"
+    _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }' 2>/dev/null)"
     case ${_CURR_OFFSET} in
         +([-0-9])*(.)*([0-9]))
             # numeric, OK (negatives are OK too!)
