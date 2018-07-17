@@ -556,7 +556,7 @@ Parameters:
                   - health check (plugin) name
                   - state of the HC plugin (disabled/enabled)
                   - version of the HC plugin
-                  - whether the HC plugin requires a configuration file in ${HC_ETC_DIR}
+                  - whether the HC plugin requires a configuration file in ${CONFIG_DIR}
                   - whether the HC plugin is scheduled by cron
 --list-core     : show the available core plugins (mail,SMS,...)
 --log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
