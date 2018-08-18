@@ -160,6 +160,7 @@ done
 
 return 0
 }
+
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: check_config()
 # DOES: check script configuration settings, abort upon failure
