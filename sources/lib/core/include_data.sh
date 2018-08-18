@@ -37,7 +37,7 @@ typeset _PARAMETER="${1}"
 typeset _LVALUE=""
 typeset _RC=0
 
-_LVALUE=$(grep -i "^${_PARAMETER}=" ${_CONFIG_FILE} | cut -f2 -d'=')
+_LVALUE=$(grep -i "^${_PARAMETER}=" ${_CONFIG_FILE} | cut -f2- -d'=')
 
 if [[ -n "${_LVALUE}" ]]
 then
@@ -735,6 +735,39 @@ _EPOCH=$(( ((${_YEAR} - 1970) * 365 + ${_YEAR_DAY} + ${_LEAP_YEARS}) * 86400
 print ${_EPOCH}
 }
 
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_epoch2date()
+# DOES: converts an UNIX epoch to a human readable format (trying GNU date and
+#       and perl). If neither works, then return the UNIX epoch.
+# EXPECTS: UNIX epoch [string]
+# OUTPUTS: date in human readable format OR UNIX epoch [string]
+# RETURNS: 0=conversion OK; 1=conversion failed
+# REQUIRES: n/a
+function data_epoch2date
+{
+typeset _UNIX_EPOCH="${1}"
+typeset _CONVERT_DATE=""
+
+# try the GNU version of 'date -d'
+_CONVERT_DATE=$(date -d @"${_UNIX_EPOCH}" 2>/dev/null)
+if (( $? > 0 ))
+then
+	# try the perl way
+	_CONVERT_DATE=$(perl -e "print scalar(localtime(${_UNIX_EPOCH}))" 2>/dev/null)
+	if (( $? > 0 ))
+	then
+		# no luck, we just return the UNIX epoch again
+		print "${_UNIX_EPOCH}"
+		return 1
+	else
+		print "${_CONVERT_DATE}"	
+	fi	
+else
+	print "${CONVERT_DATE}"
+fi
+
+return 0
+}
 
 #******************************************************************************
 # END of script

@@ -60,6 +60,7 @@ This is the OS/platform plugin package"
 
         directory       ../../sources/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
         file            -m 755 check_hpux_autopath.sh
+        file            -m 755 check_hpux_cdsf_cluster.sh
         file            -m 755 check_hpux_drd_status.sh		
         file            -m 755 check_hpux_file_age.sh
         file            -m 755 check_hpux_file_change.sh

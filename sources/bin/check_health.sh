@@ -702,11 +702,7 @@ do
         -archive|--archive)
             if (( ARG_ACTION > 0 ))
             then
-                print -u2 "ERROR: you cannot request two actions            if (( ARG_ACTION > 0 ))
-            then
                 print -u2 "ERROR: you cannot request two actions at the same time"
-                exit 1
-            else"
                 exit 1
             else
                 ARG_ACTION=10
