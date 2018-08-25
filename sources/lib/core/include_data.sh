@@ -37,7 +37,7 @@ typeset _PARAMETER="${1}"
 typeset _LVALUE=""
 typeset _RC=0
 
-_LVALUE=$(grep -i "^${_PARAMETER}=" ${_CONFIG_FILE} | cut -f2- -d'=')
+_LVALUE=$(grep -i "^${_PARAMETER} *=" ${_CONFIG_FILE} | cut -f2- -d'=')
 
 if [[ -n "${_LVALUE}" ]]
 then

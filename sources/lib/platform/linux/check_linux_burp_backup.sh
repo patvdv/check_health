@@ -26,6 +26,7 @@
 # @(#) HISTORY:
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-08-25: support for burp v2 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,9 +35,10 @@
 function check_linux_burp_backup
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _BURP_CONFIG_FILE="/etc/burp/burp-server.conf"
+typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
+typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-08-25"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,7 +51,10 @@ typeset _MSG=""
 typeset _STC=0
 typeset _BURP_BIN=""
 typeset _BURP_AGE=""
+typeset _BURP_BACKUP_DIR=""
+typeset _BURP_CLIENTCONF_DIR=""
 typeset _BURP_CLIENT=""
+typeset _BURP_VERSION=""
 typeset _BURP_WARNINGS=""
 typeset _GNU_DATE=""
 typeset _COUNT=1
@@ -61,7 +66,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -93,12 +98,50 @@ then
     return 1
 fi
 
-# check for burp server
-if [[ ! -r ${_BURP_CONFIG_FILE} ]]
-then
-    warn "burp server configuration file not found ($_BURP_CONFIG_FILE)"
-    return 1
-fi
+# burp v1 or v2?
+_BURP_VERSION="$(${_BURP_BIN} -v 2>/dev/null)"
+(( ARG_DEBUG != 0 )) && debug "burp version: ${_BURP_VERSION}"
+case "${_BURP_VERSION}" in
+    burp-2*)
+        # check for burp server
+        if [[ ! -r ${_BURP_SERVER_CONFIG_FILE} ]]
+        then
+            warn "burp server configuration file not found ($_BURP_SERVER_CONFIG_FILE)"
+            return 1
+        fi
+        # check for burp client
+        if [[ ! -r ${_BURP_CLIENT_CONFIG_FILE} ]]
+        then
+            warn "burp client configuration file not found ($_BURP_SERVER_CONFIG_FILE)"
+            return 1
+        fi
+
+        # burp v2 does not support yet the 'burp -a S -C <client> -z backup_stats' action
+        # so we need to find the backup_stats file ourselves
+        _BURP_BACKUP_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'directory')
+        if [[ -z "${_BURP_BACKUP_DIR}" ]]
+        then
+            _BURP_CLIENTCONF_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'clientconfdir')
+            if [[ -z "${_BURP_CLIENTCONF_DIR}" ]]
+            then
+                warn "could not determine backup directory from 'directory' or 'clientconfdir' directives'"
+                return 1
+            fi
+        fi
+        ;;
+    burp-1*)
+        # check for burp server
+        if [[ ! -r ${_BURP_SERVER_CONFIG_FILE} ]]
+        then
+            warn "burp server configuration file not found ($_BURP_SERVER_CONFIG_FILE)"
+            return 1
+        fi
+        ;;
+    *)
+        warn "incorrect burp version reported: ${_BURP_VERSION}"
+        return 1
+        ;;
+esac
 
 # check backup runs of clients
 grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null |\
@@ -141,6 +184,7 @@ do
         #   Backup: 0000078 2016-11-27 03:39:03 (deletable)
         #   Backup: 0000079 2016-12-04 03:59:04
 
+
         _BACKUP_STATS="$(${_BURP_BIN} -a l -C ${_BURP_CLIENT} 2>>${HC_STDERR_LOG} | grep '^Backup' | tail -n 1 | cut -f2- -d':')"
         if [[ -n "${_BACKUP_STATS}" ]]
         then
@@ -156,10 +200,50 @@ do
         fi
 
         # get backup warnings
-        _BACKUP_WARNINGS="$(${_BURP_BIN} -c ${_BURP_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z backup_stats 2>>${HC_STDERR_LOG} | grep '^warnings' 2>/dev/null | cut -f2 -d':' 2>/dev/null)"
+        case "${_BURP_VERSION}" in
+            burp-2*)
+                # burp v2 does not support yet the 'burp -a S -C <client> -z backup_stats' action
+                # so we need to find the backup_stats file ourselves
+                # first check client override
+                _BURP_BACKUP_DIR=""; _BURP_CLIENTCONF_DIR=""
+                _BURP_CLIENTCONF_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'clientconfdir')
+                if [[ -n "${_BURP_CLIENTCONF_DIR}" ]]
+                then
+                    _BURP_CLIENTCONF_FILE=${_BURP_CLIENTCONF_DIR}/${_BURP_CLIENT}
+                    if [[ -r ${_BURP_CLIENTCONF_FILE} ]]
+                    then
+                        _BURP_BACKUP_DIR=$(_CONFIG_FILE="${_BURP_CLIENTCONF_FILE}" data_get_lvalue_from_config 'directory')
+                    else
+                        warn "no client configuration file for client ${_BURP_CLIENT}, trying server configuration next"
+                    fi
+                fi
+                # check server setting
+                if [[ -z "${_BURP_BACKUP_DIR}" ]]
+                then
+                    _BURP_BACKUP_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'directory')
+                    if [[ -z "${_BURP_BACKUP_DIR}" ]]
+                    then
+                        warn "could not determine backup directory from 'clientconfdir' or 'directory' directives' for client ${_BURP_CLIENT}"
+                        continue
+                    fi
+                fi
+                if [[ -r ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz ]]
+                then
+                    _BACKUP_WARNINGS=$(zcat ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz 2>/dev/null | grep -c "WARNING:" 2>/dev/null)
+                else
+                    warn "could not find ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz"
+                    continue
+                fi
+                ;;
+            burp-1*)
+                _BACKUP_WARNINGS=$(${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z backup_stats 2>>${HC_STDERR_LOG} |\
+                                    grep '^warnings' 2>/dev/null | cut -f2 -d':' 2>/dev/null)
+                ;;
+        esac
+
         if [[ -z "${_BACKUP_WARNINGS}" ]]
         then
-            warn "could not get stats for backup ${_BACKUP_RUN} of client ${_BURP_CLIENT}"
+            warn "could not get warnings for backup ${_BACKUP_RUN} of client ${_BURP_CLIENT}"
             _COUNT=$(( _COUNT + 1 ))
             continue
         fi
@@ -173,7 +257,7 @@ do
         then
             _STC=$(( _STC + 2 ))
         fi
-        
+
         # report the results
         case ${_STC} in
             0)
@@ -186,20 +270,20 @@ do
                 _MSG="backup ${_BACKUP_RUN} of client ${_BURP_CLIENT} is too old (>${_BURP_AGE})"
                 ;;
             3)
-                _MSG="backup ${_BACKUP_RUN} of client ${_BURP_CLIENT} is too old (>${_BURP_AGE}) and  has too many warnings (${_BACKUP_WARNINGS}>${_BURP_WARNINGS})"    
+                _MSG="backup ${_BACKUP_RUN} of client ${_BURP_CLIENT} is too old (>${_BURP_AGE}) and has too many warnings (${_BACKUP_WARNINGS}>${_BURP_WARNINGS})"
                 ;;
             *)
                 :
                 ;;
         esac
-        log_hc "$0" ${_STC} "${_MSG}"       
+        log_hc "$0" ${_STC} "${_MSG}"
         _COUNT=$(( _COUNT + 1 ))
-        
+
         # save STDOUT
         if (( _STC =! 0 ))
         then
             print "=== ${_BURP_CLIENT}: ${_BACKUP_RUN} ===" >>${HC_STDOUT_LOG}
-            ${_BURP_BIN} -c ${_BURP_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+            ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
         fi
     else
         warn "bad entry in the configuration file ${_CONFIG_FILE} on data line ${_COUNT}"
@@ -219,9 +303,9 @@ NAME    : $1
 VERSION : $2
 CONFIG  : $3 with:
             backup_age=<days_till_last_backup>
-PURPOSE : Checks the status and age of saved burp client backups. 
-          Should only berun only on a burp backup server
-          
+PURPOSE : Checks the status and age of saved burp client backups.
+          Should only berun only on a burp backup server (supports burp v1 and v2)
+
 EOT
 
 return 0
