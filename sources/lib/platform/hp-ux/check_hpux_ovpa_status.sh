@@ -25,6 +25,7 @@
 # @(#) 2016-04-08: initial version [Patrick Van der Veken]
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2018-07-10: added log_healthy hc_arg [Patrick Van der Veken]
+# @(#) 2018-08-30: added config file + check list for daemons [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,8 @@
 function check_hpux_ovpa_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-07-10"                           # YYYY-MM-DD
+typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
+typeset _VERSION="2018-08-30"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _OVPA_BIN="/opt/perf/bin/perfstat"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -60,6 +62,36 @@ do
     esac
 done
 
+# handle configuration file
+[[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
+if [[ ! -r ${_CONFIG_FILE} ]]
+then
+    warn "unable to read configuration file at ${_CONFIG_FILE}"
+    return 1
+fi
+# read required configuration values
+_OVPA_DAEMONS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'ovpa_daemons')
+if [[ -z "${_OVPA_DAEMONS}" ]]
+then
+    # default
+    # get ovpa version (<12.x: scopeux; >=12.x: oacore, no coda)
+    _OVPA_VERSION="$(${_OVPA_BIN} -v 2>>${HC_STDERR_LOG} | grep "HP Performance Agent" 2>/dev/null | awk '{ print $NF }') 2>/dev/null"
+    case "${_OVPA_VERSION}" in
+        12.*)
+            log "running HP Operations Agent v12"
+            _OVPA_DAEMONS="oacore midaemon perfalarm ttd ovcd ovbbccb perfd"
+            ;;
+        *)
+            log "running HP Operations Agent v11 or lower ..."
+            _OVPA_DAEMONS="scopeux midaemon perfalarm ttd ovcd ovbbccb coda perfd"
+            ;;
+    esac
+else
+    # convert commas and strip quotes
+    _OVPA_DAEMONS=$(data_comma2space $(data_dequote "${_OVPA_DAEMONS}"))
+fi
+log "checking daemons: ${_OVPA_DAEMONS} ..."
+
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
 if (( _LOG_HEALTHY > 0 ))
@@ -73,9 +105,9 @@ then
 else
     log "not logging/showing passed health checks"
 fi
-            
+
 # check & get ovpa status
-if [[ ! -x ${_OVPA_BIN} ]] 
+if [[ ! -x ${_OVPA_BIN} ]]
 then
     warn "${_OVPA_BIN} is not installed here"
     return 1
@@ -83,19 +115,6 @@ else
     ${_OVPA_BIN} -p >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
     # no RC check here because perfstat will throw <>0 when procs are down
 fi
-
-# get ovpa version (<12.x: scopeux; >=12.x: oacore, no coda)
-_OVPA_VERSION="$(${_OVPA_BIN} -v 2>>${HC_STDERR_LOG} | grep "HP Performance Agent" | awk '{ print $NF }')"
-case "${_OVPA_VERSION}" in
-    12.*)
-        log "running HP Operations Agent v12 ..."
-        _OVPA_DAEMONS="oacore midaemon perfalarm ttd ovcd ovbbccb"
-        ;;
-    *)
-        log "running HP Operations Agent v11 or lower ..."
-        _OVPA_DAEMONS="scopeux midaemon perfalarm ttd ovcd ovbbccb coda"
-        ;;
-esac
 
 # do OVPA status checks
 for _OVPA_DAEMON in ${_OVPA_DAEMONS}
@@ -106,12 +125,12 @@ do
         0)
             _MSG="${_OVPA_DAEMON} is not running"
             _STC=1
-            ;;  
+            ;;
         *)
             _MSG="${_OVPA_DAEMON} is running"
             ;;
     esac
-    
+
     # handle result
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
@@ -129,7 +148,8 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3
+CONFIG      : $3 with:
+                ovpa_daemons=<list_of_ovpa_processes_to_check>
 PURPOSE     : Checks the status of OVPA processes (OpenView Performance Agent)
 LOG HEALTHY : Supported
 

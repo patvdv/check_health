@@ -112,6 +112,7 @@ This is the OS/platform plugin package"
         file            -m 644 check_hpux_kernel_params.conf.dist
         file            -m 644 check_hpux_kernel_usage.conf.dist
         file            -m 644 check_hpux_ntp_status.conf.dist
+        file            -m 755 check_hpux_ovpa_status.conf.dist
         file            -m 755 check_hpux_patch_version.conf.dist
         file            -m 644 check_hpux_root_crontab.conf.dist
         file            -m 644 check_hpux_sg_package_status.conf.dist

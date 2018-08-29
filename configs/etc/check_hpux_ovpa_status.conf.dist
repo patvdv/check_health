@@ -1,0 +1,15 @@
+#******************************************************************************
+# @(#) check_hpux_ovpa_status.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_ovpa_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# list of OVPA daemons to check (comma-separated list)
+# [default: oacore,midaemon,perfalarm,ttd,ovcd,ovbbccb,perfd (v12)]
+ovpa_daemons=""
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
