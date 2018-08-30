@@ -91,6 +91,16 @@ else
     _OVPA_DAEMONS=$(data_comma2space $(data_dequote "${_OVPA_DAEMONS}"))
 fi
 log "checking daemons: ${_OVPA_DAEMONS} ..."
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg 
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
