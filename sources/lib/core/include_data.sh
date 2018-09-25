@@ -121,7 +121,6 @@ print -R "${1}" 2>/dev/null | sed "s/${_MAGIC}/${_SEP}/g" 2>/dev/null
 return 0
 }
 
-
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_escape_csv()
 # DOES: escapes semi-colons
@@ -692,7 +691,7 @@ return ${_RC}
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_date2epoch()
 # DOES: converts a given date into UNIX epoch seconds
-# EXPECTS: date formatted as individual parameters: 
+# EXPECTS: date formatted as individual parameters (in UTC time):  
 #          $1 : YYYY
 #          $2 : MM
 #          $3 : DD

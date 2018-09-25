@@ -132,7 +132,7 @@ then
     then
         mv ${_TMP_FILE} ${_STATE_FILE} >/dev/null 2>&1
         (( $? > 0 )) && {
-            warn "failed to move temporary state file"
+            warn "failed to move temporary state file to permanent state file ${_STATE_FILE}"
             return 1       
         }
     fi

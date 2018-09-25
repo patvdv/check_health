@@ -141,7 +141,7 @@ do
             ;;
     esac
 
-    # handle result
+    # report result
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
         log_hc "$0" ${_STC} "${_MSG}"
