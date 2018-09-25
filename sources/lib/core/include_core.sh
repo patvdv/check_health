@@ -1475,6 +1475,26 @@ do
         if (( HAS_FCONFIG != 0 ))
         then
             FCONFIG="Yes"
+            # *.conf.dist first
+            if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf.dist ]]
+            then
+                # check for log_healthy parameter (config file)
+                HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf.dist" data_get_lvalue_from_config 'log_healthy')
+                case "${HAS_FHEALTHY}" in
+                    no|NO|No)
+                        FHEALTHY="No"
+                        ;;
+                    yes|YES|Yes)
+                        FHEALTHY="Yes"
+                        ;;
+                    *)
+                        FHEALTHY="N/S"
+                        ;;
+                esac
+            else
+                FHEALTHY="N/S"          
+            fi          
+            # *.conf next
             if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
             then
                 # check for log_healthy parameter (config file)
@@ -1489,9 +1509,7 @@ do
                     *)
                         FHEALTHY="N/S"
                         ;;
-                esac
-            else
-                FHEALTHY="N/S"          
+                esac        
             fi
         # check for log_healthy support through --hc-args (plugin)
         elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
