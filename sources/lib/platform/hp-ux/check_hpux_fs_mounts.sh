@@ -61,7 +61,7 @@ done
 mount >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? == 0)) || return $?
 
-# check for each auto-mount configured file system (except / and dump/swap)
+# check for each configured file system (except / and dump/swap)
 grep -v -E -e '^#' -e '^$' \
     -e '[[:space:]]*\/[[:space:]]+' -e '\.\.\.' /etc/fstab 2>/dev/null |\
     awk '{print $2}' |\

@@ -25,6 +25,7 @@
 # @(#) 2013-05-17: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-08-25: small fix [Patrick Van der Veken]
+# @(#) 2018-10-02: regex fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@
 function check_linux_fs_mounts
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-08-25"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-02"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -62,11 +63,11 @@ done
 mount >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? == 0 )) || return $?
 
-# check for each auto-mount configured file system (except /)
+# check for each configured file system (except /)
 grep -v -E -e '^#' -e '^$' \
-   -e '[ \t]*.*[ \t]+(proc|swap|sysfs|devpts|tmpfs).*' \
+   -e '[[:space:]]*.*[[:space:]]+(proc|swap|sysfs|devpts|tmpfs).*' \
    -e '(floppy|cdrom)' \
-   -e '[ \t]*\/[ \t]+' /etc/fstab 2>/dev/null |\
+   -e '[[:space:]]*\/[[:space:]]+' /etc/fstab 2>/dev/null |\
     awk '{print $2}' |\
 while read _FS
 do

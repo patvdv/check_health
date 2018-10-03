@@ -61,7 +61,7 @@ mount >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 lsfs -ac >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 (( $? == 0)) || return $?
 
-# check for each auto-mount configured file system (except /)
+# check for each configured file system (except /)
 lsfs -ac 2>/dev/null |\
     grep -v -E -e '^#' -e '^\/:' |\
     grep -E -e '.*:.*:.*:.*:.*:.*:.*:yes:.*' |\
