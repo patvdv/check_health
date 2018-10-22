@@ -70,20 +70,6 @@ do
     esac
 done
 
-# log_healthy
-(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
-if (( _LOG_HEALTHY > 0 ))
-then
-    if (( ARG_LOG > 0 ))
-    then
-        log "logging/showing passed health checks"
-    else
-        log "showing passed health checks (but not logging)"
-    fi
-else
-    log "not logging/showing passed health checks"
-fi
-
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
 if [[ ! -r ${_CONFIG_FILE} ]]
@@ -114,6 +100,20 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check required tools
 if [[ ! -x ${_SWLIST_BIN} ]]
