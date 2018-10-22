@@ -26,6 +26,7 @@
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2018-07-10: added log_healthy hc_arg [Patrick Van der Veken]
 # @(#) 2018-08-30: added config file + check list for daemons [Patrick Van der Veken]
+# @(#) 2018-10-22: small fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_ovpa_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-08-30"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-22"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _OVPA_BIN="/opt/perf/bin/perfstat"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -47,6 +48,7 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _OVPA_MATCH=0
 typeset _OVPA_VERSION=""
@@ -90,14 +92,13 @@ else
     # convert commas and strip quotes
     _OVPA_DAEMONS=$(data_comma2space $(data_dequote "${_OVPA_DAEMONS}"))
 fi
-log "checking daemons: ${_OVPA_DAEMONS} ..."
 _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1
         ;;
     *)
-        # do not override hc_arg 
+        # do not override hc_arg
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
@@ -127,6 +128,7 @@ else
 fi
 
 # do OVPA status checks
+log "checking daemons: ${_OVPA_DAEMONS} ..."
 for _OVPA_DAEMON in ${_OVPA_DAEMONS}
 do
     # anchored grep here!

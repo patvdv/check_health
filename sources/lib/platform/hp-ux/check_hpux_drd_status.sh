@@ -26,6 +26,7 @@
 # @(#) HISTORY:
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-18: changed boot status [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_hpux_drd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _DRD_BIN="/opt/drd/bin/drd"
-typeset _VERSION="2018-05-18"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -135,16 +136,16 @@ then
     _BOOTED_DISK=$(grep "Booted Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d'(' | cut -f1 -d ')')
     _ACTIVE_DISK=$(grep "Activated Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d'(' | cut -f1 -d ')')
 
-    # check clone status: after a fresh clone -> booted == activated == original
+    # check boot status: after a fresh clone -> booted == activated == original
     if [[ "${_ORIGINAL_DISK}" = "${_BOOTED_DISK}" ]] &&
         [[ "${_ORIGINAL_DISK}" = "${_ACTIVE_DISK}" ]] &&
         [[ "${_BOOTED_DISK}"  = "${_ACTIVE_DISK}" ]]
     then
-        _MSG="clone disk ${_CLONE_DISK} was correctly created"
+        _MSG="host was booted from original disk (${_ACTIVE_DISK})"
         log_hc "$0" 0 "${_MSG}"
     else
-        _MSG="clone disk ${_CLONE_DISK} was probably not correctly created"
-        log_hc "$0" 1 "${_MSG}"
+        _MSG="host was booted from clone disk (${_ACTIVE_DISK})"
+        log_hc "$0" 0 "${_MSG}"
     fi
 
     # check EFI status

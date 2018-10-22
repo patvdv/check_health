@@ -37,7 +37,7 @@ typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # rubbish that cmgetconf outputs to STDOUT instead of STDERR
-typeset _SG_CMGETCONF_FILTER="Permission denied|Number of configured" 
+typeset _SG_CMGETCONF_FILTER="Permission denied|Number of configured"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -59,6 +59,7 @@ typeset _CLUSTER_PARAM=""
 typeset _CLUSTER_VALUE=""
 
 # set local trap for cleanup
+trap "rm -f ${_CLUSTER_RUN_FILE}.* ${_CLUSTER_CFG_FILE}.* >/dev/null 2>&1; return 0" 0
 trap "rm -f ${_CLUSTER_RUN_FILE}.* ${_CLUSTER_CFG_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -67,13 +68,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -92,7 +93,7 @@ then
 fi
 
 # check serviceguard status & gather cluster information from running cluster (compressed lines)
-if [[ ! -x ${_SG_DAEMON} ]] 
+if [[ ! -x ${_SG_DAEMON} ]]
 then
     warn "${_SG_DAEMON} is not installed here"
     return 1
@@ -118,10 +119,10 @@ do
     BEGIN { found = 0; needle = "^\["cluster"\]" }
 
     # skip blank lines
-    /^\s*$/ { next; } 
+    /^\s*$/ { next; }
     # skip comment lines
-    /^#/ { next; } 
-    
+    /^#/ { next; }
+
     # end marker
     ( $0 ~  /^\[.*\]/ && found ) {
         found = 0;
@@ -160,7 +161,7 @@ do
         else
             _MSG="'${_CLUSTER_PARAM} (${_CLUSTER_VALUE} ...)' is configured for ${_CLUSTER_INSTANCE}"
         fi
-    
+
         # handle unit result
         log_hc "$0" ${_STC} "${_MSG}"
         _STC=0

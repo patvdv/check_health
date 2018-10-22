@@ -97,7 +97,7 @@ then
         log_hc "$0" 1 "cDSF conflict found for ${_CDSF_DEV}"
     done
 else
-    if (( _LOG_HEALTHY > 0))
+    if (( _LOG_HEALTHY > 0 ))
     then
         log_hc "$0" 0 "no cDSF conflicts found"
     fi

@@ -62,6 +62,7 @@ typeset _THRES_VALUE=""
 typeset _TEMP_UNIT=""
 
 # set local trap for cleanup
+trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -70,7 +71,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 

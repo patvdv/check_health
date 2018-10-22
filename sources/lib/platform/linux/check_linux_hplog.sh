@@ -57,6 +57,9 @@ typeset _EVENT_ENTRY=""
 # set local trap for cleanup
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
+      return 0" 0
+trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
+      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
       return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -65,13 +68,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
-      
+
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -93,7 +96,7 @@ else
     _HPLOG_SEVERITIES="^"
     print "${_SEVERITIES_LINE}" | tr ',' '\n' 2>/dev/null | while read -r _SEVERITY_ENTRY
     do
-        _HPLOG_SEVERITIES="${_HPLOG_SEVERITIES}(([0-9]+)\s*${_SEVERITY_ENTRY})|"    
+        _HPLOG_SEVERITIES="${_HPLOG_SEVERITIES}(([0-9]+)\s*${_SEVERITY_ENTRY})|"
     done
     # delete last 'OR'
     _HPLOG_SEVERITIES=${_HPLOG_SEVERITIES%?}
@@ -121,7 +124,7 @@ ${_HPLOG_BIN} -v >${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
     print "## this file sorted! Do not edit manually!" >${_STATE_FILE}
     (( $? > 0 )) && {
         warn "failed to create new state file"
-        return 1       
+        return 1
     }
     log "created new state file at ${_STATE_FILE}"
 }
@@ -139,7 +142,7 @@ do
     _MSG="${_EVENT_ENTRY}"
     _STC_COUNT=$(( _STC_COUNT + 1 ))
     # handle unit result
-    log_hc "$0" 1 "${_MSG}"  
+    log_hc "$0" 1 "${_MSG}"
 done <${_TMP2_FILE}
 if (( _STC_COUNT > 0 ))
 then
@@ -149,8 +152,8 @@ then
     sort -u ${_TMP1_FILE} ${_TMP2_FILE} >${_STATE_FILE} 2>/dev/null
     (( $? > 0 )) && {
         warn "failed to sort temporary state file"
-        return 1       
-    }   
+        return 1
+    }
 else
     _MSG="no new HPLOG messages found"
 fi

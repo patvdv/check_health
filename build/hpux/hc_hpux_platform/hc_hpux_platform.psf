@@ -61,7 +61,7 @@ This is the OS/platform plugin package"
         directory       ../../sources/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
         file            -m 755 check_hpux_autopath.sh
         file            -m 755 check_hpux_cdsf_cluster.sh
-        file            -m 755 check_hpux_drd_status.sh		
+        file            -m 755 check_hpux_drd_status.sh
         file            -m 755 check_hpux_file_age.sh
         file            -m 755 check_hpux_file_change.sh
         file            -m 755 check_hpux_fs_mounts.sh
@@ -72,7 +72,8 @@ This is the OS/platform plugin package"
         file            -m 644 check_hpux_hpvm_vpar_status.sh
         file            -m 755 check_hpux_httpd_status.sh
         file            -m 755 check_hpux_kernel_params.sh
-        file            -m 755 check_hpux_kernel_usage.sh	
+        file            -m 755 check_hpux_kernel_usage.sh
+        file            -m 755 check_hpux_lunpaths.sh
         file            -m 755 check_hpux_named_status.sh
         file            -m 755 check_hpux_ntp_status.sh
         file            -m 755 check_hpux_patch_version.sh

@@ -57,16 +57,17 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # set local trap for cleanup
+trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -104,7 +105,7 @@ fi
     print "## this file is not date sorted! Do not edit manually!" >${_STATE_FILE}
     (( $? > 0 )) && {
         warn "failed to create new state file at ${_STATE_FILE}"
-        return 1       
+        return 1
     }
     log "created new state file at ${_STATE_FILE}"
 }
@@ -126,20 +127,20 @@ then
     sort -u ${HC_STDOUT_LOG} ${_STATE_FILE} >${_TMP_FILE}
     (( $? > 0 )) && {
         warn "failed to sort temporary state file"
-        return 1       
+        return 1
     }
     if (( ARG_LOG != 0 ))
     then
         mv ${_TMP_FILE} ${_STATE_FILE} >/dev/null 2>&1
         (( $? > 0 )) && {
             warn "failed to move temporary state file to permanent state file ${_STATE_FILE}"
-            return 1       
+            return 1
         }
     fi
 else
     _MSG="no new SYSLOG messages found"
 fi
-  
+
 # handle results
 log_hc "$0" ${_STC} "${_MSG}"
 

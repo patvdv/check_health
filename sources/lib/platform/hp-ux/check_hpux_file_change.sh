@@ -69,6 +69,11 @@ trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
+      return 0" 0
+trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
       return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)

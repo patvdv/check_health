@@ -57,6 +57,7 @@ typeset _DO_ACU_LOGL=1
 typeset _DO_CHECK=0
 
 # set local trap for cleanup
+trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -65,13 +66,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -88,7 +89,7 @@ case "${_DO_ACU_CTRL}" in
     0|1)
         # on/off, OK
         ;;
-    *) 
+    *)
         # set default
         warn "illegal value for 'do_acu_controller' in ${_CONFIG_FILE}, using default"
         _DO_ACU_CTRL=1
@@ -99,7 +100,7 @@ case "${_DO_ACU_ENCL}" in
     0|1)
         # on/off, OK
         ;;
-    *) 
+    *)
         # set default
         warn "illegal value for 'do_acu_enclosure' in ${_CONFIG_FILE}, using default"
         _DO_ACU_ENCL=1
@@ -110,7 +111,7 @@ case "${_DO_ACU_PHYS}" in
     0|1)
         # on/off, OK
         ;;
-    *) 
+    *)
         # set default
         warn "illegal value for 'do_acu_physical' in ${_CONFIG_FILE}, using default"
         _DO_ACU_PHYS=1
@@ -121,7 +122,7 @@ case "${_DO_ACU_LOGL}" in
     0|1)
         # on/off, OK
         ;;
-    *) 
+    *)
         # set default
         warn "illegal value for 'do_acu_logical' in ${_CONFIG_FILE}, using default"
         _DO_ACU_LOGL=1
@@ -137,7 +138,7 @@ then
 fi
 
 # check for HP tools
-if [[ ! -x ${_HPACUCLI_BIN} || -z "${_HPACUCLI_BIN}" ]] 
+if [[ ! -x ${_HPACUCLI_BIN} || -z "${_HPACUCLI_BIN}" ]]
 then
     warn "${_HPACUCLI_BIN} is not installed here"
     return 1
@@ -156,7 +157,7 @@ then
         _MSG="failure in controller"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
         # handle unit result
-        log_hc "$0" 1 "${_MSG}"   
+        log_hc "$0" 1 "${_MSG}"
     done
     print "=== ACU controller(s) ===" >>${HC_STDOUT_LOG}
     cat ${_TMP_FILE} >>${HC_STDOUT_LOG}
@@ -173,12 +174,12 @@ then
                 # non-numeric
                 warn "found RAID controller at illegal slot?: ${_SLOT_NUM}"
                 ;;
-            esac            
+            esac
     done
 else
     warn "${_HPACUCLI_BIN}: do_acu_controller check is not enabled"
 fi
-    
+
 # ENCLOSURE(s)
 if (( _DO_ACU_ENCL != 0 ))
 then
@@ -195,7 +196,7 @@ then
             _MSG="failure in enclosure for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
             # handle unit result
-            log_hc "$0" 1 "${_MSG}"   
+            log_hc "$0" 1 "${_MSG}"
         done
         print "=== ACU enclosure(s) ===" >>${HC_STDOUT_LOG}
         cat ${_TMP_FILE} >>${HC_STDOUT_LOG}
@@ -220,15 +221,15 @@ then
             _MSG="failure in physical drive(s) for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
             # handle unit result
-            log_hc "$0" 1 "${_MSG}"   
+            log_hc "$0" 1 "${_MSG}"
         done
         print "=== ACU physical drive(s) ===" >>${HC_STDOUT_LOG}
         cat ${_TMP_FILE} >>${HC_STDOUT_LOG}
     done
 else
     warn "${_HPACUCLI_BIN}: do_acu_physical check is not enabled"
-    fi  
-    
+    fi
+
 # LOGICAL DRIVE(s)
 if (( _DO_ACU_LOGL != 0 ))
 then
@@ -245,14 +246,14 @@ then
             _MSG="failure in logical drive(s) for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
             # handle unit result
-            log_hc "$0" 1 "${_MSG}"   
+            log_hc "$0" 1 "${_MSG}"
         done
         print "=== ACU logical drive(s) ===" >>${HC_STDOUT_LOG}
         cat ${_TMP_FILE} >>${HC_STDOUT_LOG}
     done
 else
     warn "${_HPACUCLI_BIN}: do_acu_logical check is not enabled"
-fi      
+fi
 
 # report OK situation
 if (( _STC_COUNT == 0 ))

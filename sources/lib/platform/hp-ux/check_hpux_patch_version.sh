@@ -25,7 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
-# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-22: added check on fileset state [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +39,7 @@ typeset _SWLIST_BIN="/usr/sbin/swlist"
 typeset _SWLIST_OPTS=""
 typeset _SHOW_PATCHES_BIN="/usr/contrib/bin/show_patches"
 typeset _SHOW_PATCHES_OPTS=""
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-22"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -50,8 +50,13 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _OE_VERSION=""
 typeset _PATCH_LINE=""
+typeset _CHECK_FILESETS=""
+typeset _FILESET=""
+typeset _FILESET_LINE=""
 typeset _PATCHES=""
 typeset _PATCH=""
 
@@ -64,6 +69,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
@@ -79,6 +98,33 @@ if [[ -n "${_PATCH_LINE}" ]]
 then
     # convert commas and strip quotes
     _PATCHES=$(data_comma2space $(data_dequote "${_PATCH_LINE}"))
+fi
+if [[ -z "${_CHECK_FILESETS}" ]]
+then
+    # default
+    _CHECK_FILESETS="yes"
+fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# check required tools
+if [[ ! -x ${_SWLIST_BIN} ]]
+then
+    warn "${_SWLIST_BIN} is not installed here"
+    return 1
+fi
+if [[ ! -x ${_SHOW_PATCHES_BIN} ]]
+then
+    warn "${_SHOW_PATCHES_BIN} is not installed here"
+    return 1
 fi
 
 # get and check OE version
@@ -160,6 +206,32 @@ then
     fi
 else
     warn "required patches will not be checked (not configured in ${_CONFIG_FILE})"
+fi
+
+# get and check (all) filesets
+if [[ "${_CHECK_FILESETS}" = "yes" ]]
+then
+    _SWLIST_OPTS="-a state -l fileset"
+    log "executing {${_SWLIST_BIN}} with options: ${_SWLIST_OPTS}"
+    print "=== swlist ({$_SWLIST_OPTS}) ===" >>${HC_STDOUT_LOG}
+    ${_SWLIST_BIN} ${_SWLIST_OPTS} >>${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
+
+    if (( $? == 0 ))
+    then
+        grep -E -e "installed[[:space:]]*$" ${HC_STDOUT_LOG} 2>/dev/null |\
+        while read _FILESET_LINE
+        do
+            _FILESET=$(print "${_FILESET_LINE}" | awk '{print $1}' 2>/dev/null)
+            _MSG="fileset ${_FILESET} is not in a configured state"
+            log_hc "$0" 1 "${_MSG}"
+        done
+    else
+        _MSG="unable to run command: {${_SWLIST_BIN}}"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 1
+    fi
 fi
 
 return 0

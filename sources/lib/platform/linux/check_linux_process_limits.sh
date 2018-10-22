@@ -66,6 +66,7 @@ typeset _USER_PS_PID=""
 typeset _USER_PS_COMM=""
 
 # set local trap for cleanup
+trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 0" 0
 trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -92,7 +93,7 @@ case "${_CFG_HEALTHY}" in
         _LOG_HEALTHY=1
         ;;
     *)
-        # do not override hc_arg 
+        # do not override hc_arg
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
@@ -320,14 +321,14 @@ then
                 awk -v f="${_LIMIT_FIELD}" '{ print $f}' 2>/dev/null)
             _MSG_BIT="${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS}"
             ;;
-        "Max processes")            
+        "Max processes")
             case "${_LIMIT_TYPE}" in
                 soft)
                     _LIMIT_COMMAND="ulimit -a"
                     ;;
                 hard)
                     _LIMIT_COMMAND="ulimit -Ha"
-                    ;;      
+                    ;;
             esac
             _LIMIT_VALUE=$(su - ${_LIMIT_USER} -c "${_LIMIT_COMMAND}" 2>/dev/null |\
                 grep -i "max user processes" 2>/dev/null | sed -s "s/max user processes//g" 2>/dev/null |\
@@ -337,8 +338,8 @@ then
                 warn "${_LIMIT_TYPE}: unable to gather limits information (${_LIMIT_USER})"
                 return 1
             fi
-            _MSG_BIT="${_LIMIT_USER}"           
-            ;;          
+            _MSG_BIT="${_LIMIT_USER}"
+            ;;
     esac
     # check limit value -> threshold
     if [[ "${_LIMIT_VALUE}" = "unlimited" ]]

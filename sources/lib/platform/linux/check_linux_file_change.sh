@@ -69,7 +69,12 @@ set -o noglob       # no file globbing
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
-      [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1; 
+      [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
+      return 0" 0
+trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
+      [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
       return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -78,13 +83,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
-      
+
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -132,29 +137,29 @@ fi
     >${_STATE_FILE}
     (( $? > 0 )) && {
         warn "failed to create new state file at ${_STATE_FILE}"
-        return 1       
+        return 1
     }
     log "created new state file at ${_STATE_FILE}"
 }
 >${_TMP_INCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_INCL_FILE}"
-    return 1       
+    return 1
 }
 >${_TMP_EXCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_EXCL_FILE}"
-    return 1       
+    return 1
 }
 >${_TMP1_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP1_FILE}"
-    return 1       
+    return 1
 }
 >${_TMP2_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP2_FILE}"
-    return 1       
+    return 1
 }
 
 # build list of configured objects: inclusion
@@ -171,7 +176,7 @@ do
                 ;;
         esac
     fi
-    
+
     # expand directories
     if [[ -d ${_INCL_OBJECT} ]]
     then
@@ -195,7 +200,7 @@ do
                 ;;
         esac
     fi
-    
+
     # expand directories
     if [[ -d ${_EXCL_OBJECT} ]]
     then
@@ -217,7 +222,7 @@ do
     _STC=0
     _MSG=""
     _IS_NEW=0
-    
+
     # object to check must be a file (and be present)
     if [[ ! -f ${_FILE_TO_CHECK} ]]
     then
@@ -226,18 +231,18 @@ do
         log_hc "$0" ${_STC} "${_MSG}"
         continue
     fi
-    
+
     # read entry from state file
     _STATE_FILE_LINE=$(grep -E -e "^${_FILE_TO_CHECK}\|" ${_STATE_FILE} 2>/dev/null)
     if [[ -n "${_STATE_FILE_LINE}" ]]
     then
         # field 1 is the file name
         _STATE_FILE_TYPE=$(print "${_STATE_FILE_LINE}" | cut -f2 -d'|' 2>/dev/null)
-        _STATE_FILE_CKSUM=$(print "${_STATE_FILE_LINE}" | cut -f3 -d'|' 2>/dev/null)        
+        _STATE_FILE_CKSUM=$(print "${_STATE_FILE_LINE}" | cut -f3 -d'|' 2>/dev/null)
     else
         _IS_NEW=1
     fi
-    
+
     # compute new checksum (keep the same type as before)
     if (( _IS_NEW == 0 ))
     then
@@ -282,14 +287,14 @@ do
             _STC=1
         fi
     fi
-    
+
     # check for failed checksums
     if [[ -z "${_FILE_CKSUM}" ]]
     then
         _MSG="did not receive checksum (openssl/cksum) for ${_FILE_TO_CHECK}"
-        _STC=1  
+        _STC=1
     fi
-    
+
     # bounce failures back and jump to next file
     if (( _STC != 0 ))
     then
@@ -303,7 +308,7 @@ do
         if [[ "${_STATE_FILE_CKSUM}" != "${_FILE_CKSUM}" ]]
         then
             _MSG="${_FILE_TO_CHECK} has a changed checksum [${_FILE_TYPE}]"
-            _STC=1  
+            _STC=1
         else
             _MSG="${_FILE_TO_CHECK} has the same checksum [${_FILE_TYPE}]"
             _STC=0
@@ -312,10 +317,10 @@ do
         _MSG="${_FILE_TO_CHECK} is a new file [${_FILE_TYPE}]"
         _STC=0
     fi
-    
+
     # save entry to temp file
     printf "%s|%s|%s\n" "${_FILE_TO_CHECK}" "${_FILE_TYPE}" "${_FILE_CKSUM}" >>${_TMP2_FILE}
-    
+
     # report with curr/exp values
     log_hc "$0" ${_STC} "${_MSG}" "${_FILE_CKSUM}" "${_STATE_FILE_CKSUM}"
 done <${_TMP1_FILE}
@@ -329,7 +334,7 @@ then
     mv ${_TMP2_FILE} ${_STATE_FILE} >/dev/null 2>&1
     (( $? > 0 )) && {
         warn "failed to move temporary state file"
-        return 1       
+        return 1
     }
 fi
 
@@ -352,18 +357,18 @@ CONFIG  : $3 with formatted stanzas:
             incl:<full path>
             excl:<full path>
 PURPOSE : a KISS file integrity checker (like AIDE). Supports includes and excludes
-          of files and directories (automatically expanded). Excludes have a higher 
-          priority than includes. Integrity checks will only be performed on files. 
+          of files and directories (automatically expanded). Excludes have a higher
+          priority than includes. Integrity checks will only be performed on files.
           Will detect changed, new & deleted files (but not when deleted files
-          occur in an expanded directory tree). If you wish to detect deleted files: 
-          use only direct file references in the configuration file. Uses by preference 
-          openssl for hash calculation, with cksum as fall-back). 
+          occur in an expanded directory tree). If you wish to detect deleted files:
+          use only direct file references in the configuration file. Uses by preference
+          openssl for hash calculation, with cksum as fall-back).
           Updated and deleted files will cause a HC failure, new files will not.
-          CAVEAT EMPTOR: use only to check a relatively small number of files. 
+          CAVEAT EMPTOR: use only to check a relatively small number of files.
                          Processing a big number of files is likely to take
-                         ages and probably will cause the plugin to time out 
+                         ages and probably will cause the plugin to time out
                          (see HC_TIME_OUT). YMMV.
-            
+
 
 EOT
 

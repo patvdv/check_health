@@ -6,6 +6,11 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy=yes
+
 # OE version that should be checked (version string as displayed by 'swlist')
 # [default: none]
 required_oe=""
@@ -13,6 +18,10 @@ required_oe=""
 # comma-separated list of SD patches that should be checked
 # [default: none]
 required_patches=""
+
+# check that all installed filesets are configured?
+# [default: yes]
+check_filesets=yes
 
 
 #******************************************************************************
