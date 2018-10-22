@@ -92,6 +92,7 @@ else
     # convert commas and strip quotes
     _OVPA_DAEMONS=$(data_comma2space $(data_dequote "${_OVPA_DAEMONS}"))
 fi
+log "will check daemons: ${_OVPA_DAEMONS}"
 _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
@@ -128,7 +129,6 @@ else
 fi
 
 # do OVPA status checks
-log "checking daemons: ${_OVPA_DAEMONS} ..."
 for _OVPA_DAEMON in ${_OVPA_DAEMONS}
 do
     # anchored grep here!

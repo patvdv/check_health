@@ -23,6 +23,10 @@ required_patches=""
 # [default: yes]
 check_filesets=yes
 
+# list of filesets to exclude from the check (comma-separated list)
+# [default: none]
+exclude_filesets=""
+
 
 #******************************************************************************
 # End of FILE

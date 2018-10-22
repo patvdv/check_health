@@ -90,6 +90,8 @@ then
     # default
     _CHECK_FILESETS="yes"
 fi
+_EXCLUDE_FILESETS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'exclude_filesets')
+[[ -n "${_EXCLUDE_FILESETS}" ]] && log "excluding filesets: $(print ${_EXCLUDE_FILESETS})"
 _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
@@ -228,8 +230,12 @@ then
         while read _FILESET_LINE
         do
             _FILESET=$(print "${_FILESET_LINE}" | awk '{print $1}' 2>/dev/null)
-            _MSG="fileset ${_FILESET} is not in a configured state"
-            log_hc "$0" 1 "${_MSG}"
+            # check exclude(s)
+            if [[ "${_EXCLUDE_FILESETS#*${_FILESET}}" = "${_EXCLUDE_FILESETS}" ]]
+            then
+                _MSG="fileset ${_FILESET} is not in a configured state"
+                log_hc "$0" 1 "${_MSG}"
+            fi
         done
     else
         _MSG="unable to run command: {${_SWLIST_BIN}}"
