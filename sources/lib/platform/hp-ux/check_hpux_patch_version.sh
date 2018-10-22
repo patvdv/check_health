@@ -258,8 +258,11 @@ VERSION : $2
 CONFIG  : $3 with:
             required_patches=<list_of_patches_to_check>
             required_oe=<OE_version>
+            check_filesets=<yes|no>
+            exclude_filesets=<list_of_filesets_to_exclude>
 PURPOSE : Checks whether the required OE (Operating Environment) version is installed
           Checks whether the required patches are installed
+          Checks whether filesets are in a configured state
 
 EOT
 
