@@ -148,8 +148,11 @@ then
     then
         if (( $(grep -c -E -e "${_OE_VERSION}.*Operating Environment" ${HC_STDOUT_LOG} 2>/dev/null) > 0 ))
         then
-            _MSG="required OE with version ${_OE_VERSION} is installed"
-            log_hc "$0" 0 "${_MSG}"
+            if (( _LOG_HEALTHY > 0 ))
+            then
+                _MSG="required OE with version ${_OE_VERSION} is installed"
+                log_hc "$0" 0 "${_MSG}"
+            fi
         else
             _MSG="required OE with version ${_OE_VERSION} is not installed"
             log_hc "$0" 1 "${_MSG}"
@@ -190,8 +193,11 @@ then
         do
             if (( $(grep -c "${_PATCH}" ${HC_STDOUT_LOG} 2>/dev/null) > 0 ))
             then
-                _MSG="required patch ${_PATCH} is installed"
-                log_hc "$0" 0 "${_MSG}"
+                if (( _LOG_HEALTHY > 0 ))
+                then
+                    _MSG="required patch ${_PATCH} is installed"
+                    log_hc "$0" 0 "${_MSG}"
+                fi
             else
                 _MSG="required patch ${_PATCH} is not installed"
                 log_hc "$0" 1 "${_MSG}"
