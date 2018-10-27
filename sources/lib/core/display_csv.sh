@@ -30,7 +30,7 @@
 function display_csv
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 typeset _DISPLAY_SEP=";"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -42,11 +42,10 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _DISPLAY_HC="$1"
 typeset _DISPLAY_FAIL_ID="$2"
 
-typeset _HC_MSG_ENTRY=""
 typeset _DISPLAY_MSG_STC=""
 typeset _DISPLAY_MSG_TIME=""
 typeset _DISPLAY_MSG_TEXT=""
-typeset _DISPLAY_MSG_CUR_VAL="" 
+typeset _DISPLAY_MSG_CUR_VAL=""
 typeset _DISPLAY_MSG_EXP_VAL=""
 typeset _ID_BIT=""
 
@@ -56,6 +55,7 @@ then
     printf "%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s${_DISPLAY_SEP}%s\n" "Health Check" "STC" "Message" "FAIL ID" \
         "Current Value" "Expected Value"
 
+    # shellcheck disable=SC2034
     print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
         # magically unquote if needed
@@ -82,8 +82,8 @@ then
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
             fi
-        fi  
-        if (( _DISPLAY_MSG_STC > 0 )) 
+        fi
+        if (( _DISPLAY_MSG_STC > 0 ))
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else

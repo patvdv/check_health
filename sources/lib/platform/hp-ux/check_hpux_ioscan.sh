@@ -29,6 +29,7 @@
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2018-05-11: small optimizations [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +41,7 @@ function check_hpux_ioscan
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-Fn"
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-08-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -67,13 +68,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -86,7 +87,7 @@ then
     _IOSCAN_CLASSES="ctl|diag|disk|ext_bus|fc|fcp|i2o|ipmi|lan|lvm|olar|vm"
 else
     # convert commas and strip quotes
-    _IOSCAN_CLASSES=$(data_comma2pipe $(data_dequote "${_CLASS_LINE}"))
+    _IOSCAN_CLASSES=$(data_comma2pipe "$(data_dequote \"${_CLASS_LINE}\")")
 fi
 _KERNEL_MODE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'kernel_mode')
 if [[ -z "${_KERNEL_MODE}" ]]
@@ -126,32 +127,32 @@ else
     fi
     log "executing ioscan with options: ${_IOSCAN_OPTS}"
     ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-    if (( $? != 0 )) 
+    if (( $? != 0 ))
     then
         _MSG="unable to run command: {${_IOSCAN_BIN}}"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
         (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-        return 0
+        return 1
     fi
 fi
-    
+
 # check for requested device classes
 grep -E -e ".*:.*:.*:.*:.*:.*:.*:.*:${_IOSCAN_CLASSES}:.*" ${HC_STDOUT_LOG} 2>/dev/null |\
     while read _IOSCAN_LINE
 do
     # possible states are: CLAIMED, UNCLAIMED, DIFF_HW, NO_HW, ERROR, SCAN
-    _HW_CLASS="$(print ${_IOSCAN_LINE} | cut -f9 -d':')"    
-    _HW_PATH="$(print ${_IOSCAN_LINE} | cut -f11 -d':')"    
+    _HW_CLASS="$(print ${_IOSCAN_LINE} | cut -f9 -d':')"
+    _HW_PATH="$(print ${_IOSCAN_LINE} | cut -f11 -d':')"
     _HW_STATE="$(print ${_IOSCAN_LINE} | cut -f16 -d':')"
-    
+
     case "${_HW_STATE}" in
         NO_HW)
             _MSG="detected NO_HW for device on path '${_HW_PATH}', class '${_HW_CLASS}'"
             _STC=1
             _STC_COUNT=$(( _STC_COUNT + 1 ))
             ;;
-        ERROR)      
+        ERROR)
             _MSG="detected ERROR for device on HW path '${_HW_PATH}', class '${_HW_CLASS}'"
             _STC=1
             _STC_COUNT=$(( _STC_COUNT + 1 ))
@@ -160,7 +161,7 @@ do
             # everything else is considered non-fatal (do not report)
             continue
     esac
-    
+
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0
 done

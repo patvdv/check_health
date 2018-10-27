@@ -31,7 +31,7 @@ function notify_sms
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/core/providers/$0.conf"
-typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -48,10 +48,10 @@ typeset _CURL_BIN=""
 typeset _SMS_PROVIDERS=""
 typeset _SMS_KAPOW_SEND_URL=""
 typeset _SMS_KAPOW_USER=""
-typeset _SMS_KAPOW_PASSWORD=""
+typeset _SMS_KAPOW_PASS=""
 
 # handle config file
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -84,8 +84,8 @@ then
                 then
                     warn "no value set for 'SMS_KAPOW_USER' in ${_CONFIG_FILE}"
                     return 1
-                fi   
-                _SMS_KAPOW_PASS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_KAPOW_PASS')              
+                fi
+                _SMS_KAPOW_PASS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'SMS_KAPOW_PASS')
                 if [[ -z "${_SMS_KAPOW_PASS}" ]]
                 then
                     warn "no value set for 'SMS_KAPOW_PASS' in ${_CONFIG_FILE}"
@@ -108,7 +108,7 @@ case "${ARG_SMS_PROVIDER}" in
             then
                 ${_CURL_BIN} -s --url "${_SMS_KAPOW_SEND_URL}?username=${_SMS_KAPOW_USER}&password=${_SMS_KAPOW_PASS}&mobile=${ARG_SMS_TO}&sms=${_SMS_TEXT}" >/dev/null 2>&1
             else
-                ${_CURL_BIN} --url "${_SMS_KAPOW_SEND_URL}?username=${_SMS_KAPOW_USER}&password=${_SMS_KAPOW_PASS}&mobile=${ARG_SMS_TO}&sms=${_SMS_TEXT}"       
+                ${_CURL_BIN} --url "${_SMS_KAPOW_SEND_URL}?username=${_SMS_KAPOW_USER}&password=${_SMS_KAPOW_PASS}&mobile=${ARG_SMS_TO}&sms=${_SMS_TEXT}"
             fi
          else
             die "unable to send SMS - curl is not installed here"

@@ -26,6 +26,7 @@
 # @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
 # @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_sg_package_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-07-05"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _SG_DAEMON="/usr/lbin/cmcld"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -51,7 +52,6 @@ typeset _SG_ENTRY=""
 typeset _SG_MATCH=""
 typeset _SG_PACKAGE=""
 typeset _SG_CFG_PARAM=""
-typeset _SG_RUN_PARAM=""
 typeset _SG_CFG_VALUE=""
 typeset _SG_RUN_VALUE=""
 

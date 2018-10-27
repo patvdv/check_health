@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: added dump_logs() & other fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_sg_package_config
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # rubbish that cmgetconf outputs to STDOUT instead of STDERR
@@ -59,7 +60,9 @@ typeset _PKG_PARAM=""
 typeset _PKG_VALUE=""
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
 trap "rm -f ${_PKG_RUN_FILE}.* ${_PKG_CFG_FILE}.* >/dev/null 2>&1; return 0" 0
+# shellcheck disable=SC2064
 trap "rm -f ${_PKG_RUN_FILE}.* ${_PKG_CFG_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -167,9 +170,6 @@ do
         _STC=0
     done <${_PKG_CFG_FILE}.${_PKG_INSTANCE}
 done
-
-# remove working files
-rm -f ${_PKG_RUN_FILE}.* ${_PKG_CFG_FILE}.* >/dev/null 2>&1
 
 return 0
 }

@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2018-07-10: original version [Patrick Van der Veken]
 # @(#) 2018-07-12: better log_healthy handling [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-07-12"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -43,8 +44,6 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
-typeset _STC=0
-typeset _DUMMY=""
 typeset _LINE_COUNT=1
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
@@ -66,7 +65,9 @@ typeset _USER_PS_PID=""
 typeset _USER_PS_COMM=""
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
 trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 0" 0
+# shellcheck disable=SC2064
 trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -114,7 +115,7 @@ fi
 
 # check PROCESS stanzas
 grep -i '^process' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=';' read _DUMMY _PROCESS _PROCESS_LIMIT _PROCESS_SOFT_THRESHOLD _PROCESS_HARD_THRESHOLD
+    while IFS=';' read _ _PROCESS _PROCESS_LIMIT _PROCESS_SOFT_THRESHOLD _PROCESS_HARD_THRESHOLD
 do
     # check for empties
     if [[ -z "${_PROCESS}" || -z "${_PROCESS_LIMIT}" ]]
@@ -124,7 +125,7 @@ do
     fi
     if [[ -n "${_PROCESS_SOFT_THRESHOLD}" ]]
     then
-        $(data_is_numeric ${_PROCESS_SOFT_THRESHOLD})
+        data_is_numeric ${_PROCESS_SOFT_THRESHOLD}
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -133,7 +134,7 @@ do
     fi
     if [[ -n "${_PROCESS_HARD_THRESHOLD}" ]]
     then
-        $(data_is_numeric ${_PROCESS_HARD_THRESHOLD})
+        data_is_numeric ${_PROCESS_HARD_THRESHOLD}
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -178,7 +179,7 @@ done
 # check USER stanzas
 _LINE_COUNT=0
 grep -i '^user' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=';' read _DUMMY _USER _USER_LIMIT _USER_SOFT_THRESHOLD _USER_HARD_THRESHOLD
+    while IFS=';' read _ _USER _USER_LIMIT _USER_SOFT_THRESHOLD _USER_HARD_THRESHOLD
 do
     # check for empties
     if [[ -z "${_USER}" || -z "${_USER_LIMIT}" ]]
@@ -188,7 +189,7 @@ do
     fi
     if [[ -n "${_USER_SOFT_THRESHOLD}" ]]
     then
-        $(data_is_numeric ${_USER_SOFT_THRESHOLD})
+        data_is_numeric ${_USER_SOFT_THRESHOLD}
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -197,7 +198,7 @@ do
     fi
     if [[ -n "${_USER_HARD_THRESHOLD}" ]]
     then
-        $(data_is_numeric ${_USER_HARD_THRESHOLD})
+        data_is_numeric ${_USER_HARD_THRESHOLD}
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"

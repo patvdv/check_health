@@ -25,6 +25,7 @@
 # @(#) 2016-04-04: original version [Patrick Van der Veken]
 # @(#) 2016-12-02: add support for ignore_missing_fs option [Patrick Van der Veken]
 # @(#) 2017-07-31: added support for current/expected value output [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_fs_mounts_options
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-07-31"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -48,7 +49,6 @@ typeset _STC=0
 typeset _CONFIG_FS=""
 typeset _CONFIG_OPTS=""
 typeset _CURR_OPTS=""
-typeset _DUMMY=""
 typeset _IGNORE_FS=""
 typeset _IS_ACTIVE=0
 typeset _FS_ENTRY=""
@@ -86,7 +86,7 @@ mount >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 
 # check for each configured file system
 grep -i '^fs:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _CONFIG_FS _CONFIG_OPTS
+    while IFS=':' read _ _CONFIG_FS _CONFIG_OPTS
 do
     # check for active FS
     _IS_ACTIVE=$(grep -c -E -e "^${_CONFIG_FS}[ \t].*" ${HC_STDOUT_LOG} 2>/dev/null)

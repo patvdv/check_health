@@ -27,6 +27,7 @@
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-08-25: support for burp v2 [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_linux_burp_backup
 typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-08-25"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -156,7 +157,7 @@ do
     typeset _MIN_BACKUP_TIME=""
     typeset _STC=0
 
-    if [[ -n "{_BURP_CLIENT}" ]] && [[ -n "{_BURP_WARNINGS}" ]] && [[ -n "${_BURP_AGE}" ]]
+    if [[ -n "${_BURP_CLIENT}" ]] && [[ -n "${_BURP_WARNINGS}" ]] && [[ -n "${_BURP_AGE}" ]]
     then
         # convert backup aging (UNIX seconds)
         case "${_BURP_AGE}" in

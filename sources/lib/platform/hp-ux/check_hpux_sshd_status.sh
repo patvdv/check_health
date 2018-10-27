@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_hpux_sshd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _SSHD_PID_FILE="/var/run/sshd/sshd.pid"
-typeset _VERSION="2017-04-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -52,7 +53,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -64,7 +65,7 @@ then
     if [[ -n "${_SSHD_PID}" ]]
     then
         # get PID list without heading
-        (( $(UNIX95= ps -o pid= -p ${_SSHD_PID}| wc -l) == 0 )) && _STC=1
+        (( $(UNIX95='' ps -o pid= -p ${_SSHD_PID}| wc -l) == 0 )) && _STC=1
     else
         # not running
         _RC=1

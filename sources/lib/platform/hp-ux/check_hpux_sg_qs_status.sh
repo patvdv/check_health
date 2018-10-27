@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-05-01: initial version [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -31,7 +32,7 @@
 function check_hpux_sg_qs_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2017-05-01"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _QS_BIN="/usr/lbin/qsc"
 typeset _QS_AUTH_FILE="/etc/cmcluster/qs_authfile"
@@ -44,7 +45,6 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
-typeset _RC=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -52,12 +52,12 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # check QS presence
-if [[ ! -x ${_QS_BIN} ]] 
+if [[ ! -x ${_QS_BIN} ]]
 then
     warn "${_QS_BIN} is not installed here"
     return 1

@@ -26,6 +26,7 @@
 # @(#) 2016-05-26: added a simple exclusion list for hosts as configurable
 # @(#)             parameter [Patrick Van der Veken]
 # @(#) 2016-06-03: small fix [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_hpux_ignite_backup
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 # backup DONE identifier
 typeset _IGNITE_NEEDLE="^DONE"
-typeset _VERSION="2016-06-03"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -92,7 +93,16 @@ _EXCLUDE_HOSTS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'exc
 if [[ -d /var/opt/ignite/clients ]]
 then
     _OLD_PWD="$(pwd)"
+    # shellcheck disable=SC2164
     cd /var/opt/ignite/clients
+    if (( $? > 0 ))
+    then
+      _MSG="unable to run command: cd /var/opt/ignite/clients"
+      log_hc "$0" 1 "${_MSG}"
+      # dump debug info
+      (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+      return 1
+    fi
 
     # check backup states
     find * -prune -type l | while read _IGNITE_HOST
@@ -168,7 +178,16 @@ then
         _STC=0
     done
 
+    # shellcheck disable=SC2164
     cd "${_OLD_PWD}"
+    if (( $? > 0 ))
+    then
+      _MSG="unable to run command: cd /var/opt/ignite/clients"
+      log_hc "$0" 1 "${_MSG}"
+      # dump debug info
+      (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+      return 1
+    fi
 else
     _MSG="Host is not an Ignite/UX server"
     log_hc "$0" ${_STC} "${_MSG}"
@@ -187,7 +206,7 @@ CONFIG  : $3 with:
             backup_age=<days_till_last_backup>
 PURPOSE : Checks the state and age of saved Ignite-UX client backups (should only be
           run only on the Ignite-UX server). Backups with warnings are considered
-          to OK. Backups older than $backup_age will not pass the health check.
+          to OK. Backups older than \$backup_age will not pass the health check.
 
 EOT
 

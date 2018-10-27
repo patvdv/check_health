@@ -25,6 +25,7 @@
 # @(#) 2013-05-15: initial version [Patrick Van der Veken]
 # @(#) 2013-05-29: small fix errpt last check time [Patrick Van der Veken]
 # @(#) 2013-06-24: big fix errpt last check time [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@
 function check_aix_errpt
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2013-06-24"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX"                      # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -47,7 +48,6 @@ typeset _STC=0
 typeset _LAST_TIME_CHECK=""
 typeset _LAST_TIME_FILE=""
 typeset _LABEL=""
-typeset _IDENTIFIER=""
 typeset _NEW_CHECK_TIME=""
 
 # handle arguments (originally comma-separated)
@@ -56,7 +56,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -66,7 +66,7 @@ if [[ -r ${_LAST_TIME_FILE} ]]
 then
     if [[ -s ${_LAST_TIME_FILE} ]]
     then
-        _LAST_TIME_CHECK="<${_LAST_TIME_FILE})"  
+        _LAST_TIME_CHECK="<${_LAST_TIME_FILE})"
     else
         warn "$0: no last known check date/time"
     fi
@@ -100,12 +100,12 @@ fi
 # but we can live it :-))
 _NEW_CHECK_TIME="$(errpt 2>/dev/null | head -n 2 | tail -n 1 | awk '{print $2}')"
 # blank result indicates either no errpt entries or exist the time call failed
-if [[ -n "${_NEW_CHECK_TIME}" ]] 
+if [[ -n "${_NEW_CHECK_TIME}" ]]
 then
     print "${_NEW_CHECK_TIME}" >${_LAST_TIME_FILE}
     (( $? == 0)) || warn "$0: unable to write last check time to ${_LAST_TIME_FILE}"
 else
-    warn "$0: no last check time received from errpt (no entries)"  
+    warn "$0: no last check time received from errpt (no entries)"
 fi
 
 # handle results

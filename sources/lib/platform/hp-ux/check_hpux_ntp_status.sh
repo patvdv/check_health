@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2016-12-29: added threshold & config file [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -33,7 +34,7 @@ function check_hpux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2016-12-29"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -55,13 +56,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle config file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -75,7 +76,7 @@ then
 fi
 
 # check & get NTP status
-if [[ ! -x ${_NTPQ_BIN} ]] 
+if [[ ! -x ${_NTPQ_BIN} ]]
 then
     warn "${_NTPQ_BIN} is not installed here"
     return 1
@@ -116,16 +117,16 @@ then
             if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }') != 0 ))
             then
                 _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
-                _STC=1      
+                _STC=1
             else
-                _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"         
+                _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
             fi
-            log_hc "$0" ${_STC} "${_MSG}"           
+            log_hc "$0" ${_STC} "${_MSG}"
             ;;
-        *) 
+        *)
             # not numeric
-            warn "invalid offset value of ${_CURR_OFFSET} found for ${NTP_PEER}?"
-            return 1 
+            warn "invalid offset value of ${_CURR_OFFSET} found for ${_NTP_PEER}?"
+            return 1
             ;;
     esac
 fi

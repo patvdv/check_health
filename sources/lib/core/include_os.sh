@@ -101,6 +101,7 @@ then
     LINUX_INIT="systemd"
 elif [[ -r /usr/share/upstart ]]
 then
+    # shellcheck disable=SC2034
     LINUX_INIT="upstart"
 fi
 

@@ -26,6 +26,7 @@
 # @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_sg_package_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -52,7 +53,6 @@ typeset _SG_ENTRY=""
 typeset _SG_MATCH=""
 typeset _SG_PACKAGE=""
 typeset _SG_CFG_PARAM=""
-typeset _SG_RUN_PARAM=""
 typeset _SG_CFG_VALUE=""
 typeset _SG_RUN_VALUE=""
 
@@ -62,20 +62,20 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
 fi
 
 # check & get serviceguard status
-if [[ ! -x ${_SG_DAEMON} ]] 
+if [[ ! -x ${_SG_DAEMON} ]]
 then
     warn "${_SG_DAEMON} is not installed here"
     return 1
@@ -86,7 +86,7 @@ else
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
         (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-        return 0        
+        return 0
     }
 fi
 
@@ -104,14 +104,14 @@ do
     if [[ -n "${_SG_MATCH}" ]]
     then
         _SG_RUN_VALUE=$(print "${_SG_MATCH}" | cut -f3- -d':' 2>/dev/null | cut -f2 -d'=' 2>/dev/null)   # field3-,2
-    
+
         if [[ "${_SG_CFG_VALUE}" = "${_SG_RUN_VALUE}" ]]
         then
             _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a correct value [${_SG_RUN_VALUE}]"
             _STC=0
         else
-            _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a wrong value [${_SG_RUN_VALUE}]"  
-            _STC=1        
+            _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a wrong value [${_SG_RUN_VALUE}]"
+            _STC=1
         fi
         log_hc "$0" ${_STC} "${_MSG}" "${_SG_RUN_VALUE}" "${_SG_CFG_VALUE}"
     else

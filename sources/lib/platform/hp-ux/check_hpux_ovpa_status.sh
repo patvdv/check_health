@@ -27,6 +27,7 @@
 # @(#) 2018-07-10: added log_healthy hc_arg [Patrick Van der Veken]
 # @(#) 2018-08-30: added config file + check list for daemons [Patrick Van der Veken]
 # @(#) 2018-10-22: small fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_hpux_ovpa_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-10-22"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _OVPA_BIN="/opt/perf/bin/perfstat"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -90,7 +91,7 @@ then
     esac
 else
     # convert commas and strip quotes
-    _OVPA_DAEMONS=$(data_comma2space $(data_dequote "${_OVPA_DAEMONS}"))
+    _OVPA_DAEMONS=$(data_comma2space "$(data_dequote \"${_OVPA_DAEMONS}\")")
 fi
 log "will check daemons: ${_OVPA_DAEMONS}"
 _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')

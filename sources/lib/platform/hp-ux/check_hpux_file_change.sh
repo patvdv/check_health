@@ -24,6 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-05-18: initial version [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_hpux_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2017-05-18"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -44,7 +45,6 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
-typeset _STC_COUNT=0
 typeset _DO_META_CHECK=0
 typeset _CFG_STATE_FILE=""
 typeset _STATE_FILE=""
@@ -65,11 +65,13 @@ typeset _TMP_EXCL_FILE="${TMP_DIR}/.$0.tmp_excl.$$"
 set -o noglob       # no file globbing
 
 # set local trap for clean-up
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
       return 0" 0
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
@@ -133,6 +135,7 @@ fi
 
 # check state file & TMP_FILEs
 [[ -r ${_STATE_FILE} ]] || {
+    # shellcheck disable=SC2188
     >${_STATE_FILE}
     (( $? > 0 )) && {
         warn "failed to create new state file at ${_STATE_FILE}"
@@ -140,21 +143,25 @@ fi
     }
     log "created new state file at ${_STATE_FILE}"
 }
+# shellcheck disable=SC2188
 >${_TMP_INCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_INCL_FILE}"
     return 1
 }
+# shellcheck disable=SC2188
 >${_TMP_EXCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_EXCL_FILE}"
     return 1
 }
+# shellcheck disable=SC2188
 >${_TMP1_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP1_FILE}"
     return 1
 }
+# shellcheck disable=SC2188
 >${_TMP2_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP2_FILE}"
@@ -163,7 +170,7 @@ fi
 
 # build list of configured objects: inclusion
 grep -i '^incl:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _INCL_OBJECT
+    while IFS=':' read _ _INCL_OBJECT
 do
     # check for meta & globbing characters (*?[]{}|)
     if (( _DO_META_CHECK == 1 ))
@@ -187,7 +194,7 @@ done
 
 # build list of configured objects: exclusion
 grep -i '^excl:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _EXCL_OBJECT
+    while IFS=':' read _ _EXCL_OBJECT
 do
     # check for meta & globbing characters (*?[]{}|)
     if (( _DO_META_CHECK == 1 ))
@@ -336,12 +343,6 @@ then
         return 1
     }
 fi
-
-# clean up temporary files
-[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
-[[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
-[[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1
-[[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1
 
 return 0
 }

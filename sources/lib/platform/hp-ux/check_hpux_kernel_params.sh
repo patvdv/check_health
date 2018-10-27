@@ -25,6 +25,7 @@
 # @(#) 2017-12-22: original version [Patrick Van der Veken]
 # @(#) 2018-01-05: added validation on config values [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_kernel_params
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCTUNE_BIN="/usr/sbin/kctune"
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -51,7 +52,6 @@ typeset _CONFIG_VALUE=""
 typeset _CURR_VALUE=""
 typeset _EXPR_VALUE=""
 typeset _REPORTED_VALUE=""
-typeset _DUMMY=""
 typeset _FOUND_PARAM=0
 typeset _LINE_COUNT=1
 
@@ -92,7 +92,7 @@ fi
 
 # check configuration values
 grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
+    while IFS=':' read _ _PARAM_NAME _CONFIG_VALUE
 do
     # check for empties
     if [[ -z "${_PARAM_NAME}" || -z "${_CONFIG_VALUE}" ]]
@@ -112,7 +112,7 @@ done
 
 # perform checks
 grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
+    while IFS=':' read _ _PARAM_NAME _CONFIG_VALUE
 do
     # check for actual values and expression values
     _CURR_VALUE=$(grep -E -e "^${_PARAM_NAME}[ \t].*" ${HC_STDOUT_LOG} 2>/dev/null | awk '{ print $2 }')

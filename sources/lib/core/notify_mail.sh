@@ -30,7 +30,7 @@
 function notify_mail
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -44,9 +44,7 @@ typeset _MAIL_FAIL_ID="$2"
 typeset _HC_BODY=""
 typeset _HC_STDOUT_LOG_SHORT=""
 typeset _HC_STDERR_LOG_SHORT=""
-typeset _HC_MSG_ENTRY=""
 typeset _MAIL_MSG_STC=""
-typeset _MAIL_MSG_TIME=""
 typeset _MAIL_MSG_TEXT=""
 typeset _MAIL_INFO_TPL="${CONFIG_DIR}/core/templates/mail_info.tpl"
 typeset _MAIL_HEADER_TPL="${CONFIG_DIR}/core/templates/mail_header.tpl"
@@ -67,10 +65,13 @@ typeset _TMP1_MAIL_FILE="${TMP_DIR}/.${SCRIPT_NAME}.mail.tmp1.$$"
 typeset _TMP2_MAIL_FILE="${TMP_DIR}/.${SCRIPT_NAME}.mail.tmp2.$$"
 typeset _NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset _SUBJ_MSG="[${HOST_NAME}] HC ${_MAIL_HC} failed (${_NOW})"
+# shellcheck disable=SC2034
 typeset _FROM_MSG="${EXEC_USER}@${HOST_NAME}"
-typeset _dummy=""
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
+trap "[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1; [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1; return 0" 0
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1; [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # set short paths for STDOUT/STDERR logs
@@ -133,7 +134,7 @@ $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_HEADER_TPL})
 __EOT" >>${_TMP1_MAIL_FILE}
 
 # create body part (from $HC_MSG_VAR)
-print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _MAIL_MSG_TIME _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
+print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _ _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
 do
     # magically unquote if needed
     if [[ -n "${_MAIL_MSG_TEXT}" ]]
@@ -159,7 +160,7 @@ do
         then
             _MAIL_MSG_EXP_VAL=$(data_magic_unquote "${_MAIL_MSG_EXP_VAL}")
         fi
-    fi  
+    fi
     if (( _MAIL_MSG_STC > 0 ))
     then
         _HC_BODY=$(printf "%s\n%s\n" "${_HC_BODY}" "${_MAIL_MSG_TEXT}")
@@ -177,18 +178,22 @@ __EOT" >>${_TMP1_MAIL_FILE}
 _MAIL_STDOUT_LOG="${EVENTS_DIR}/${DIR_PREFIX}/${_MAIL_FAIL_ID}/${_HC_STDOUT_LOG_SHORT%.*}"
 if [[ -s "${_MAIL_STDOUT_LOG}" ]]
 then
+    # shellcheck disable=SC2034
     _MAIL_STDOUT_MSG="${_MAIL_STDOUT_LOG}"
     _MAIL_ATTACH_BIT="-a ${_MAIL_STDOUT_LOG}"
 else
+    # shellcheck disable=SC2034
     _MAIL_STDOUT_MSG="no log file available"
 fi
 # HC STDERR? (drop the .$$ bit)
 _MAIL_STDERR_LOG="${EVENTS_DIR}/${DIR_PREFIX}/${_MAIL_FAIL_ID}/${_HC_STDERR_LOG_SHORT%.*}"
 if [[ -s "${_MAIL_STDERR_LOG}" ]]
 then
+    # shellcheck disable=SC2034
     _MAIL_STDERR_MSG="${_MAIL_STDERR_LOG}"
     _MAIL_ATTACH_BIT="${_MAIL_ATTACH_BIT} -a ${_MAIL_STDERR_LOG}"
 else
+     # shellcheck disable=SC2034
     _MAIL_STDERR_MSG="no log file available"
 fi
 
@@ -235,7 +240,7 @@ fi
 # clean up temporary files
 [[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1
 [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1
- 
+
 return 0
 }
 

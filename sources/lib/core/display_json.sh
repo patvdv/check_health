@@ -30,9 +30,8 @@
 function display_json
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
-typeset _DISPLAY_SEP=";"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -42,11 +41,10 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _DISPLAY_HC="$1"
 typeset _DISPLAY_FAIL_ID="$2"
 
-typeset _HC_MSG_ENTRY=""
 typeset _DISPLAY_MSG_STC=""
 typeset _DISPLAY_MSG_TIME=""
 typeset _DISPLAY_MSG_TEXT=""
-typeset _DISPLAY_MSG_CUR_VAL="" 
+typeset _DISPLAY_MSG_CUR_VAL=""
 typeset _DISPLAY_MSG_EXP_VAL=""
 typeset _ID_BIT=""
 
@@ -79,8 +77,8 @@ then
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
             fi
-        fi  
-        if (( _DISPLAY_MSG_STC > 0 )) 
+        fi
+        if (( _DISPLAY_MSG_STC > 0 ))
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else
@@ -90,7 +88,7 @@ then
         _DISPLAY_MSG_TEXT=$(data_escape_json "${_DISPLAY_MSG_TEXT}")
         _DISPLAY_MSG_CUR_VAL=$(data_escape_json "${_DISPLAY_MSG_CUR_VAL}")
         _DISPLAY_MSG_EXP_VAL=$(data_escape_json "${_DISPLAY_MSG_EXP_VAL}")
-        
+
 
         printf '{"hc":"%s","stc":"%s","time":"%s","fail_id":"%s","text":"%s","current_value":"%s","expected_value":"%s"}\n' \
             "${_DISPLAY_HC}" \

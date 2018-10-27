@@ -26,6 +26,7 @@
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-22: added check on fileset state [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ typeset _SWLIST_BIN="/usr/sbin/swlist"
 typeset _SWLIST_OPTS=""
 typeset _SHOW_PATCHES_BIN="/usr/contrib/bin/show_patches"
 typeset _SHOW_PATCHES_OPTS=""
-typeset _VERSION="2018-10-22"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,7 +50,6 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
-typeset _STC=0
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _OE_VERSION=""
@@ -83,7 +83,7 @@ _PATCH_LINE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'requir
 if [[ -n "${_PATCH_LINE}" ]]
 then
     # convert commas and strip quotes
-    _PATCHES=$(data_comma2space $(data_dequote "${_PATCH_LINE}"))
+    _PATCHES=$(data_comma2space "$(data_dequote \"${_PATCH_LINE}\")")
 fi
 if [[ -z "${_CHECK_FILESETS}" ]]
 then

@@ -32,7 +32,7 @@
 function display_zenoss
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-20"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -43,16 +43,16 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _DISPLAY_HC="$1"
 typeset _DISPLAY_FAIL_ID="$2"
 
-typeset _HC_MSG_ENTRY=""
 typeset _DISPLAY_MSG_STC=""
 typeset _DISPLAY_MSG_TIME=""
 typeset _DISPLAY_MSG_TEXT=""
-typeset _DISPLAY_MSG_CUR_VAL="" 
+typeset _DISPLAY_MSG_CUR_VAL=""
 typeset _DISPLAY_MSG_EXP_VAL=""
 
 # parse $HC_MSG_VAR
 if [[ -n "${HC_MSG_VAR}" ]]
 then
+    # shellcheck disable=SC2034
     print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
         # magically unquote if needed
@@ -79,8 +79,8 @@ then
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
             fi
-        fi  
-        if (( _DISPLAY_MSG_STC > 0 )) 
+        fi
+        if (( _DISPLAY_MSG_STC > 0 ))
         then
             printf "NOK|data1=%s data2=%s data3=%s data4=\"%s\" data5=%s data6=%s\n" \
                 "${_DISPLAY_HC}" \
@@ -97,7 +97,7 @@ then
                 "${_DISPLAY_MSG_TEXT}" \
                 "${_DISPLAY_MSG_CUR_VAL}" \
                 "${_DISPLAY_MSG_EXP_VAL}"
-        fi    
+        fi
     done
 fi
 

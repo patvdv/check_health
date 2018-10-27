@@ -51,13 +51,12 @@ typeset _STC=0
 typeset _LOG_HEALTHY=0
 typeset _TMP1_FILE="${TMP_DIR}/.$0.ioscan_tmp.$$"
 typeset _TMP2_FILE="${TMP_DIR}/.$0.scsimgr_tmp.$$"
-typeset _IOSCAN_LINE=""
-typeset _SCSIMGR_LINE=""
 typeset _HW_PATH=""
 typeset _ACTIVE_PATH_COUNT=""
 typeset _ALL_PATH_COUNT=""
 typeset _FAILED_PATH_COUNT=""
 typeset _STANDBY_PATH_COUNT=""
+typeset _WWID=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -84,9 +83,11 @@ else
 fi
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       return 0" 0
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
       return 1" 1 2 3 15
@@ -104,11 +105,13 @@ then
 fi
 
 # check TMP_FILEs
+# shellcheck disable=SC2188
 >${_TMP1_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP1_FILE}"
     return 1
 }
+# shellcheck disable=SC2188
 >${_TMP2_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP2_FILE}"

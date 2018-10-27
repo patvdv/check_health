@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2018-03-20: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR + other small fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ function check_linux_ntp_status
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -57,13 +58,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle config file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -78,6 +79,7 @@ fi
 
 #------------------------------------------------------------------------------
 # check ntp service
+# 1) try using the init ways
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
@@ -105,6 +107,12 @@ case "${LINUX_INIT}" in
         ;;
 esac
 
+# 2) try the pgrep way (note: old pgreps do not support '-c')
+if (( _RC != 0 ))
+then
+    (( $(pgrep -u root ntpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+fi
+
 # evaluate results
 case ${_STC} in
     0)
@@ -122,7 +130,7 @@ log_hc "$0" ${_STC} "${_MSG}"
 #------------------------------------------------------------------------------
 # check ntpq results
 _STC=0
-if [[ ! -x ${_NTPQ_BIN} ]] 
+if [[ ! -x ${_NTPQ_BIN} ]]
 then
     warn "${_NTPQ_BIN} is not installed here"
     return 1
@@ -159,16 +167,16 @@ then
             if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
             then
                 _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
-                _STC=1      
+                _STC=1
             else
-                _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"         
+                _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
             fi
-            log_hc "$0" ${_STC} "${_MSG}"           
+            log_hc "$0" ${_STC} "${_MSG}"
             ;;
-        *) 
+        *)
             # not numeric
-            warn "invalid offset value of ${_CURR_OFFSET} found for ${NTP_PEER}?"
-            return 1 
+            warn "invalid offset value of ${_CURR_OFFSET} found for ${_NTP_PEER}?"
+            return 1
             ;;
     esac
 fi

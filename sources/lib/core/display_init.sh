@@ -31,7 +31,7 @@
 function display_init
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-14"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -59,7 +59,6 @@ then
     typeset _BLUE=$(tput setaf 4)
     typeset _MAGENTA=$(tput setaf 5)
     typeset _CYAN=$(tput setaf 6)
-    typeset _WHITE=$(tput setaf 7)
     typeset _BOLD=$(tput bold)
     typeset _NORMAL=$(tput sgr0)
 else
@@ -69,7 +68,6 @@ else
     typeset _BLUE=""
     typeset _MAGENTA=""
     typeset _CYAN=""
-    typeset _WHITE=""
     typeset _BOLD=""
     typeset _NORMAL=""
 fi
@@ -98,9 +96,9 @@ else
         print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
         do
             # determine _DISPLAY_MSG_STC (sum of all STCs)
-            _DISPLAY_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 } } END { print stc }' 2>/dev/null)
+            _DISPLAY_MSG_STC=$(print "${_HC_MSG_ENTRY}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 } } END { print stc }' 2>/dev/null)
         done
-    
+
         # display HC results
         if (( _DISPLAY_MSG_STC == 0 ))
         then
@@ -114,7 +112,7 @@ else
             then
                 _DISPLAY_ID=" (${_BOLD}${_DISPLAY_FAIL_ID}${_NORMAL})"
             else
-                _DISPLAY_ID=" (${_BOLD}not logged${_NORMAL})"           
+                _DISPLAY_ID=" (${_BOLD}not logged${_NORMAL})"
             fi
         fi
     else

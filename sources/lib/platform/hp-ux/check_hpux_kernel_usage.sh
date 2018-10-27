@@ -26,6 +26,7 @@
 # @(#) 2018-01-08: extra config checks [Patrick Van der Veken]
 # @(#) 2018-01-09: bug fix [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_hpux_kernel_usage
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCUSAGE_BIN="/usr/sbin/kcusage"
-typeset _VERSION="2018-05-20"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -58,7 +59,6 @@ typeset _CURR_VALUE=""
 typeset _FOUND_PARAM=0
 typeset _KCUSAGE_LINE=""
 typeset _LINE_COUNT=1
-typeset _DUMMY=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -82,7 +82,7 @@ _MAX_KCUSAGE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'max_k
 if [[ -z "${_MAX_KCUSAGE}" ]]
 then
     # default
-    _IGNORE_FS=90
+    _MAX_KCUSAGE=90
 fi
 _EXCLUDED_PARAMS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'exclude_params')
 if [[ -n "${_EXCLUDED_PARAMS}" ]]
@@ -109,7 +109,7 @@ fi
 
 # check configuration values
 grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
+    while IFS=':' read _ _PARAM_NAME _CONFIG_VALUE
 do
     # check for empties
     if [[ -z "${_PARAM_NAME}" || -z "${_CONFIG_VALUE}" ]]
@@ -134,10 +134,10 @@ do
                 return 1
             fi
             ;;
-        *) 
+        *)
             # not numeric
             warn "invalid threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1 
+            return 1
             ;;
     esac
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
@@ -145,7 +145,7 @@ done
 
 # 1) perform checks (first the invidually configured ones)
 grep -i '^param:' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _DUMMY _PARAM_NAME _CONFIG_VALUE
+    while IFS=':' read _ _PARAM_NAME _CONFIG_VALUE
 do
     # check for actual values and ceilings
     _CURR_VALUE=$(grep -E -e "^${_PARAM_NAME}[ \t].*" ${HC_STDOUT_LOG} 2>/dev/null | awk '{ print $2 }')
@@ -196,7 +196,7 @@ do
         else
             _MSG="${_PARAM_NAME} is below the general threshold (${_CHECK_VALUE}% <= ${_MAX_KCUSAGE}%)"
         fi
-    
+
         # handle unit result
         log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_MAX_KCUSAGE}"
         _STC=0

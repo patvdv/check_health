@@ -41,11 +41,10 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _DISPLAY_HC="$1"
 typeset _DISPLAY_FAIL_ID="$2"
 
-typeset _HC_MSG_ENTRY=""
 typeset _DISPLAY_MSG_STC=""
 typeset _DISPLAY_MSG_TIME=""
 typeset _DISPLAY_MSG_TEXT=""
-typeset _DISPLAY_MSG_CUR_VAL="" 
+typeset _DISPLAY_MSG_CUR_VAL=""
 typeset _DISPLAY_MSG_EXP_VAL=""
 typeset _ID_BIT=""
 
@@ -54,6 +53,7 @@ if [[ -n "${HC_MSG_VAR}" ]]
 then
     printf "%-30s\t%s\t%-16s\t%s\n" "HC" "STC" "FAIL ID" "Message"
 
+    # shellcheck disable=SC2034
     print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
         # magically unquote if needed
@@ -80,8 +80,8 @@ then
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")
             fi
-        fi      
-        if (( _DISPLAY_MSG_STC > 0 )) 
+        fi
+        if (( _DISPLAY_MSG_STC > 0 ))
         then
             _ID_BIT="${_DISPLAY_FAIL_ID}"
         else
@@ -91,8 +91,8 @@ then
             "${_DISPLAY_HC}" \
             "${_DISPLAY_MSG_STC}" \
             "${_ID_BIT}" \
-            "${_DISPLAY_MSG_TEXT}"     
-    done    
+            "${_DISPLAY_MSG_TEXT}"
+    done
 else
     ARG_LOG=0 ARG_VERBOSE=1 log "INFO: no HC results to display"
 fi

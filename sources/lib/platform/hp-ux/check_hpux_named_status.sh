@@ -53,7 +53,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -65,7 +65,7 @@ then
     if [[ -n "${_NAMED_PID}" ]]
     then
         # get PID list without heading
-        (( $(UNIX95= ps -o pid= -p ${_NAMED_PID}| wc -l) == 0 )) && _STC=1
+        (( $(UNIX95='' ps -o pid= -p ${_NAMED_PID}| wc -l) == 0 )) && _STC=1
     else
         # not running
         _RC=1

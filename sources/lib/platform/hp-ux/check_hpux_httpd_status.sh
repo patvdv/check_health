@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2017-04-23: initial version [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_hpux_httpd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _HTTPD_PID_FILE="/var/run/httpd/httpd.pid"
-typeset _VERSION="2017-04-23"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -41,7 +42,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
-typeset _HTTPD_CHECKCONF_BIN=""
+typeset _HTTPD_BIN=""
 typeset _HTTPD_PID=""
 typeset _MSG=""
 typeset _STC=0
@@ -65,7 +66,7 @@ then
     if [[ -n "${_HTTPD_PID}" ]]
     then
         # get PID list without heading
-        (( $(UNIX95= ps -o pid= -p ${_HTTPD_PID}| wc -l) == 0 )) && _STC=1
+        (( $(UNIX95='' ps -o pid= -p ${_HTTPD_PID}| wc -l) == 0 )) && _STC=1
     else
         # not running
         _RC=1

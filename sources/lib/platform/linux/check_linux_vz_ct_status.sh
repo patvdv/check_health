@@ -28,6 +28,7 @@
 # @(#) 2018-04-30: fixes on variable names Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_linux_vz_ct_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VZLIST_BIN="/usr/sbin/vzlist"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -66,7 +67,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -92,15 +93,15 @@ grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CT_ENTRY
 do
     # field split
     _CT_ID="$(print ${_CT_ENTRY} | cut -f1 -d';')"
-    _CT_CFG_STATUS=$(data_lc $(print "${_CT_ENTRY}" | cut -f2 -d';' 2>/dev/null))
-    _CT_CFG_BOOT=$(data_lc $(print "${_CT_ENTRY}" | cut -f3 -d';' 2>/dev/null))
-    
+    _CT_CFG_STATUS=$(data_lc "$(print \"${_CT_ENTRY}\" | cut -f2 -d';' 2>/dev/null)")
+    _CT_CFG_BOOT=$(data_lc "$(print \"${_CT_ENTRY}\" | cut -f3 -d';' 2>/dev/null)")
+
     # check config
     case "${_CT_ID}" in
         +([0-9])*(.)*([0-9]))
             # numeric, OK
             ;;
-        *) 
+        *)
             # not numeric
             warn "invalid container ID '${_CT_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
             return 1
@@ -109,23 +110,23 @@ do
     case "${_CT_CFG_STATUS}" in
         running|stopped)
             ;;
-        *) 
+        *)
             warn "invalid container status '${_CT_CFG_STATUS}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1 
+            return 1
             ;;
-    esac   
+    esac
     case "${_CT_CFG_BOOT}" in
         yes|no)
             ;;
-        *) 
+        *)
             warn "invalid container boot value '${_CT_CFG_BOOT}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1 
+            return 1
             ;;
     esac
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
 
-    
+
 # perform checks
 grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CT_ENTRY
 do
@@ -133,34 +134,34 @@ do
     _CT_ID="$(print ${_CT_ENTRY} | cut -f1 -d';')"
     _CT_CFG_STATUS="$(print ${_CT_ENTRY} | cut -f2 -d';')"
     _CT_CFG_BOOT="$(print ${_CT_ENTRY} | cut -f3 -d';')"
-    
+
     # check run-time values
     _CT_MATCH=$(grep -i "^[[:space:]]*${_CT_ID}" ${HC_STDOUT_LOG} 2>/dev/null)
     if [[ -n "${_CT_MATCH}" ]]
     then
         # field split
-        _CT_RUN_STATUS=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' 2>/dev/null | cut -f3 -d';' 2>/dev/null))
-        _CT_RUN_BOOT=$(data_lc $(print "${_CT_MATCH}" | tr -s ' ' ';' 2>/dev/null | cut -f4 -d';' 2>/dev/null))
-        
+        _CT_RUN_STATUS=$(data_lc "$(print \"${_CT_MATCH}\" | tr -s ' ' ';' 2>/dev/null | cut -f3 -d';' 2>/dev/null)")
+        _CT_RUN_BOOT=$(data_lc "$(print \"${_CT_MATCH}\" | tr -s ' ' ';' 2>/dev/null | cut -f4 -d';' 2>/dev/null)")
+
         if [[ "${_CT_RUN_STATUS}" = "${_CT_CFG_STATUS}" ]]
         then
             _MSG="container ${_CT_ID} has a correct status [${_CT_RUN_STATUS}]"
             _STC=0
         else
-             _MSG="container ${_CT_ID} has a wrong status [${_CT_RUN_STATUS}]"     
-             _STC=1        
+             _MSG="container ${_CT_ID} has a wrong status [${_CT_RUN_STATUS}]"
+             _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_STATUS}" "${_CT_CFG_STATUS}"           
-        
+        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_STATUS}" "${_CT_CFG_STATUS}"
+
         if [[ "${_CT_RUN_BOOT}" = "${_CT_CFG_BOOT}" ]]
         then
             _MSG="container ${_CT_ID} has a correct boot flag [${_CT_RUN_BOOT}]"
             _STC=0
         else
-             _MSG="container ${_CT_ID} has a wrong boot flag [${_CT_RUN_BOOT}]"      
-             _STC=1        
+             _MSG="container ${_CT_ID} has a wrong boot flag [${_CT_RUN_BOOT}]"
+             _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_BOOT}" "${_CT_CFG_BOOT}"         
+        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_BOOT}" "${_CT_CFG_BOOT}"
     else
         warn "could not determine status for container ${_CT_ID} from command output {${_VZLIST_BIN}}"
         _RC=1

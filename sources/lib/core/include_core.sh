@@ -153,6 +153,7 @@ then
     then
         print - "$*" | while read -r LOG_LINE
         do
+            # shellcheck disable=SC2153
             print "${NOW}: ERROR: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
         done
     fi
@@ -220,6 +221,7 @@ HAS_REPORT_STD=0
 # check which core display/notification plugins are installed
 # do not use a while-do loop here because mksh/pdksh does not pass updated
 # variables back from the sub shell (only works for true ksh88/ksh93)
+# shellcheck disable=SC2010
 for FFILE in $(ls -1 ${FPATH_PARENT}/core/*.sh 2>/dev/null | grep -v "include_" 2>/dev/null)
 do
     case "${FFILE}" in
@@ -593,7 +595,7 @@ typeset EXISTS_RC=0
 # variables back from the sub shell (only works for true ksh88/ksh93)
 for FDIR in $(print "${FPATH}" | tr ':' ' ' 2>/dev/null)
 do
-    $(data_contains_string "${FDIR}" "core")
+    data_contains_string "${FDIR}" "core"
     if (( $? == 0 ))
     then
         ls "${FDIR}/${EXISTS_HC}" >/dev/null 2>&1 && EXISTS_RC=1
@@ -613,7 +615,6 @@ function find_hc
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FIND_HC="${1}"
-typeset FIND_PATH=""
 typeset FDIR=""
 
 print "${FPATH}" | tr ':' '\n' | grep -v "core$" | while read -r FDIR
@@ -670,6 +671,7 @@ do
     # rewrite if needed
     if (( ERROR_COUNT > 0 ))
     then
+        # shellcheck disable=SC2188
         >${TMP_FILE} 2>/dev/null
         cat ${FIX_FILE} 2>/dev/null | awk -F"${LOG_SEP}" -v OFS="${LOG_SEP}" '
 
@@ -797,7 +799,6 @@ function handle_hc
 typeset HC_NAME="${1}"
 typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
-typeset HC_MSG_ENTRY=""
 typeset HC_STC_RC=0
 typeset ONE_MSG_STC=0
 typeset ONE_MSG_TIME=""
@@ -823,7 +824,7 @@ then
     # determine ALL_MSG_STC (sum of all STCs)
     ALL_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 }} END { print stc }' 2>/dev/null)
     (( ARG_DEBUG != 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
-    $(data_is_numeric ${ALL_MSG_STC}) || die "HC all STC computes to a non-numeric value"
+    data_is_numeric ${ALL_MSG_STC} || die "HC all STC computes to a non-numeric value"
 else
     # nothing to do
     return 0
@@ -1128,6 +1129,7 @@ function handle_timeout
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 [[ -n "${CHILD_PID}" ]] && kill -s TERM ${CHILD_PID}
 warn "child process with PID ${CHILD_PID} has been forcefully stopped"
+# shellcheck disable=SC2034
 CHILD_ERROR=1
 
 return 0
@@ -1142,9 +1144,6 @@ return 0
 function init_check_host
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset DUMMY=""
-typeset HC_CONFIG=""
-typeset HC_DESC=""
 typeset HC_EXEC=""
 typeset DISPLAY_STYLE=""
 
@@ -1152,7 +1151,7 @@ typeset DISPLAY_STYLE=""
 
 # read required config values
 DISPLAY_STYLE=$(_CONFIG_FILE="${HOST_CONFIG_FILE}" data_get_lvalue_from_config 'display_style')
-case "${REPORT_STYLE}" in
+case "${DISPLAY_STYLE}" in
     csv|CSV) # csv format
         if (( HAS_DISPLAY_CSV == 1 ))
         then
@@ -1258,7 +1257,7 @@ esac
 # mangle $ARG_HC to build the full list of HCs to be executed
 ARG_HC=""
 grep -i '^hc:' ${HOST_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read DUMMY HC_EXEC HC_CONFIG HC_DESC
+    while IFS=':' read _ HC_EXEC _ _
 do
     ARG_HC="${ARG_HC},${HC_EXEC}"
 done
@@ -1359,11 +1358,13 @@ typeset HC_VERSION=""
 if [[ "${FACTION}" != "list" ]]
 then
     printf "%-30s\t%-8s\t%s\t\t%s\n" "Core plugin" "State" "Version" "Config?"
+    # shellcheck disable=SC2183
     printf "%80s\n" | tr ' ' -
 fi
 print "${FPATH}" | tr ':' '\n' | grep "core$" | sort 2>/dev/null | while read -r FDIR
 do
     # exclude core helper librar(y|ies)
+    # shellcheck disable=SC2010
     ls -1 ${FDIR}/*.sh 2>/dev/null | grep -v "include_" | sort 2>/dev/null | while read -r FFILE
     do
         # reset state
@@ -1405,6 +1406,7 @@ then
     print "${FPATH}" | tr ':' '\n' | grep "core$" | while read -r FDIR
     do
         # do not use 'find -type l' here!
+        # shellcheck disable=SC2010
         ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
@@ -1460,6 +1462,7 @@ fi
 if [[ "${FACTION}" != "list" ]]
 then
     printf "%-30s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
+    # shellcheck disable=SC2183
     printf "%100s\n" | tr ' ' -
 fi
 print "${FPATH}" | tr ':' '\n' | grep -v "core$" | sort 2>/dev/null | while read -r FDIR
@@ -1492,8 +1495,8 @@ do
                         ;;
                 esac
             else
-                FHEALTHY="N/S"          
-            fi          
+                FHEALTHY="N/S"
+            fi
             # *.conf next
             if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
             then
@@ -1509,7 +1512,7 @@ do
                     *)
                         FHEALTHY="N/S"
                         ;;
-                esac        
+                esac
             fi
         # check for log_healthy support through --hc-args (plugin)
         elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
@@ -1562,6 +1565,7 @@ then
     print "${FPATH}" | tr ':' '\n' | grep -v "core" | while read -r FDIR
     do
         # do not use 'find -type l' here!
+        # shellcheck disable=SC2010
         ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
@@ -1635,7 +1639,6 @@ function log_hc
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="${1}"
 typeset HC_STC=${2}
-typeset HC_MSG="${3}"
 typeset HC_NOW="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"
 typeset HC_MSG_CUR_VAL=""
 typeset HC_MSG_EXP_VAL=""

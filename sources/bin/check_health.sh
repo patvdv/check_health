@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-07-12"
+typeset -r SCRIPT_VERSION="2018-10-28"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -54,13 +54,18 @@ typeset -r EXEC_USER="root"
 # read-only settings (but should not be changed)
 typeset -r SCRIPT_NAME="$(basename $0)"
 typeset -r SCRIPT_DIR="$(dirname $0)"
+# shellcheck disable=SC2034
 typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
+# shellcheck disable=SC2034
 typeset -r LOG_SEP="|"          # single character only
+# shellcheck disable=SC2034
 typeset -r MSG_SEP="%"          # single character only
+# shellcheck disable=SC2034
 typeset -t NUM_LOG_FIELDS=6     # current number of fields in $HC_LOG + 1
+# shellcheck disable=SC2034
 typeset -r MAGIC_QUOTE="!_!"    # magic quote
 typeset -r LOG_DIR="/var/opt/hc"
 typeset -r LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
@@ -74,28 +79,35 @@ typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
 typeset CMD_LINE=""
 typeset CMD_PARAMETER=""
 typeset CHILD_ERROR=0
+# shellcheck disable=SC2034
 typeset DIR_PREFIX="$(date '+%Y-%m')"
 typeset EXIT_CODE=0
 typeset FDIR=""
 typeset FFILE=""
 typeset FPATH=""
 typeset HC_FAIL_ID=""
+# shellcheck disable=SC2034
 typeset HC_FILE_LINE=""
 typeset HC_NOW=""
 typeset HC_TIME_OUT=60
 typeset HC_MIN_TIME_OUT=30
+# shellcheck disable=SC2034
 typeset HC_MSG_VAR=""
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
+# shellcheck disable=SC2034
 typeset LINUX_DISTRO=""
+# shellcheck disable=SC2034
 typeset LINUX_RELEASE=""
 typeset ARCHIVE_RC=0
 typeset DISABLE_RC=0
 typeset ENABLE_RC=0
+# shellcheck disable=SC2034
 typeset FIX_FC=0
 typeset RUN_RC=0
 typeset RUN_CONFIG_FILE=""
 typeset RUN_TIME_OUT=0
+# shellcheck disable=SC2034
 typeset SORT_CMD=""
 typeset DEBUG_OPTS=""
 # command-line parameters
@@ -217,7 +229,7 @@ function check_core
 # check and include core helper libs
 if [[ -r ${FPATH_PARENT}/core/include_core.sh && -h ${FPATH_PARENT}/core/include_core ]]
 then
-    # source /opt/hc/lib/core/include_core.sh
+    # shellcheck source=/opt/hc/lib/core/include_core.sh
     . ${FPATH_PARENT}/core/include_core.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_core.sh is not present (tip: run --fix-symlinks)"
@@ -225,7 +237,7 @@ else
 fi
 if [[ -r ${FPATH_PARENT}/core/include_data.sh && -h ${FPATH_PARENT}/core/include_data ]]
 then
-    # source /opt/hc/lib/core/include_data.sh
+    # shellcheck source=/opt/hc/lib/core/include_data.sh
     . ${FPATH_PARENT}/core/include_data.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_data.sh is not present (tip: run --fix-symlinks)"
@@ -233,7 +245,7 @@ else
 fi
 if [[ -r ${FPATH_PARENT}/core/include_os.sh && -h ${FPATH_PARENT}/core/include_os ]]
 then
-    # source /opt/hc/lib/core/include_os.sh
+    # shellcheck source=/opt/hc/lib/core/include_os.sh
     . ${FPATH_PARENT}/core/include_os.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_os.sh is not present (tip: run --fix-symlinks)"
@@ -468,6 +480,7 @@ function check_user
 typeset WHOAMI=""
 
 # avoid sub-shell for mksh/pdksh
+# shellcheck disable=SC2046
 WHOAMI=$(IFS='()'; set -- $(id); print $2)
 if [[ "${WHOAMI}" != "${EXEC_USER}" ]]
 then
@@ -493,6 +506,7 @@ case "${KSH_VERSION}" in
     *)
         if [[ -z "${ERRNO}" ]]
         then
+            # shellcheck disable=SC2154
             (( ARG_DEBUG != 0 )) && print "running ksh: ${.sh.version}"
         else
             (( ARG_DEBUG != 0 )) && print "running ksh: ksh88 or older"
@@ -648,6 +662,7 @@ done
 print "${FPATH}" | tr ':' '\n' | while read -r FDIR
 do
     # do not use 'find -type l' here!
+    # shellcheck disable=SC2010
     ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FSYML
     do
         # check if file is a dead symlink
@@ -672,7 +687,6 @@ return 0
 function read_config
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset SMS_CONFIG_FILE=""
 
 if [[ -z "${CONFIG_FILE}" ]] || [[ -z "${CONFIG_FILE}" ]]
 then
@@ -682,6 +696,7 @@ if [[ ! -r "${CONFIG_FILE}" ]]
 then
     die "unable to read configuration file at ${CONFIG_FILE}"
 else
+    # shellcheck source=/dev/null
     . "${CONFIG_FILE}"
 fi
 
@@ -741,6 +756,7 @@ do
             ARG_DEBUG_LEVEL="${CMD_PARAMETER#--debug-level=}"
             ;;
         -detail|--detail)
+            # shellcheck disable=SC2034
             ARG_DETAIL=1
             ;;
         -d|-disable|--disable)
@@ -769,6 +785,7 @@ do
             ARG_DISPLAY="${CMD_PARAMETER#-display=}"
             ;;
         --display=*)
+            # shellcheck disable=SC2034
             ARG_DISPLAY="${CMD_PARAMETER#--display=}"
             ;;
         -e|-enable|--enable)
@@ -824,15 +841,19 @@ do
             ARG_HC_ARGS="${CMD_PARAMETER#--hc-args=}"
             ;;
         -with-history|--with-history)
+            # shellcheck disable=SC2034
             ARG_HISTORY=1
             ;;
         -id=*)
+            # shellcheck disable=SC2034
             ARG_FAIL_ID="${CMD_PARAMETER#-id=}"
             ;;
         --id=*)
+            # shellcheck disable=SC2034
             ARG_FAIL_ID="${CMD_PARAMETER#--id=}"
             ;;
         -last|--last)
+            # shellcheck disable=SC2034
             ARG_LAST=1
             ;;
         -list|--list)
@@ -885,12 +906,14 @@ do
             ARG_MAIL_TO="${CMD_PARAMETER#-mail-to=}"
             ;;
         --mail-to=*)
+            # shellcheck disable=SC2034
             ARG_MAIL_TO="${CMD_PARAMETER#--mail-to=}"
             ;;
         -notify=*)
             ARG_NOTIFY="${CMD_PARAMETER#-notify=}"
             ;;
         --notify=*)
+            # shellcheck disable=SC2034
             ARG_NOTIFY="${CMD_PARAMETER#--notify=}"
             ;;
         -no-log|--no-log)
@@ -933,10 +956,12 @@ do
             else
                 ARG_ACTION=8
             fi
+            # shellcheck disable=SC2034
             ARG_REPORT="${CMD_PARAMETER#--report=}"
             ARG_LOG=0; ARG_VERBOSE=0
             ;;
         -reverse|--reverse)
+            # shellcheck disable=SC2034
             ARG_REVERSE=1
             ;;
         -r|-run|--run)
@@ -956,7 +981,9 @@ do
             else
                 ARG_ACTION=5
             fi
-            ARG_LOG=0; ARG_VERBOSE=0
+            ARG_LOG=0
+            # shellcheck disable=SC2034
+            ARG_VERBOSE=0
             ;;
         -show-stats|--show-stats)
             if (( ARG_ACTION > 0 ))
@@ -971,12 +998,14 @@ do
             ARG_SMS_PROVIDER="${CMD_PARAMETER#-sms-provider=}"
             ;;
         --sms-provider=*)
+            # shellcheck disable=SC2034
             ARG_SMS_PROVIDER="${CMD_PARAMETER#--sms-provider=}"
             ;;
         -sms-to=*)
             ARG_SMS_TO="${CMD_PARAMETER#-sms-to=}"
             ;;
         --sms-to=*)
+            # shellcheck disable=SC2034
             ARG_SMS_TO="${CMD_PARAMETER#--sms-to=}"
             ;;
         -timeout=*)
@@ -986,6 +1015,7 @@ do
             ARG_TIME_OUT="${CMD_PARAMETER#--timeout=}"
             ;;
         -today|--today)
+            # shellcheck disable=SC2034
             ARG_TODAY=1
             ;;
         -v|-version|--version)
@@ -1047,6 +1077,7 @@ log "*** start of ${SCRIPT_NAME} [${CMD_LINE}] ***"
 (( ARG_ACTION == 4 || ARG_ACTION == 11 || ARG_ACTION == 12 )) && check_lock_dir
 
 # general HC log
+# shellcheck disable=SC2034
 HC_LOG="${LOG_DIR}/hc.log"
 
 # get linux stuff
@@ -1152,7 +1183,9 @@ case ${ARG_ACTION} in
             # set & initialize STDOUT/STDERR locations (not in init_hc()!)
             HC_STDOUT_LOG="${TMP_DIR}/${HC_RUN}.stdout.log.$$"
             HC_STDERR_LOG="${TMP_DIR}/${HC_RUN}.stderr.log.$$"
+            # shellcheck disable=SC2188
             >${HC_STDOUT_LOG} 2>/dev/null
+            # shellcheck disable=SC2188
             >${HC_STDERR_LOG} 2>/dev/null
 
             # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE & HC_TIME_OUT

@@ -41,7 +41,7 @@ _LVALUE=$(grep -i "^${_PARAMETER} *=" ${_CONFIG_FILE} | cut -f2- -d'=')
 
 if [[ -n "${_LVALUE}" ]]
 then
-    print $(data_dequote "${_LVALUE}")
+    print "$(data_dequote \"${_LVALUE}\")"
 else
     _RC=1
 fi
@@ -88,7 +88,7 @@ return ${_RC}
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_quote()
 # DOES: magically quotes a needle in a string (default needle is: %)
-# EXPECTS: to be magically quoted [string]; $2=needle [string] 
+# EXPECTS: to be magically quoted [string]; $2=needle [string]
 # OUTPUTS: magically quoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a
@@ -106,7 +106,7 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_unquote()
 # DOES: magically unquotes a needle in a string (default needle is: %)
-# EXPECTS: to be magically unquoted [string]; $2=needle [string] 
+# EXPECTS: to be magically unquoted [string]; $2=needle [string]
 # OUTPUTS: magically unquoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a
@@ -473,9 +473,9 @@ case "${1}" in
     +([0-9])*(.)*([0-9]))
         # numeric, OK
         ;;
-    *) 
+    *)
         # not numeric
-        return 1 
+        return 1
         ;;
 esac
 
@@ -544,7 +544,7 @@ return 0
 # OUTPUTS: 32 bit number [string]
 # REQUIRES: n/a
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
-function data_dot2ip 
+function data_dot2ip
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _DOT="${1}"
@@ -553,7 +553,7 @@ typeset _OLD_IFS="${IFS}"
 
 IFS="."
 set -A _COMPS ${_DOT}
-IFS="${OLD_IFS}"
+IFS="${_OLD_IFS}"
 
 _IP=$((_IP | ((_COMPS[0] & 255) << 24) ))
 _IP=$((_IP | ((_COMPS[1] & 255) << 16) ))
@@ -573,13 +573,13 @@ return 0
 # RETURNS: 0
 # REQUIRES: n/a
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
-function data_ip2dot 
+function data_ip2dot
 {
 (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _IP="${1}"
-typeset _W="" 
-typeset _X="" 
-typeset _Y="" 
+typeset _W=""
+typeset _X=""
+typeset _Y=""
 typeset _Z=""
 
 _W=$(( (_IP >> 24) & 255 ))
@@ -617,21 +617,21 @@ case "${_BITS}" in
      6) _OFFSET=67108864 ;;
      7) _OFFSET=33554432 ;;
      8) _OFFSET=16777216 ;;
-     9) _OFFSET=8388608 ;;  
-    10) _OFFSET=4194304 ;;  
+     9) _OFFSET=8388608 ;;
+    10) _OFFSET=4194304 ;;
     11) _OFFSET=2097152 ;;
     12) _OFFSET=1048576 ;;
     13) _OFFSET=524288 ;;
-    14) _OFFSET=262144 ;;   
-    15) _OFFSET=131072 ;;   
-    16) _OFFSET=65536 ;;        
+    14) _OFFSET=262144 ;;
+    15) _OFFSET=131072 ;;
+    16) _OFFSET=65536 ;;
     17) _OFFSET=32768 ;;
     18) _OFFSET=16384 ;;
     19) _OFFSET=8192 ;;
-    20) _OFFSET=4096 ;; 
-    21) _OFFSET=2048 ;;     
+    20) _OFFSET=4096 ;;
+    21) _OFFSET=2048 ;;
     22) _OFFSET=1024 ;;
-    23) _OFFSET=512 ;;  
+    23) _OFFSET=512 ;;
     24) _OFFSET=256 ;;
     25) _OFFSET=128 ;;
     26) _OFFSET=64 ;;
@@ -691,11 +691,11 @@ return ${_RC}
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_date2epoch()
 # DOES: converts a given date into UNIX epoch seconds
-# EXPECTS: date formatted as individual parameters (in UTC time):  
+# EXPECTS: date formatted as individual parameters (in UTC time):
 #          $1 : YYYY
 #          $2 : MM
 #          $3 : DD
-#          $4 : HH 
+#          $4 : HH
 #          $5 : MM
 #          $6 : SS
 # OUTPUTS: UNIX epoch seconds [number]
@@ -711,25 +711,25 @@ typeset _DAY="${3}"
 typeset _HOUR="${4}"
 typeset _MINUTE="${5}"
 typeset _SECOND="${6}"
-typeset _DAYS_ACC 
-typeset _YEAR_DAY 
-typeset _EPOCH 
+typeset _DAYS_ACC
+typeset _YEAR_DAY
+typeset _EPOCH
 typeset _LEAP_YEARS
 set -A _DAYS_ACC 0 0 31 59 90 120 151 181 212 243 273 304 334 365
 
 # calculate day of year (counting from 0)
-_YEAR_DAY=$(( (${_DAY} - 1) + ${_DAYS_ACC[${_MONTH}]} ))
+_YEAR_DAY=$(( (_DAY - 1) + _DAYS_ACC[_MONTH] ))
 
 # calculate number of leap years
-_LEAP_YEARS=$(( (${_YEAR} - 1968) / 4 ))
-_LEAP_YEARS=$(( ${_LEAP_YEARS} - ${_YEAR} / 100 + ${_YEAR} / 400 + 15 ))
+_LEAP_YEARS=$(( (_YEAR - 1968) / 4 ))
+_LEAP_YEARS=$(( _LEAP_YEARS - _YEAR / 100 + _YEAR / 400 + 15 ))
 
 # adjust if we are still in Jan/Feb of leap year
-[[ $((${_YEAR} % 4)) = 0 && ${_MONTH} < 3 ]] && _LEAP_YEARS=$(( ${_LEAP_YEARS} - 1 ))
+[[ $((_YEAR % 4)) = 0 && ${_MONTH} -lt 3 ]] && _LEAP_YEARS=$(( _LEAP_YEARS - 1 ))
 
 # calculate the time since epoch
-_EPOCH=$(( ((${_YEAR} - 1970) * 365 + ${_YEAR_DAY} + ${_LEAP_YEARS}) * 86400
-           + ${_HOUR} * 3600 + ${_MINUTE} * 60 + ${_SECOND} ))
+_EPOCH=$(( ((_YEAR - 1970) * 365 + _YEAR_DAY + _LEAP_YEARS) * 86400
+           + _HOUR * 3600 + _MINUTE * 60 + _SECOND ))
 
 print ${_EPOCH}
 }
@@ -759,10 +759,10 @@ then
 		print "${_UNIX_EPOCH}"
 		return 1
 	else
-		print "${_CONVERT_DATE}"	
-	fi	
+		print "${_CONVERT_DATE}"
+	fi
 else
-	print "${CONVERT_DATE}"
+	print "${_CONVERT_DATE}"
 fi
 
 return 0

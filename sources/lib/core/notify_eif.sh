@@ -33,7 +33,7 @@ function notify_eif
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/core/providers/$0.conf"
-typeset _VERSION="2018-05-12"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -53,7 +53,7 @@ typeset _SLEEP_PID=0
 typeset _CHILD_RC=0
 
 # handle config file
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -79,7 +79,7 @@ then
 fi
 
 # send EIF
-if [[ -x ${EIF_BIN} ]]
+if [[ -x ${_EIF_BIN} ]]
 then
     # set trap on SIGUSR1
     trap "handle_timeout" USR1
@@ -95,7 +95,7 @@ then
     _SLEEP_PID=$!
 
     # do POSTEIFMSG in the background
-    ${EIF_BIN} -f ${EIF_ETC} -r ${EIF_SEVERITY} -m "${_EIF_MESSAGE}" \
+    ${_EIF_BIN} -f ${_EIF_ETC} -r ${_EIF_SEVERITY} -m "${_EIF_MESSAGE}" \
         hostname=${HOST_NAME} sub_origin=part1 ${_EIF_CLASS} POST &
     CHILD_PID=$!
     log "spawning child process with time-out of ${_TIME_OUT} secs for EIF notify [PID=${CHILD_PID}]"

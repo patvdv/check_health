@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2013-09-09: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_linux_hpacucli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -43,7 +44,6 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}"  "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
-typeset _STC=0
 typeset _STC_COUNT=0
 typeset _TMP_FILE="${TMP_DIR}/.$0.tmp.$$"
 typeset _HPACUCLI_BIN=""
@@ -57,7 +57,9 @@ typeset _DO_ACU_LOGL=1
 typeset _DO_CHECK=0
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
+# shellcheck disable=SC2064
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
@@ -261,9 +263,6 @@ then
     _MSG="no problems detected by {${_HPACUCLI_BIN}}"
     log_hc "$0" 0 "${_MSG}"
 fi
-
-# remove temporary file
-[[ -f ${_TMP_FILE} ]] & rm -f ${_TMP_FILE} >/dev/null 2>&1
 
 return 0
 }

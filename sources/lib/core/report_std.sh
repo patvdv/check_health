@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-27"                               # YYYY-MM-DD
+typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,7 +49,6 @@ typeset _HC_LAST_FAIL_ID="-"
 typeset _ID_NEEDLE=""
 typeset _CHECK_FILE=""
 typeset _LOG_STASH=""
-typeset _REPORT_LINE=""
 typeset _SORT_CMD=""
 
 # which files do we need to examine
@@ -65,6 +64,7 @@ fi
 if (( ARG_LAST != 0 ))
 then
     printf "\n| %-30s | %-20s | %-14s | %-4s\n" "HC" "Timestamp" "FAIL ID" "STC (combined value)"
+    # shellcheck disable=SC2183
     printf "%100s\n" | tr ' ' -
     # loop over all HCs
     list_hc "list" | while read -r _HC_LAST
@@ -136,6 +136,7 @@ else
         then
             printf "\n| %-20s | %-14s | %-30s | %-s\n" \
                 "Timestamp" "FAIL ID" "HC" "Message"
+            # shellcheck disable=SC2183
             printf "%120s\n" | tr ' ' -
 
             # print failed events
@@ -169,6 +170,7 @@ else
                 ' 2>/dev/null
 
             _DIR_PREFIX="$(expr substr ${ARG_FAIL_ID} 1 4)-$(expr substr ${ARG_FAIL_ID} 5 2)"
+            # shellcheck disable=SC2183
             printf "%37sSTDOUT%37s\n" | tr ' ' -;
             # display non-empty STDOUT file(s)
             if [[ -n "$(du -a ${EVENTS_DIR}/${_DIR_PREFIX}/${ARG_FAIL_ID}/*.stdout.log 2>/dev/null | awk '$1*512 > 0 {print $2}')"  ]]
@@ -178,6 +180,7 @@ else
                 printf "%-s\n" "No STDOUT found"
             fi
 
+            # shellcheck disable=SC2183
             printf "%37sSTDERR%37s\n" | tr ' ' -;
             # display non-empty STDERR file(s)
             if [[ -n "$(du -a ${EVENTS_DIR}/${_DIR_PREFIX}/${ARG_FAIL_ID}/*.stderr.log 2>/dev/null | awk '$1*512 > 0 {print $2}')" ]]
@@ -187,6 +190,7 @@ else
                 printf "%-s\n" "No STDERR found"
             fi
 
+            # shellcheck disable=SC2183
             printf "%80s\n" | tr ' ' -
         fi
     else
