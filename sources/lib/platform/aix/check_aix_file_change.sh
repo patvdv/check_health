@@ -135,34 +135,29 @@ fi
 
 # check state file & TMP_FILEs
 [[ -r ${_STATE_FILE} ]] || {
-    # shellcheck disable=SC2188
-    >${_STATE_FILE}
+    : >${_STATE_FILE}
     (( $? > 0 )) && {
         warn "failed to create new state file at ${_STATE_FILE}"
         return 1
     }
     log "created new state file at ${_STATE_FILE}"
 }
-# shellcheck disable=SC2188
->${_TMP_INCL_FILE}
+: >${_TMP_INCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_INCL_FILE}"
     return 1
 }
-# shellcheck disable=SC2188
->${_TMP_EXCL_FILE}
+: >${_TMP_EXCL_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP_EXCL_FILE}"
     return 1
 }
-# shellcheck disable=SC2188
->${_TMP1_FILE}
+: >${_TMP1_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP1_FILE}"
     return 1
 }
-# shellcheck disable=SC2188
->${_TMP2_FILE}
+: >${_TMP2_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP2_FILE}"
     return 1

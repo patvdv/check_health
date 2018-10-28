@@ -105,14 +105,12 @@ then
 fi
 
 # check TMP_FILEs
-# shellcheck disable=SC2188
->${_TMP1_FILE}
+: >${_TMP1_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP1_FILE}"
     return 1
 }
-# shellcheck disable=SC2188
->${_TMP2_FILE}
+: >${_TMP2_FILE}
 (( $? > 0 )) && {
     warn "failed to create temporary file at ${_TMP2_FILE}"
     return 1

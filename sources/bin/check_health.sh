@@ -1183,10 +1183,8 @@ case ${ARG_ACTION} in
             # set & initialize STDOUT/STDERR locations (not in init_hc()!)
             HC_STDOUT_LOG="${TMP_DIR}/${HC_RUN}.stdout.log.$$"
             HC_STDERR_LOG="${TMP_DIR}/${HC_RUN}.stderr.log.$$"
-            # shellcheck disable=SC2188
-            >${HC_STDOUT_LOG} 2>/dev/null
-            # shellcheck disable=SC2188
-            >${HC_STDERR_LOG} 2>/dev/null
+            : >${HC_STDOUT_LOG} 2>/dev/null
+            : >${HC_STDERR_LOG} 2>/dev/null
 
             # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE & HC_TIME_OUT
             if (( ARG_CHECK_HOST == 1 ))
