@@ -1,0 +1,49 @@
+#******************************************************************************
+# @(#) check_hpux_sfm_status.conf.dist
+#******************************************************************************
+# This is a configuration file for the check_hpux_sfm_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks (yes|no)
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy=yes
+
+# specify whether to check for new events? (yes|no)
+# [default: yes]
+check_events=yes
+
+# specify the age interval for which to check events
+# (format: X:mm|X:hh|X:dd|X:yy, where X stands for an integer and
+#      dd: days
+#      mm: months
+#      yy: years)
+# [default: 1:dd (last day)]
+events_age="1:dd"
+
+# specify the severity for which events events to check. Leave blank for all.
+# You can specify multiple severities separated by comma
+# severities: MILESTONE,INFORMATIONAL,WARNING,ERROR,CRITICAL,STOPLOGGING
+# see also: /var/opt/sfm/conf/FMLoggerConfig.xml
+# [default: CRITICAL]
+events_severity="CRITICAL"
+
+# specify whether to send a test event? (yes|no)
+# [default: no]
+send_test_event=yes
+
+# specify wait time for test event (seconds)
+# [default: 60]
+wait_test_event=60
+
+# specify the URL for the external SIM/IRS subscriber (only 1 URL supported)
+# [default: none]
+event_subscriber_wbem=""
+event_subscriber_cimom=""
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
