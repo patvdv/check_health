@@ -43,6 +43,7 @@ typeset TMP1_FILE="${TMP_DIR}/.$0.tmp1.archive.$$"
 typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 
 # set local trap for cleanup
+# shellcheck disable=SC2064
 trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # isolate messages from HC, find unique %Y-%m combinations
@@ -655,6 +656,7 @@ else
 fi
 
 # set local trap for clean-up
+# shellcheck disable=SC2064
 trap "[[ -f ${TMP_FILE} ]] && rm -f ${TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # check and rewrite log file(s)
@@ -671,8 +673,7 @@ do
     # rewrite if needed
     if (( ERROR_COUNT > 0 ))
     then
-        # shellcheck disable=SC2188
-        >${TMP_FILE} 2>/dev/null
+        : >${TMP_FILE} 2>/dev/null
         cat ${FIX_FILE} 2>/dev/null | awk -F"${LOG_SEP}" -v OFS="${LOG_SEP}" '
 
             BEGIN { max_log_fields = '"${NUM_LOG_FIELDS}"'
