@@ -52,8 +52,8 @@ typeset -r TMP_DIR="/var/tmp"
 typeset -r EXEC_USER="root"
 # ------------------------- CONFIGURATION ends here ---------------------------
 # read-only settings (but should not be changed)
-typeset -r SCRIPT_NAME="$(basename $0)"
-typeset -r SCRIPT_DIR="$(dirname $0)"
+typeset -r SCRIPT_NAME=$(basename "$0")
+typeset -r SCRIPT_DIR=$(dirname "$0")
 # shellcheck disable=SC2034
 typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
@@ -229,7 +229,7 @@ function check_core
 # check and include core helper libs
 if [[ -r ${FPATH_PARENT}/core/include_core.sh && -h ${FPATH_PARENT}/core/include_core ]]
 then
-    # shellcheck source=/opt/hc/lib/core/include_core.sh
+    # shellcheck source=/dev/null
     . ${FPATH_PARENT}/core/include_core.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_core.sh is not present (tip: run --fix-symlinks)"
@@ -237,7 +237,7 @@ else
 fi
 if [[ -r ${FPATH_PARENT}/core/include_data.sh && -h ${FPATH_PARENT}/core/include_data ]]
 then
-    # shellcheck source=/opt/hc/lib/core/include_data.sh
+    # shellcheck source=/dev/null
     . ${FPATH_PARENT}/core/include_data.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_data.sh is not present (tip: run --fix-symlinks)"
@@ -245,7 +245,7 @@ else
 fi
 if [[ -r ${FPATH_PARENT}/core/include_os.sh && -h ${FPATH_PARENT}/core/include_os ]]
 then
-    # shellcheck source=/opt/hc/lib/core/include_os.sh
+    # shellcheck source=/dev/null
     . ${FPATH_PARENT}/core/include_os.sh
 else
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_os.sh is not present (tip: run --fix-symlinks)"
@@ -480,8 +480,7 @@ function check_user
 typeset WHOAMI=""
 
 # avoid sub-shell for mksh/pdksh
-# shellcheck disable=SC2046
-WHOAMI=$(IFS='()'; set -- $(id); print $2)
+WHOAMI=$(IFS='()'; set -- "$(id)"; print $2)
 if [[ "${WHOAMI}" != "${EXEC_USER}" ]]
 then
     print -u2 "ERROR: must be run as user '${EXEC_USER}'"
