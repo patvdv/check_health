@@ -34,10 +34,13 @@ function check_linux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
+typeset _CHRONY_INIT_SCRIPT="/etc/init.d/chrony"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
+typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
 typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
+typeset _CHRONYC_BIN="/bin/chronyc"
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -48,9 +51,13 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _CURR_OFFSET=0
 typeset _MAX_OFFSET=0
 typeset _NTP_PEER=""
+typeset _USE_CHRONYD=0
+typeset _USE_NTPD=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -76,6 +83,47 @@ then
     # default
     _MAX_OFFSET=500
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+
+#------------------------------------------------------------------------------
+# chronyd (prefer) or ntpd (fallback)?
+if [[ -x ${_CHRONYC_BIN} ]]
+then
+    _USE_CHRONYD=1
+elif [[ -x ${_NTPQ_BIN} ]]
+then
+    # shellcheck disable=SC2034
+    _USE_NTPD=1
+else
+    _MSG="unable to find chronyd or ntpd"
+    log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    return 1
+fi
 
 #------------------------------------------------------------------------------
 # check ntp service
@@ -83,7 +131,12 @@ fi
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        if (( _USE_CHRONYD > 0 ))
+        then
+            systemctl --quiet is-active ${_CHRONYD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        else
+            systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        fi
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"
@@ -91,15 +144,29 @@ case "${LINUX_INIT}" in
         ;;
     'sysv')
         # check running SysV
-        if [[ -x ${_NTPD_INIT_SCRIPT} ]]
+        if (( _USE_CHRONYD > 0 ))
         then
-            if (( $(${_NTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+            if [[ -x ${_CHRONY_INIT_SCRIPT} ]]
             then
-                _STC=1
+                if (( $(${_CHRONY_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+                then
+                    _STC=1
+                fi
+            else
+                warn "sysv init script not found {${_NTPD_INIT_SCRIPT}}"
+                _RC=1
             fi
         else
-            warn "sysv init script not found {${_NTPD_INIT_SCRIPT}}"
-            _RC=1
+            if [[ -x ${_NTPD_INIT_SCRIPT} ]]
+            then
+                if (( $(${_NTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+                then
+                    _STC=1
+                fi
+            else
+                warn "sysv init script not found {${_NTPD_INIT_SCRIPT}}"
+                _RC=1
+            fi
         fi
         ;;
     *)
@@ -110,19 +177,39 @@ esac
 # 2) try the pgrep way (note: old pgreps do not support '-c')
 if (( _RC != 0 ))
 then
-    (( $(pgrep -u root ntpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    if (( _USE_CHRONYD > 0 ))
+    then
+        (( $(pgrep -u root chronyd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    else
+        (( $(pgrep -u root ntpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    fi
 fi
 
 # evaluate results
 case ${_STC} in
     0)
-        _MSG="ntpd is running"
+        if (( _USE_CHRONYD > 0 ))
+        then
+            _MSG="chronyd is running"
+        else
+            _MSG="ntpd is running"
+        fi
         ;;
     1)
-        _MSG="ntpd is not running"
+        if (( _USE_CHRONYD > 0 ))
+        then
+            _MSG="chronyd is not running"
+        else
+            _MSG="ntpd is not running"
+        fi
         ;;
     *)
-        _MSG="could not determine status of n"
+        if (( _USE_CHRONYD > 0 ))
+        then
+            _MSG="could not determine status of chronyd"
+        else
+            _MSG="could not determine status of ntpd"
+        fi
         ;;
 esac
 log_hc "$0" ${_STC} "${_MSG}"
@@ -130,55 +217,104 @@ log_hc "$0" ${_STC} "${_MSG}"
 #------------------------------------------------------------------------------
 # check ntpq results
 _STC=0
-if [[ ! -x ${_NTPQ_BIN} ]]
+if (( _USE_CHRONYD > 0 ))
 then
-    warn "${_NTPQ_BIN} is not installed here"
-    return 1
+    ${_CHRONYC_BIN} -nc sources 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
+    if (( $? > 0 ))
+    then
+        _MSG="unable to execute {${_CHRONYC_BIN}}"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 1
+    fi
+
+    # 1) active server
+    _CHRONY_PEER="$(grep -E -e '^\^,\*' 2>/dev/null ${HC_STDOUT_LOG} | cut -f3 -d',' 2>/dev/null)"
+    case ${_CHRONY_PEER} in
+        \*127.127.1.0*)
+            _MSG="chrony is synchronizing against its internal clock"
+            _STC=1
+            ;;
+        *)
+            # some valid server
+            _MSG="chrony is synchronizing against ${_CHRONY_PEER}"
+            ;;
+    esac
+    log_hc "$0" ${_STC} "${_MSG}"
+
+    # 2) offset value
+    if (( _STC == 0 ))
+    then
+        _CURR_OFFSET="$(grep -E -e '^\^,\*' 2>/dev/null ${HC_STDOUT_LOG} | cut -f9 -d',' 2>/dev/null)"
+        # convert from us to ms
+        case ${_CURR_OFFSET} in
+            +([-0-9])*(.)*([0-9]))
+                # numeric, OK (negatives are OK too!)
+                # convert from us to ms
+                _CURR_OFFSET=$(print "${_CURR_OFFSET} * 1000" | bc 2>/dev/null)
+                if (( $? > 0 )) || [[ -z "${_CURR_OFFSET}" ]]
+                then
+                    :
+                fi
+                if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
+                then
+                    _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
+                    _STC=1
+                else
+                    _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
+                fi
+                log_hc "$0" ${_STC} "${_MSG}"
+                ;;
+            *)
+                # not numeric
+                warn "invalid offset value of ${_CURR_OFFSET} found for ${_NTP_PEER}?"
+                return 1
+                ;;
+        esac
+    fi
+
 else
     ${_NTPQ_BIN} -np 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
     # RC is always 0
-fi
 
-# 1) active server
-_NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }' 2>/dev/null)"
-case ${_NTP_PEER} in
-    \*127.127.1.0*)
-        _MSG="NTP is synchronizing against its internal clock"
-        _STC=1
-        ;;
-    \*[0-9]*)
-        # some valid server
-        _MSG="NTP is synchronizing against ${_NTP_PEER##*\*}"
-        ;;
-    *)
-        _MSG="NTP is not synchronizing or NTP daemon is not running"
-        _STC=1
-        ;;
-esac
-log_hc "$0" ${_STC} "${_MSG}"
-
-# 2) offset value
-if (( _STC == 0 ))
-then
-    _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }' 2>/dev/null)"
-    case ${_CURR_OFFSET} in
-        +([-0-9])*(.)*([0-9]))
-            # numeric, OK (negatives are OK too!)
-            if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
-            then
-                _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
-                _STC=1
-            else
-                _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
-            fi
-            log_hc "$0" ${_STC} "${_MSG}"
+    # 1) active server
+    _NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }' 2>/dev/null)"
+    case ${_NTP_PEER} in
+        \*127.127.1.0*)
+            _MSG="NTP is synchronizing against its internal clock"
+            _STC=1
             ;;
         *)
-            # not numeric
-            warn "invalid offset value of ${_CURR_OFFSET} found for ${_NTP_PEER}?"
-            return 1
+            # some valid server
+            _MSG="NTP is synchronizing against ${_NTP_PEER##*\*}"
             ;;
     esac
+    log_hc "$0" ${_STC} "${_MSG}"
+
+    # 2) offset value
+    if (( _STC == 0 ))
+    then
+        _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }' 2>/dev/null)"
+        case ${_CURR_OFFSET} in
+            +([-0-9])*(.)*([0-9]))
+                # numeric, OK (negatives are OK too!)
+                if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
+                then
+                    _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
+                    _STC=1
+                else
+                    _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
+                fi
+                log_hc "$0" ${_STC} "${_MSG}"
+                ;;
+            *)
+                # not numeric
+                warn "invalid offset value of ${_CURR_OFFSET} found for ${_NTP_PEER}?"
+                return 1
+                ;;
+        esac
+    fi
 fi
 
 return 0
@@ -191,7 +327,9 @@ cat <<- EOT
 NAME    : $1
 VERSION : $2
 CONFIG  : $3
-PURPOSE : Checks the status of NTP service & synchronization
+PURPOSE : Checks the status of NTP service & synchronization.
+          Supports chronyd & ntpd.
+          Assumes chronyd is the preferred time synchronization.
 
 EOT
 

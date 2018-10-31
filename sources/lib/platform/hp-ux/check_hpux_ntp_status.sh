@@ -46,6 +46,8 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _CURR_OFFSET=0
 typeset _MAX_OFFSET=0
 typeset _NTP_PEER=""
@@ -74,6 +76,30 @@ then
     # default
     _MAX_OFFSET=500
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check & get NTP status
 if [[ ! -x ${_NTPQ_BIN} ]]
@@ -85,10 +111,7 @@ else
     # RC is always 0
 fi
 
-#------------------------------------------------------------------------------
 # evaluate ntpq results
-#------------------------------------------------------------------------------
-
 # 1) active server
 _NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }')"
 case ${_NTP_PEER} in
@@ -96,13 +119,9 @@ case ${_NTP_PEER} in
         _MSG="NTP is synchronizing against its internal clock"
         _STC=1
         ;;
-    \*[0-9]*)
+    *)
         # some valid server
         _MSG="NTP is synchronizing against ${_NTP_PEER##*\*}"
-        ;;
-    *)
-        _MSG="NTP is not synchronizing or NTP daemon is not running"
-        _STC=1
         ;;
 esac
 log_hc "$0" ${_STC} "${_MSG}"
