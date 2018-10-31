@@ -221,7 +221,7 @@ if [[ "${_CHECK_FILESETS}" = "yes" ]]
 then
     _SWLIST_OPTS="-a state -l fileset"
     log "executing {${_SWLIST_BIN}} with options: ${_SWLIST_OPTS}"
-    print "=== swlist ({$_SWLIST_OPTS}) ===" >>${HC_STDOUT_LOG}
+    print "=== swlist (${_SWLIST_OPTS}) ===" >>${HC_STDOUT_LOG}
     ${_SWLIST_BIN} ${_SWLIST_OPTS} >>${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
 
     if (( $? == 0 ))

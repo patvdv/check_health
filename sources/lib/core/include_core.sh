@@ -1534,6 +1534,7 @@ do
         # check for log_healthy support through --hc-args (plugin)
         elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
         then
+            FCONFIG="No"
             FHEALTHY="S"
         else
             FCONFIG="No"
