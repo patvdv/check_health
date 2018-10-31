@@ -97,8 +97,9 @@ return ${ARCHIVE_RC}
 
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: count_log_errors()
-# DOES: check hc log file(s) for rogue entries. Log entries may get scrambled
-#       if the append operation in handle_hc() does not happen fully atomically.
+# DOES: check hc log file(s) for rogue entries (=lines with NF<>$NUM_LOG_FIELDS
+#       or empty lines). Log entries may get scrambled if the append operation
+#       in handle_hc() does not happen fully atomically.
 #       This means that log entries are written without line separator (same line)
 #       There is no proper way to avoid this without an extra file locking utility
 # EXPECTS: path to log file to check
@@ -111,7 +112,14 @@ function count_log_errors
 typeset LOG_STASH="${1}"
 typeset ERROR_COUNT=0
 
-ERROR_COUNT=$(cat ${LOG_STASH} 2>/dev/null | awk -F"${LOG_SEP}" 'BEGIN { num = 0 } { if (NF>'"${NUM_LOG_FIELDS}"') { num++ }} END { print num }' 2>/dev/null)
+ERROR_COUNT=$(cat ${LOG_STASH} 2>/dev/null | awk -F"${LOG_SEP}" '
+    BEGIN { num = 0 }
+    {
+        if (NF>'"${NUM_LOG_FIELDS}"' || $0 == "") {
+            num++;
+        }
+    }
+    END { print num }' 2>/dev/null)
 
 print ${ERROR_COUNT}
 
@@ -641,6 +649,7 @@ function fix_logs
 typeset FIX_FILE=""
 typeset FIX_RC=0
 typeset LOG_STASH=""
+typeset EMPTY_COUNT=0
 typeset ERROR_COUNT=0
 typeset STASH_COUNT=0
 typeset TMP_COUNT=0
@@ -669,6 +678,9 @@ do
 
     # does it have errors?
     ERROR_COUNT=$(count_log_errors ${FIX_FILE})
+
+    # we count the empty lines (again)
+    EMPTY_COUNT=$(grep -c -E -e '^$' ${FIX_FILE} 2>/dev/null)
 
     # rewrite if needed
     if (( ERROR_COUNT > 0 ))
@@ -743,17 +755,21 @@ do
                         }
                     }
                     printf ("\n")
+                } else if ($0 == "") {
+                    # skip empty line
+                    next;
                 } else {
                     # correct log line, no rewrite needed
                     print $0
                 }
             }' >${TMP_FILE} 2>/dev/null
 
-        # count after rewrite
+        # count after rewrite (include empty lines again in the count)
         TMP_COUNT=$(wc -l ${TMP_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+        TMP_COUNT=$(( TMP_COUNT + EMPTY_COUNT ))
 
         # bail out when we do not have enough records
-        if (( TMP_COUNT <= STASH_COUNT ))
+        if (( TMP_COUNT < STASH_COUNT ))
         then
             warn "found inconsistent record count (${TMP_COUNT}<${STASH_COUNT}), aborting"
             return 2
@@ -1722,12 +1738,15 @@ awk -F"${LOG_SEP}" '{
 
                  END {
                     for (hc in total_count) {
-                        printf ("\t%s:\n", hc)
-                        printf ("\t\t# entries: %s\n", total_count[hc])
-                        printf ("\t\t# STC==0 : %s\n", ok_count[hc])
-                        printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
-                        printf ("\t\tfirst    : %s\n", first_entry[hc])
-                        printf ("\t\tlast     : %s\n", last_entry[hc])
+                        # empty hc variable means count of empty lines in log file
+                        if (hc != "") {
+                            printf ("\t%s:\n", hc)
+                            printf ("\t\t# entries: %s\n", total_count[hc])
+                            printf ("\t\t# STC==0 : %s\n", ok_count[hc])
+                            printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                            printf ("\t\tfirst    : %s\n", first_entry[hc])
+                            printf ("\t\tlast     : %s\n", last_entry[hc])
+                        }
                     }
                 }
                 ' ${HC_LOG} 2>/dev/null
@@ -1761,12 +1780,15 @@ do
 
                     END {
                         for (hc in total_count) {
-                            printf ("\t%s:\n", hc)
-                            printf ("\t\t# entries: %s\n", total_count[hc])
-                            printf ("\t\t# STC==0 : %s\n", ok_count[hc])
-                            printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
-                            printf ("\t\tfirst    : %s\n", first_entry[hc])
-                            printf ("\t\tlast     : %s\n", last_entry[hc])
+                            # empty hc variable means count of empty lines in log file
+                            if (hc != "") {
+                                printf ("\t%s:\n", hc)
+                                printf ("\t\t# entries: %s\n", total_count[hc])
+                                printf ("\t\t# STC==0 : %s\n", ok_count[hc])
+                                printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                                printf ("\t\tfirst    : %s\n", first_entry[hc])
+                                printf ("\t\tlast     : %s\n", last_entry[hc])
+                            }
                         }
                     }
                     ' ${_ARCHIVE_FILE} 2>/dev/null

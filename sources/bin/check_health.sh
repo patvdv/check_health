@@ -37,7 +37,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2018-10-28"
+typeset -r SCRIPT_VERSION="2018-10-31"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -480,7 +480,8 @@ function check_user
 typeset WHOAMI=""
 
 # avoid sub-shell for mksh/pdksh
-WHOAMI=$(IFS='()'; set -- "$(id)"; print $2)
+# shellcheck disable=SC2046
+WHOAMI=$(IFS='()'; set -- $(id); print $2)
 if [[ "${WHOAMI}" != "${EXEC_USER}" ]]
 then
     print -u2 "ERROR: must be run as user '${EXEC_USER}'"
@@ -1152,6 +1153,13 @@ case ${ARG_ACTION} in
         # execute plug-in(s)
         print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_RUN
         do
+            # re-initialize messages stash (log of failed checks)
+            HC_MSG_VAR=""
+            : >${HC_MSG_FILE} 2>/dev/null
+            if (( $? > 0 ))
+            then
+                die "unable to reset the \${HC_MSG_FILE} file"
+            fi
             # check for HC (function)
             exists_hc "${HC_RUN}"
             if (( $? == 0 ))
@@ -1169,7 +1177,7 @@ case ${ARG_ACTION} in
             stat_hc "${HC_RUN}"
             if (( $? == 0 ))
             then
-                # callback for display_init with extra code 'DISABLED'
+                # call for display_init with extra code 'DISABLED'
                 if (( DO_DISPLAY_INIT == 1 ))
                 then
                     display_init "${HC_RUN}" "" "DISABLED"
@@ -1183,7 +1191,15 @@ case ${ARG_ACTION} in
             HC_STDOUT_LOG="${TMP_DIR}/${HC_RUN}.stdout.log.$$"
             HC_STDERR_LOG="${TMP_DIR}/${HC_RUN}.stderr.log.$$"
             : >${HC_STDOUT_LOG} 2>/dev/null
+            if (( $? > 0 ))
+            then
+                die "unable to reset the \${HC_STDOUT_LOG} file"
+            fi
             : >${HC_STDERR_LOG} 2>/dev/null
+            if (( $? > 0 ))
+            then
+                die "unable to reset the \${HC_STDERR_LOG} file"
+            fi
 
             # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE & HC_TIME_OUT
             if (( ARG_CHECK_HOST == 1 ))
@@ -1211,14 +1227,15 @@ case ${ARG_ACTION} in
                 then
                     log "executed HC: ${HC_RUN} [RC=${RUN_RC}]"
                 else
-                    # callback for display_init with extra code 'ERROR'
+                    # call for display_init with extra code 'ERROR'
                     if (( DO_DISPLAY_INIT == 1 ))
                     then
-                        display_init "${HC_RUN}" "" "ERROR"
+                        # only do call if we have an empty messages stash
+                        # (otherwise handle_hc() will call display_init())
+                        [[ -s "${HC_MSG_FILE}" ]] || display_init "${HC_RUN}" "" "ERROR"
                     else
                         warn "failed to execute HC: ${HC_RUN} [RC=${RUN_RC}]"
                     fi
-                    continue
                 fi
             else
                 # set trap on SIGUSR1
@@ -1246,27 +1263,29 @@ case ${ARG_ACTION} in
                 # process return codes
                 if (( RUN_RC != 0 ))
                 then
-                    # callback for display_init with extra code 'ERROR'
+                    # call for display_init with extra code 'ERROR'
                     if (( DO_DISPLAY_INIT == 1 ))
                     then
-                        display_init "${HC_RUN}" "" "ERROR"
+                        # only do call if we have an empty messages stash
+                        # (otherwise handle_hc() will call display_init())
+                        [[ -s "${HC_MSG_FILE}" ]] || display_init "${HC_RUN}" "" "ERROR"
                     else
                         warn "failed to execute HC: ${HC_RUN} [RC=${RUN_RC}]"
                     fi
-                    continue
                 else
                     if (( CHILD_ERROR == 0 ))
                     then
                         log "executed HC: ${HC_RUN} [RC=${RUN_RC}]"
                     else
-                        # callback for display_init with extra code 'ERROR'
+                        # call for display_init with extra code 'ERROR'
                         if (( DO_DISPLAY_INIT == 1 ))
                         then
-                            display_init "${HC_RUN}" "" "ERROR"
+                            # only do call if we have an empty messages stash
+                            # (otherwise handle_hc() will call display_init())
+                            [[ -s "${HC_MSG_FILE}" ]] || display_init "${HC_RUN}" "" "ERROR"
                         else
                             warn "failed to execute HC as background process"
                         fi
-                        continue
                     fi
                 fi
             fi

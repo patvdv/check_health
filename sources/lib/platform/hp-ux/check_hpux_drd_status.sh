@@ -28,6 +28,7 @@
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-18: changed boot status [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-10-31: better result check for DRD output [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_hpux_drd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _DRD_BIN="/opt/drd/bin/drd"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-31"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -120,13 +121,15 @@ else
     # drd outputs on STDERR
     ${_DRD_BIN} status >${HC_STDOUT_LOG} 2>&1
     _RC=$?
+    # check for result in output since _RC is not reliable
+    grep -q -E -e "succeeded" ${HC_STDOUT_LOG} 2>/dev/null || _RC=1
 fi
 
 # check drd status
-if (( _RC == 0 )) && (( $(grep -c -E -e ".*Information succeeded.*" ${HC_STDOUT_LOG} 2>/dev/null) > 0 ))
+if (( _RC == 0 ))
 then
-    # convert NOW to epoch (pass date values as unquoted parameters)
-    _NOW_EPOCH=$(data_date2epoch "$(date '+%Y')" "$(date '+%m')" "$(date '+%d')" "$(date '+%H')" "$(date '+%M')" "$(date '+%S')")
+    # convert NOW to epoch (pass date values as quoted parameters)
+    _NOW_EPOCH=$(data_date2epoch "$(date '+%Y' 2>/dev/null)" "$(date '+%m' 2>/dev/null)" "$(date '+%d' 2>/dev/null)" "$(date '+%H' 2>/dev/null)" "$(date '+%M' 2>/dev/null)" "$(date '+%S' 2>/dev/null)")
 
     # get devices
     _ORIGINAL_DISK=$(data_strip_space "$(grep "Original Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d':')")
