@@ -25,6 +25,8 @@
 # @(#) 2018-03-20: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR + other small fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-10-31: added support for chronyd, --dump-logs
+# @(#)             & --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ typeset _CHRONY_INIT_SCRIPT="/etc/init.d/chrony"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
 typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-10-31"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _CHRONYC_BIN="/bin/chronyc"
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
