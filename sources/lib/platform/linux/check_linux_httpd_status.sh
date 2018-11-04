@@ -41,7 +41,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -56,7 +56,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -90,7 +90,7 @@ case "${LINUX_INIT}" in
 esac
 
 # 2) try the pgrep way (note: old pgreps do not support '-c')
-if (( _RC != 0 ))
+if (( _RC > 0 ))
 then
     (( $(pgrep -u root httpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
@@ -136,7 +136,7 @@ cat <<- EOT
 NAME    : $1
 VERSION : $2
 CONFIG  : $3
-PURPOSE : Checks whether httpd (apache service) is running and whether the 
+PURPOSE : Checks whether httpd (apache service) is running and whether the
           httpd configuration files are syntactically correct
 
 EOT

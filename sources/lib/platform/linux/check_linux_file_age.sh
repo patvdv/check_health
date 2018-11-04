@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -105,7 +105,7 @@ do
         _STC=1
     else
         _AGE_CHECK=$(find "${_FILE_DIR}" -type f -name "${_FILE_NAME}" -mmin -"${_FILE_AGE}" 2>/dev/null)
-        if (( $? != 0 ))
+        if (( $? > 0 ))
         then
             warn "unable to execute file age test for ${_FILE_PATH}"
             return 1

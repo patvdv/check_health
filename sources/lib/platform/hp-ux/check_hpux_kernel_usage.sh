@@ -42,7 +42,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -97,11 +97,11 @@ then
     return 1
 else
     ${_KCUSAGE_BIN} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-    if (( $? != 0 ))
+    if (( $? > 0 ))
     then
         _MSG="unable to gather kcusage information"
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         log_hc "$0" 1 "${_MSG}"
         return 0
     fi
@@ -176,7 +176,7 @@ do
     # parameter excluded?
     if (( $(print "${_EXCLUDED_PARAMS}" | tr ',' '\n' | grep -c -E -e "${_PARAM_NAME}") != 0 ))
     then
-        (( ARG_DEBUG != 0 )) && debug "excluding kernel parameter ${_PARAM_NAME} ..."
+        (( ARG_DEBUG > 0 )) && debug "excluding kernel parameter ${_PARAM_NAME} ..."
         continue
     fi
 

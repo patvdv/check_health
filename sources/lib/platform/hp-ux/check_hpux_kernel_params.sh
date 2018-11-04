@@ -41,7 +41,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -80,12 +80,12 @@ then
     return 1
 else
     ${_KCTUNE_BIN} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-    if (( $? != 0 ))
+    if (( $? > 0 ))
     then
         _MSG="unable to gather kctune information"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     fi
 fi

@@ -38,7 +38,7 @@ typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 
 typeset _EIF_MESSAGE="$1 alert with ID ${HC_FAIL_ID}"
@@ -105,7 +105,7 @@ then
     _CHILD_RC=$?
     kill -s TERM ${_SLEEP_PID} >/dev/null 2>&1
     # process return codes
-    if (( _CHILD_RC != 0 ))
+    if (( _CHILD_RC > 0 ))
     then
         warn "problem in sending alert via EIF [RC=${_CHILD_RC}]"
     else

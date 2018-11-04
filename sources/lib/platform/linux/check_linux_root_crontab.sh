@@ -38,7 +38,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -54,13 +54,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -92,7 +92,7 @@ then
         fi
     done
 fi
-    
+
 # perform check
 grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CRON_ENTRY
 do
@@ -102,15 +102,15 @@ do
         0)
             _MSG="'${_CRON_ENTRY}' is not configured in cron"
             _STC=1
-            ;;  
+            ;;
         1)
             _MSG="'${_CRON_ENTRY}' is configured in cron"
             ;;
         +([0-9])*([0-9]))
             _MSG="'${_CRON_ENTRY}' is configured multiple times in cron"
-            ;;      
+            ;;
     esac
-    
+
     # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0

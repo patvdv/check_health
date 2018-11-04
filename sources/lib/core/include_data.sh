@@ -32,7 +32,7 @@
 # REQUIRES: n/a
 function data_get_lvalue_from_config
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _PARAMETER="${1}"
 typeset _LVALUE=""
 typeset _RC=0
@@ -58,7 +58,7 @@ return ${_RC}
 # REQUIRES: n/a
 function data_chop
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1%?}" 2>/dev/null
 
@@ -74,7 +74,7 @@ return 0
 # REQUIRES: n/a
 function data_contains_string
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 typeset _HAYSTACK="${1}"
 typeset _NEEDLE="${2}"
@@ -94,7 +94,7 @@ return ${_RC}
 # REQUIRES: n/a
 function data_magic_quote
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _SEP="${2:-%}"
 typeset _MAGIC="${MAGIC:-!_!}"
 
@@ -112,7 +112,7 @@ return 0
 # REQUIRES: n/a
 function data_magic_unquote
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _SEP="${2:-%}"
 typeset _MAGIC="${MAGIC:-!_!}"
 
@@ -130,7 +130,7 @@ return 0
 # REQUIRES: n/a
 function data_escape_csv
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | sed 's#\([;]\)#\\\1#g' 2>/dev/null
 
@@ -146,7 +146,7 @@ return 0
 # REQUIRES: n/a
 function data_escape_json
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _NEEDLE='[\"]'
 
 print -R "${1}" 2>/dev/null | sed 's#\(["\]\)#\\\1#g' 2>/dev/null
@@ -163,7 +163,7 @@ return 0
 # REQUIRES: n/a
 function data_decomma
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -d ',' 2>/dev/null
 
@@ -179,7 +179,7 @@ return 0
 # REQUIRES: n/a
 function data_decomma_last
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1%*,}" 2>/dev/null
 
@@ -195,7 +195,7 @@ return 0
 # REQUIRES: n/a
 function data_decomma_first
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1#,*}" 2>/dev/null
 
@@ -211,7 +211,7 @@ return 0
 # REQUIRES: n/a
 function data_dequote
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -d '\"' 2>/dev/null | tr -d "'" 2>/dev/null
 
@@ -227,7 +227,7 @@ return 0
 # REQUIRES: n/a
 function data_comma2space
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr ',' ' ' 2>/dev/null
 
@@ -243,7 +243,7 @@ return 0
 # REQUIRES: n/a
 function data_comma2pipe
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr ',' '|' 2>/dev/null
 
@@ -259,7 +259,7 @@ return 0
 # REQUIRES: n/a
 function data_comma2newline
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr ',' '\n' 2>/dev/null
 
@@ -275,7 +275,7 @@ return 0
 # REQUIRES: n/a
 function data_newline2comma
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr '\n' ',' 2>/dev/null
 
@@ -291,7 +291,7 @@ return 0
 # REQUIRES: n/a
 function data_newline2hash
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr '\r' '#' 2>/dev/null
 
@@ -307,7 +307,7 @@ return 0
 # REQUIRES: n/a
 function data_space2comma
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' ',' 2>/dev/null
 
@@ -323,7 +323,7 @@ return 0
 # REQUIRES: n/a
 function data_pipe2comma
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -s '|' 2>/dev/null | tr ' '|',' 2>/dev/null
 
@@ -339,7 +339,7 @@ return 0
 # REQUIRES: n/a
 function data_space2hash
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -s ' ' 2>/dev/null | tr ' ' '#' 2>/dev/null
 
@@ -355,7 +355,7 @@ return 0
 # REQUIRES: n/a
 function data_strip_newline
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -d '\n' 2>/dev/null | tr -d '\r' 2>/dev/null
 
@@ -371,7 +371,7 @@ return 0
 # REQUIRES: n/a
 function data_strip_space
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr -d '[:space:]' 2>/dev/null
 
@@ -387,7 +387,7 @@ return 0
 # REQUIRES: n/a
 function data_strip_leading_space
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" | sed 's/^[[:blank:]]*//' 2>/dev/null
 
@@ -403,7 +403,7 @@ return 0
 # REQUIRES: n/a
 function data_strip_trailing_space
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" | sed 's/[[:blank:]]*$//' 2>/dev/null
 
@@ -419,7 +419,7 @@ return 0
 # REQUIRES: n/a
 function data_strip_outer_space
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' 2>/dev/null
 
@@ -435,7 +435,7 @@ return 0
 # REQUIRES: n/a
 function data_lc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr '[:upper:]' '[:lower:]' 2>/dev/null
 
@@ -451,7 +451,7 @@ return 0
 # REQUIRES: n/a
 function data_uc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1}" 2>/dev/null | tr '[:lower:]' '[:upper:]' 2>/dev/null
 
@@ -467,7 +467,7 @@ return 0
 # REQUIRES: n/a
 function data_is_numeric
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 case "${1}" in
     +([0-9])*(.)*([0-9]))
@@ -492,7 +492,7 @@ return 0
 # REFERENCE: added from http://www.shelldorado.com/scripts/cmds/urlencode
 function data_encode_url
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _EncodeEOL=0
 
 LANG=C awk '
@@ -546,7 +546,7 @@ return 0
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
 function data_dot2ip
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _DOT="${1}"
 typeset _IP=0
 typeset _OLD_IFS="${IFS}"
@@ -575,7 +575,7 @@ return 0
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
 function data_ip2dot
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _IP="${1}"
 typeset _W=""
 typeset _X=""
@@ -602,7 +602,7 @@ return 0
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
 function data_bits2mask
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _BITS=${1}
 typeset _MAX=4294967296
 typeset _OFFSET=0
@@ -658,7 +658,7 @@ return 0
 # REFERENCE: https://raw.githubusercontent.com/dualbus/tutorial_nmap/master/iprange
 function data_mask2bits
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _MASK="${1}"
 typeset -i _I=32
 
@@ -679,7 +679,7 @@ return 0
 # REQUIRES: n/a
 function data_is_ipv4
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _IP="${1}"
 typeset _RC=0
 
@@ -704,7 +704,7 @@ return ${_RC}
 # REFERENCE: https://groups.google.com/forum/#!topic/comp.unix.shell/aPoPzFWP2Og
 function data_date2epoch
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _YEAR="${1}"
 typeset _MONTH="${2}"
 typeset _DAY="${3}"

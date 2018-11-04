@@ -35,7 +35,7 @@ typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 
 typeset _DIR_PREFIX=""
@@ -52,7 +52,7 @@ typeset _LOG_STASH=""
 typeset _SORT_CMD=""
 
 # which files do we need to examine
-if (( ARG_HISTORY != 0 ))
+if (( ARG_HISTORY > 0 ))
 then
     set +f  # file globbing must be on
     _LOG_STASH="${HC_LOG} ${ARCHIVE_DIR}/hc.*.log"
@@ -61,7 +61,7 @@ else
 fi
 
 # --last report
-if (( ARG_LAST != 0 ))
+if (( ARG_LAST > 0 ))
 then
     printf "\n| %-30s | %-20s | %-14s | %-4s\n" "HC" "Timestamp" "FAIL ID" "STC (combined value)"
     # shellcheck disable=SC2183
@@ -113,14 +113,14 @@ then
 else
     _ID_NEEDLE="[0-9][0-9]*"
     [[ -n "${ARG_FAIL_ID}" ]] && _ID_NEEDLE="${ARG_FAIL_ID}"
-    (( ARG_TODAY != 0 )) && _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
+    (( ARG_TODAY > 0 )) && _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
 
     # check fail count (look for unique IDs in the 5th field of the HC log)
     _FAIL_COUNT=$(cut -f5 -d"${LOG_SEP}" ${_LOG_STASH} 2>/dev/null | grep -E -e "${_ID_NEEDLE}" | uniq | wc -l)
-    if (( _FAIL_COUNT != 0 ))
+    if (( _FAIL_COUNT > 0 ))
     then
         # check for detail or not?
-        if (( ARG_DETAIL != 0 )) && (( _FAIL_COUNT != 1 ))
+        if (( ARG_DETAIL > 0 )) && (( _FAIL_COUNT > 1 ))
         then
             ARG_LOG=1 die "you must specify a unique FAIL_ID value"
         fi

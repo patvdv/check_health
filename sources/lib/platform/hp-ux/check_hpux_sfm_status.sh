@@ -41,7 +41,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -238,7 +238,7 @@ then
     # save cimprovider OUTPUT
     print "${_CHECK_CIM_OUTPUT}" >>${HC_STDOUT_LOG}
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
 else
     # find module
@@ -310,7 +310,7 @@ then
         _MSG="unable to execute {${_SFMCONFIG_BIN} -t -a}, cimserver is probably not running"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 1
     else
         # wait for test event to showing
@@ -326,7 +326,7 @@ then
             # save evweb OUTPUT
             print "${_CHECK_EVWEB_OUTPUT}" >>${HC_STDOUT_LOG}
             # dump debug info
-            (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+            (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
             return 1
         else
             if [[ -n "${_CHECK_EVWEB_OUTPUT}" ]]
@@ -361,7 +361,7 @@ then
         # save evweb OUTPUT
         print "${_CHECK_EVWEB_OUTPUT}" >>${HC_STDOUT_LOG}
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 1
     else
         _CFG_EVENTS_SEVERITY=$(data_lc "${_CFG_EVENTS_SEVERITY}")

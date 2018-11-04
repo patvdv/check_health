@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -55,12 +55,12 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # check autopath presence
-if [[ ! -x ${_AUTOPATH_BIN} ]] 
+if [[ ! -x ${_AUTOPATH_BIN} ]]
 then
     warn "${_AUTOPATH_BIN}  is not installed here"
     return 1
@@ -69,23 +69,23 @@ fi
 # collect autopath info
 log "collecting autopath information, this may take a while ..."
 ${_AUTOPATH_BIN} display >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-(( $? != 0 )) && {
+(( $? > 0 )) && {
     _MSG="unable to run {${_AUTOPATH_BIN}}"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 0
 }
-    
+
 # check for device failures
 grep -E -e "${_AUTOPATH_NEEDLE}" ${HC_STDOUT_LOG} 2>/dev/null |\
     while read _AUTOPATH_LINE
 do
-    _DEVICE="$(print ${_AUTOPATH_LINE} | cut -f1 -d' ')"    
+    _DEVICE="$(print ${_AUTOPATH_LINE} | cut -f1 -d' ')"
     _MSG="failed path for device '${_DEVICE}'"
     _STC=1
     _STC_COUNT=$(( _STC_COUNT + 1 ))
-        
+
     # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0

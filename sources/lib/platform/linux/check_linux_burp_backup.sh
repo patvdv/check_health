@@ -44,7 +44,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}"  "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -101,7 +101,7 @@ fi
 
 # burp v1 or v2?
 _BURP_VERSION="$(${_BURP_BIN} -v 2>/dev/null)"
-(( ARG_DEBUG != 0 )) && debug "burp version: ${_BURP_VERSION}"
+(( ARG_DEBUG > 0 )) && debug "burp version: ${_BURP_VERSION}"
 case "${_BURP_VERSION}" in
     burp-2*)
         # check for burp server

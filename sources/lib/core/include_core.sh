@@ -31,7 +31,7 @@
 # REQUIRES: ${HC_LOG}
 function archive_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="${1}"
 typeset ARCHIVE_FILE=""
 typeset ARCHIVE_RC=0
@@ -108,7 +108,7 @@ return ${ARCHIVE_RC}
 # REQUIRES: n/a
 function count_log_errors
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset LOG_STASH="${1}"
 typeset ERROR_COUNT=0
 
@@ -152,13 +152,13 @@ return 0
 # REQUIRES: n/a
 function die
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
 if [[ -n "${1}" ]]
 then
-    if (( ARG_LOG != 0 ))
+    if (( ARG_LOG > 0 ))
     then
         print - "$*" | while read -r LOG_LINE
         do
@@ -186,7 +186,7 @@ exit 1
 # REQUIRES: die()
 function discover_core
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset NOTIFY_OPTS=""
 
 # init global flags for core plugins (no typeset!)
@@ -236,75 +236,75 @@ do
     case "${FFILE}" in
         *display_csv.sh)
             HAS_DISPLAY_CSV=1
-            (( ARG_DEBUG != 0 )) && debug "display_csv plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_csv plugin is available"
             ;;
         *display_init.sh)
             HAS_DISPLAY_INIT=1
-            (( ARG_DEBUG != 0 )) && debug "display_init plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_init plugin is available"
             ;;
         *display_json.sh)
             HAS_DISPLAY_JSON=1
-            (( ARG_DEBUG != 0 )) && debug "display_json plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_json plugin is available"
             ;;
         *display_terse.sh)
             HAS_DISPLAY_TERSE=1
-            (( ARG_DEBUG != 0 )) && debug "display_terse plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_terse plugin is available"
             ;;
         *display_zenoss.sh)
             HAS_DISPLAY_ZENOSS=1
-            (( ARG_DEBUG != 0 )) && debug "display_zenoss plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_zenoss plugin is available"
             ;;
         *display_custom1.sh)
             HAS_DISPLAY_CUSTOM1=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom1 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom1 plugin is available"
             ;;
         *display_custom2.sh)
             HAS_DISPLAY_CUSTOM2=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom2 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom2 plugin is available"
             ;;
         *display_custom3.sh)
             HAS_DISPLAY_CUSTOM3=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom3 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom3 plugin is available"
             ;;
         *display_custom4.sh)
             HAS_DISPLAY_CUSTOM4=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom4 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom4 plugin is available"
             ;;
         *display_custom5.sh)
             HAS_DISPLAY_CUSTOM5=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom5 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom5 plugin is available"
             ;;
         *display_custom6.sh)
             HAS_DISPLAY_CUSTOM6=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom6 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom6 plugin is available"
             ;;
         *display_custom7.sh)
             HAS_DISPLAY_CUSTOM7=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom7 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom7 plugin is available"
             ;;
         *display_custom8.sh)
             HAS_DISPLAY_CUSTOM8=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom8 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom8 plugin is available"
             ;;
         *display_custom9.sh)
             HAS_DISPLAY_CUSTOM9=1
-            (( ARG_DEBUG != 0 )) && debug "display_custom9 plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "display_custom9 plugin is available"
             ;;
         *notify_mail.sh)
             HAS_NOTIFY_MAIL=1
-            (( ARG_DEBUG != 0 )) && debug "notify_mail plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "notify_mail plugin is available"
             ;;
         *notify_sms.sh)
             HAS_NOTIFY_SMS=1
-            (( ARG_DEBUG != 0 )) && debug "notify_sms plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "notify_sms plugin is available"
             ;;
         *notify_eif.sh)
             HAS_NOTIFY_EIF=1
-            (( ARG_DEBUG != 0 )) && debug "notify_eif plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "notify_eif plugin is available"
             ;;
         *report_std.sh)
             HAS_REPORT_STD=1
-            (( ARG_DEBUG != 0 )) && debug "report_std plugin is available"
+            (( ARG_DEBUG > 0 )) && debug "report_std plugin is available"
             ;;
     esac
 done
@@ -489,7 +489,7 @@ if [[ -n "${ARG_MAIL_TO}" ]] && (( DO_NOTIFY_MAIL == 0 ))
 then
     die "you cannot specify '--mail-to' without '--notify=mail'"
 fi
-if (( DO_NOTIFY_MAIL != 0 )) && [[ -z "${ARG_MAIL_TO}" ]]
+if (( DO_NOTIFY_MAIL > 0 )) && [[ -z "${ARG_MAIL_TO}" ]]
 then
     die "you cannot specify '--notify=mail' without '--mail-to'"
 fi
@@ -502,64 +502,64 @@ if [[ -n "${ARG_SMS_PROVIDER}" ]] && (( DO_NOTIFY_SMS == 0 ))
 then
     die "you cannot specify '--sms-provider' without '--notify=sms'"
 fi
-if (( DO_NOTIFY_SMS != 0 )) && [[ -z "${ARG_SMS_TO}" ]]
+if (( DO_NOTIFY_SMS > 0 )) && [[ -z "${ARG_SMS_TO}" ]]
 then
     die "you cannot specify '--notify=sms' without '--sms-to'"
 fi
-if (( DO_NOTIFY_SMS != 0 )) && [[ -z "${ARG_SMS_PROVIDER}" ]]
+if (( DO_NOTIFY_SMS > 0 )) && [[ -z "${ARG_SMS_PROVIDER}" ]]
 then
     die "you cannot specify '--notify=sms' without '--sms-provider'"
 fi
 # --report/--detail/--id/--reverse/--last/--today/--with-history
-if (( DO_REPORT_STD != 0 ))
+if (( DO_REPORT_STD > 0 ))
 then
-    if (( ARG_DETAIL != 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
+    if (( ARG_DETAIL > 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
     then
         die "you must specify an unique value for '--id' when using '--detail'"
     fi
-    if (( ARG_LAST != 0 )) && (( ARG_TODAY != 0 ))
+    if (( ARG_LAST > 0 )) && (( ARG_TODAY > 0 ))
     then
         die "you cannot specify '--last' with '--today'"
     fi
-    if (( ARG_LAST != 0 )) && (( ARG_DETAIL != 0 ))
+    if (( ARG_LAST > 0 )) && (( ARG_DETAIL > 0 ))
     then
         die "you cannot specify '--last' with '--detail'"
     fi
-    if (( ARG_LAST != 0 )) && (( ARG_REVERSE != 0 ))
+    if (( ARG_LAST > 0 )) && (( ARG_REVERSE > 0 ))
     then
         die "you cannot specify '--last' with '--detail'"
     fi
-    if (( ARG_LAST != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
+    if (( ARG_LAST > 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
     then
         die "you cannot specify '--last' with '--id'"
     fi
-    if (( ARG_TODAY != 0 )) && (( ARG_DETAIL != 0 ))
+    if (( ARG_TODAY > 0 )) && (( ARG_DETAIL > 0 ))
     then
         die "you cannot specify '--today' with '--detail'"
     fi
-    if (( ARG_TODAY != 0 )) && (( ARG_REVERSE != 0 ))
+    if (( ARG_TODAY > 0 )) && (( ARG_REVERSE > 0 ))
     then
         die "you cannot specify '--today' with '--detail'"
     fi
-    if (( ARG_TODAY != 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
+    if (( ARG_TODAY > 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
     then
         die "you cannot specify '--today' with '--id'"
     fi
     # switch on history for --last & --today
-    if (( ARG_LAST != 0 )) || (( ARG_TODAY != 0 ))
+    if (( ARG_LAST > 0 )) || (( ARG_TODAY > 0 ))
     then
         ARG_HISTORY=1
     fi
 fi
-if (( DO_REPORT_STD == 0 )) && (( ARG_LAST != 0 ))
+if (( DO_REPORT_STD == 0 )) && (( ARG_LAST > 0 ))
 then
     die "you cannot specify '--last' without '--report'"
 fi
-if (( DO_REPORT_STD == 0 )) && (( ARG_REVERSE != 0 ))
+if (( DO_REPORT_STD == 0 )) && (( ARG_REVERSE > 0 ))
 then
     die "you cannot specify '--reverse' without '--report'"
 fi
-if (( DO_REPORT_STD == 0 )) && (( ARG_DETAIL != 0 ))
+if (( DO_REPORT_STD == 0 )) && (( ARG_DETAIL > 0 ))
 then
     die "you cannot specify '--detail' without '--report'"
 fi
@@ -595,7 +595,7 @@ return 0
 # REQUIRES: n/a
 function exists_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset EXISTS_HC="${1}"
 typeset FDIR=""
 typeset EXISTS_RC=0
@@ -622,7 +622,7 @@ return ${EXISTS_RC}
 # REQUIRES: n/a
 function find_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FIND_HC="${1}"
 typeset FDIR=""
 
@@ -645,7 +645,7 @@ return 0
 #       the rewrite operation!!
 function fix_logs
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FIX_FILE=""
 typeset FIX_RC=0
 typeset LOG_STASH=""
@@ -656,7 +656,7 @@ typeset TMP_COUNT=0
 typeset SAVE_TMP_FILE="${TMP_DIR}/.$0.save.log.$$"
 typeset TMP_FILE="${TMP_DIR}/.$0.tmp.log.$$"
 
-if (( ARG_HISTORY != 0 ))
+if (( ARG_HISTORY > 0 ))
 then
     set +f  # file globbing must be on
     LOG_STASH="${HC_LOG} ${ARCHIVE_DIR}/hc.*.log"
@@ -812,7 +812,7 @@ return ${FIX_RC}
 # REQUIRES: die(), display_*(), notify_*(), warn()
 function handle_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="${1}"
 typeset HC_STDOUT_LOG_SHORT=""
 typeset HC_STDERR_LOG_SHORT=""
@@ -831,7 +831,7 @@ then
     HC_MSG_VAR=$(<${HC_MSG_FILE})
 
     # DEBUG: dump TMP file
-    if (( ARG_DEBUG != 0 ))
+    if (( ARG_DEBUG > 0 ))
     then
         debug "begin dumping plugin messages file (${HC_MSG_FILE})"
         print "${HC_MSG_VAR}"
@@ -840,7 +840,7 @@ then
 
     # determine ALL_MSG_STC (sum of all STCs)
     ALL_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 }} END { print stc }' 2>/dev/null)
-    (( ARG_DEBUG != 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
+    (( ARG_DEBUG > 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
     data_is_numeric ${ALL_MSG_STC} || die "HC all STC computes to a non-numeric value"
 else
     # nothing to do
@@ -978,7 +978,7 @@ then
         fi
     else
         # default STDOUT
-        if (( ARG_VERBOSE != 0 ))
+        if (( ARG_VERBOSE > 0 ))
         then
             print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
             do
@@ -1008,7 +1008,7 @@ then
                     fi
                 fi
                 printf "%s" "INFO: ${HC_NAME} [STC=${ONE_MSG_STC}]: ${ONE_MSG_TEXT}"
-                if (( ONE_MSG_STC != 0 ))
+                if (( ONE_MSG_STC > 0 ))
                 then
                     printf " %s\n" "[FAIL_ID=${HC_FAIL_ID}]"
                 else
@@ -1020,7 +1020,7 @@ then
 fi
 
 # log & notify routines
-if (( ARG_LOG != 0 ))
+if (( ARG_LOG > 0 ))
 then
     # log routine (combined STC=0 or <>0)
     print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
@@ -1143,7 +1143,7 @@ fi
 # REQUIRES: warn()
 function handle_timeout
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 [[ -n "${CHILD_PID}" ]] && kill -s TERM ${CHILD_PID}
 warn "child process with PID ${CHILD_PID} has been forcefully stopped"
 # shellcheck disable=SC2034
@@ -1160,7 +1160,7 @@ return 0
 # REQUIRES: die()
 function init_check_host
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_EXEC=""
 typeset DISPLAY_STYLE=""
 
@@ -1290,20 +1290,20 @@ return 0
 # REQUIRES: die()
 function init_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_PLATFORMS="${2}"
 typeset HC_VERSION="${3}"
 typeset HC_OK=0
 
 # check platform (don't use a pattern comparison here (~! mksh/pdksh))
 HC_OK=$(print "${HC_PLATFORMS}" | grep -c "${OS_NAME}" 2>/dev/null)
-(( HC_OK != 0 )) || die "may only run on platform(s): ${HC_PLATFORMS}"
+(( HC_OK > 0 )) || die "may only run on platform(s): ${HC_PLATFORMS}"
 
 # check version of HC plugin
 case "${HC_VERSION}" in
     [0-2][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9])
         # OK
-        (( ARG_DEBUG != 0 )) && debug "HC plugin ${1} has version ${HC_VERSION}"
+        (( ARG_DEBUG > 0 )) && debug "HC plugin ${1} has version ${HC_VERSION}"
         ;;
     *)
         die "version of the HC plugin ${1} is not in YYYY-MM-DD format (${HC_VERSION})"
@@ -1321,7 +1321,7 @@ return 0
 # REQUIRES: n/a
 function is_scheduled
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset CRON_HC="${1}"
 typeset CRON_COUNT=0
 typeset CRON_SYS_LOCATIONS='/etc/crontab /etc/cron.d/*'
@@ -1359,7 +1359,7 @@ return ${CRON_COUNT}
 # REQUIRES: n/a
 function list_core
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FACTION="${1}"
 typeset FCONFIG=""
 typeset FDIR=""
@@ -1392,7 +1392,7 @@ do
         FVERSION=$(grep '^typeset _VERSION=' "${FFILE}" 2>&1 | tr -d '\"' | tr -d ' \t' | cut -f1 -d'#' | cut -f2 -d'=')
         # look for configuration file string
         HAS_FCONFIG=$(grep -c '^typeset _CONFIG_FILE=' "${FFILE}" 2>&1)
-        if (( HAS_FCONFIG != 0 ))
+        if (( HAS_FCONFIG > 0 ))
         then
             FCONFIG="Yes"
         else
@@ -1450,7 +1450,7 @@ return 0
 # REQUIRES: is_scheduled()
 function list_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FACTION="${1}"
 typeset FNEEDLE="${2}"
 typeset FCONFIG=""
@@ -1492,7 +1492,7 @@ do
         FVERSION=$(grep '^typeset _VERSION=' "${FFILE}" 2>&1 | tr -d '\"' | tr -d ' \t' | cut -f1 -d'#' | cut -f2 -d'=')
         # look for configuration file string
         HAS_FCONFIG=$(grep -c '^typeset _CONFIG_FILE=' "${FFILE}" 2>&1)
-        if (( HAS_FCONFIG != 0 ))
+        if (( HAS_FCONFIG > 0 ))
         then
             FCONFIG="Yes"
             # *.conf.dist first
@@ -1619,20 +1619,20 @@ return 0
 # REQUIRES: n/a
 function log
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
 if [[ -n "${1}" ]]
 then
-    if (( ARG_LOG != 0 ))
+    if (( ARG_LOG > 0 ))
     then
         print - "$*" | while read -r LOG_LINE
         do
             print "${NOW}: INFO: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
         done
     fi
-    if (( ARG_VERBOSE != 0 ))
+    if (( ARG_VERBOSE > 0 ))
     then
         print - "$*" | while read -r LOG_LINE
         do
@@ -1654,7 +1654,7 @@ return 0
 # REQUIRES: n/a
 function log_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_NAME="${1}"
 typeset HC_STC=${2}
 typeset HC_NOW="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"
@@ -1708,7 +1708,7 @@ return 0
 # REQUIRES: n/a
 function show_statistics
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _ARCHIVE_FILE=""
 
 # current events
@@ -1806,7 +1806,7 @@ return 0
 # REQUIRES: n/a
 function stat_hc
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset STAT_HC="${1}"
 typeset STAT_RC=1   # default: enabled
 
@@ -1823,20 +1823,20 @@ return ${STAT_RC}
 # REQUIRES: n/a
 function warn
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset NOW="$(date '+%d-%h-%Y %H:%M:%S')"
 typeset LOG_LINE=""
 
 if [[ -n "${1}" ]]
 then
-    if (( ARG_LOG != 0 ))
+    if (( ARG_LOG > 0 ))
     then
         print - "$*" | while read -r LOG_LINE
         do
             print "${NOW}: WARN: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
         done
     fi
-    if (( ARG_VERBOSE != 0 ))
+    if (( ARG_VERBOSE > 0 ))
     then
         print - "$*" | while read -r LOG_LINE
         do

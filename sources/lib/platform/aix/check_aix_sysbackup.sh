@@ -17,7 +17,7 @@
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
 # @(#) MAIN: check_aix_sysbackup
-# DOES: see _show_usage() 
+# DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_space2comma(), init_hc(), log_hc()
 #
@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="AIX"                      # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -59,13 +59,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # handle configuration file
 [[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
-if [[ ! -r ${_CONFIG_FILE} ]] 
+if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
@@ -93,7 +93,7 @@ case "${_BACKUP_AGE}" in
     +([0-9])*(.)*([0-9]))
         # numeric, OK
         ;;
-    *) 
+    *)
         # not numeric, set default
         _BACKUP_AGE=14
         ;;
@@ -118,21 +118,21 @@ do
                 # save log
                 print "=== ${_BACKUP_HOST} ===" >>${HC_STDOUT_LOG}
                 cat ${_BACKUP_LOG} >>${HC_STDOUT_LOG}
-                ;;          
+                ;;
             *)
                 _MSG="sysbackup status for ${_BACKUP_HOST}: failed"
                 _STC=1
                 print "=== ${_BACKUP_HOST} ===" >>${HC_STDOUT_LOG}
                 cat ${_BACKUP_LOG} >>${HC_STDOUT_LOG}
-                ;;  
+                ;;
         esac
     else
         # don't flag this as erroneous, we could drop into this fork for
-        # VIO servers for example without mksysb but having backupios instead 
+        # VIO servers for example without mksysb but having backupios instead
         # caveat emptor: also means that hosts *without* backup go undetected
         continue
     fi
-   
+
     # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0
@@ -148,25 +148,25 @@ do
         if (( _COUNT == 0 ))
         then
             _MSG="sysbackup age for ${_BACKUP_HOST}: <=${_BACKUP_AGE} days"
-            _STC=0        
+            _STC=0
         else
             _MSG="sysbackup age for ${_BACKUP_HOST}: >${_BACKUP_AGE} days"
             _STC=1
             print "=== ${_BACKUP_HOST} ===" >>${HC_STDOUT_LOG}
-            print "age: $(ls -l ${_BACKUP_LOG})" >>${HC_STDOUT_LOG}       
+            print "age: $(ls -l ${_BACKUP_LOG})" >>${HC_STDOUT_LOG}
         fi
     else
         # don't flag this as erroneous, we could drop into this fork for
-        # VIO servers for example without mksysb but having backupios instead 
+        # VIO servers for example without mksysb but having backupios instead
         # caveat emptor: also means that hosts *without* backup go undetected
         continue
     fi
-   
+
     # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
     _STC=0
 done
-    
+
 return 0
 }
 
@@ -180,9 +180,9 @@ CONFIG  : $3 with:
             backup_path=<location_of_mksysb_images>
             mksysb_log=<name_of_standard_standard_mksysb_log>
             backup_age=<days_till_last_backup>
-PURPOSE : Checks the state of saved mksysb client backups (should typically be 
+PURPOSE : Checks the state of saved mksysb client backups (should typically be
           run only on the NIM master or server that is acting as mksysb repo,
-          do NOT run on a typical client LPAR) 
+          do NOT run on a typical client LPAR)
 
 EOT
 

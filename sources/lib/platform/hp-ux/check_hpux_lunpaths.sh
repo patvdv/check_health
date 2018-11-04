@@ -42,7 +42,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -117,7 +117,7 @@ fi
 }
 
 # get all disk LUNs
-(( ARG_DEBUG != 0 )) && debug "collecting ioscan information"
+(( ARG_DEBUG > 0 )) && debug "collecting ioscan information"
 print "=== ioscan ===" >>${HC_STDOUT_LOG}
 ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >${_TMP1_FILE} 2>>${HC_STDERR_LOG}
 if (( $? > 0 ))
@@ -125,24 +125,24 @@ then
     _MSG="unable to gather ioscan information"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
 fi
 
 # collect scsimgr info for all LUNs
-(( ARG_DEBUG != 0 )) && debug "collecting scsimgr information"
+(( ARG_DEBUG > 0 )) && debug "collecting scsimgr information"
 ${_SCSIMGR_BIN} ${_SCSIMGR_OPTS} >${_TMP2_FILE} 2>>${HC_STDERR_LOG}
 if (( $? > 0 ))
 then
     _MSG="unable to gather scsimgr information"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
 fi
 
 # parse ioscan + scsimgr results (WWID is the glue)
-(( ARG_DEBUG != 0 )) && debug "glueing ioscan & scsimgr information together"
+(( ARG_DEBUG > 0 )) && debug "glueing ioscan & scsimgr information together"
 awk 'BEGIN { wwid = ""; active_paths = ""; all_paths = ""; failed_paths = ""; standby_paths = ""; }
 
     {

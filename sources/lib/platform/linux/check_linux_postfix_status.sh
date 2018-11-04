@@ -23,7 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
-# @(#) 2017-05-08: suppress errors on postfix call + fix fall-back 
+# @(#) 2017-05-08: suppress errors on postfix call + fix fall-back
 # @(#)             for sysv->pgrep[Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
@@ -41,7 +41,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -56,7 +56,7 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
@@ -89,7 +89,7 @@ case "${LINUX_INIT}" in
 esac
 
 # 2) try the postfix way
-if (( _RC != 0 ))
+if (( _RC > 0 ))
 then
     _POSTFIX_BIN="$(which postfix 2>>${HC_STDERR_LOG})"
     if [[ -x ${_POSTFIX_BIN} && -n "${_POSTFIX_BIN}" ]]

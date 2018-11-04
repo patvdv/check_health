@@ -58,7 +58,7 @@ typeset -r SCRIPT_DIR=$(dirname "$0")
 typeset -r HOST_NAME="$(hostname)"
 typeset -r OS_NAME="$(uname -s)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
-typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages files
+typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages file
 # shellcheck disable=SC2034
 typeset -r LOG_SEP="|"          # single character only
 # shellcheck disable=SC2034
@@ -155,7 +155,7 @@ set +o bgnice
 # REQUIRES: n/a
 function build_fpath
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FPATH_DIR=""
 
 # do not use a while-do loop here because mksh/pdksh does not pass updated
@@ -181,7 +181,7 @@ return 0
 # REQUIRES: n/a
 function check_config
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 # EXEC_USER
 if [[ -z "${EXEC_USER}" ]]
@@ -224,7 +224,7 @@ return 0
 # REQUIRES: n/a
 function check_core
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 # check and include core helper libs
 if [[ -r ${FPATH_PARENT}/core/include_core.sh && -h ${FPATH_PARENT}/core/include_core ]]
@@ -290,8 +290,8 @@ return 0
 # REQUIRES: n/a
 function check_lock_dir
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-if (( ARG_LOCK != 0 ))
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+if (( ARG_LOCK > 0 ))
 then
     mkdir ${LOCK_DIR} >/dev/null || {
         print -u2 "ERROR: unable to acquire lock ${LOCK_DIR}"
@@ -306,7 +306,7 @@ then
     }
     print $$ >${LOCK_DIR}/.pid
 else
-    (( ARG_DEBUG != 0 )) && print "DEBUG: locking has been disabled"
+    (( ARG_DEBUG > 0 )) && print "DEBUG: locking has been disabled"
 fi
 
 return 0
@@ -320,7 +320,7 @@ return 0
 # REQUIRES: n/a
 function check_params
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 # --debug-level
 if (( ARG_DEBUG_LEVEL > 2 ))
@@ -345,7 +345,7 @@ then
     fi
 fi
 # --flip-rc
-if (( ARG_FLIP_RC != 0 ))
+if (( ARG_FLIP_RC > 0 ))
 then
     # do not allow flip RC for multiple checks
     if [[ "${ARG_HC}" = *,* ]]      # use =, ksh88
@@ -435,7 +435,7 @@ then
     exit 1
 fi
 # check log location
-if (( ARG_LOG != 0 ))
+if (( ARG_LOG > 0 ))
 then
     if [[ ! -d "${LOG_DIR}" ]] || [[ ! -w "${LOG_DIR}" ]]
     then
@@ -455,13 +455,13 @@ return 0
 # REQUIRES: $OS_NAME
 function check_platform
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset HC_PLATFORM="${1}"
 typeset RC=0
 
 if [[ "${OS_NAME}" != @(${HC_PLATFORM}) ]]
 then
-    (( ARG_DEBUG != 0 )) && warn "platform ${HC_PLATFORM} does not match ${OS_NAME}"
+    (( ARG_DEBUG > 0 )) && warn "platform ${HC_PLATFORM} does not match ${OS_NAME}"
     RC=1
 fi
 
@@ -476,7 +476,7 @@ return ${RC}
 # REQUIRES: n/a
 function check_user
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset WHOAMI=""
 
 # avoid sub-shell for mksh/pdksh
@@ -501,15 +501,15 @@ function check_shell
 {
 case "${KSH_VERSION}" in
     *MIRBSD*|*PD*|*LEGACY*)
-        (( ARG_DEBUG != 0 )) && debug "running ksh: ${KSH_VERSION}"
+        (( ARG_DEBUG > 0 )) && debug "running ksh: ${KSH_VERSION}"
         ;;
     *)
         if [[ -z "${ERRNO}" ]]
         then
             # shellcheck disable=SC2154
-            (( ARG_DEBUG != 0 )) && print "running ksh: ${.sh.version}"
+            (( ARG_DEBUG > 0 )) && print "running ksh: ${.sh.version}"
         else
-            (( ARG_DEBUG != 0 )) && print "running ksh: ksh88 or older"
+            (( ARG_DEBUG > 0 )) && print "running ksh: ksh88 or older"
         fi
         ;;
 esac
@@ -607,7 +607,7 @@ return 0
 # REQUIRES: log()
 function do_cleanup
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 log "performing cleanup ..."
 
 # remove temporary files
@@ -637,7 +637,7 @@ return 0
 # REQUIRES: n/a
 function fix_symlinks
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset FDIR=""
 typeset FFILE=""
 typeset FSYML=""
@@ -686,7 +686,7 @@ return 0
 # REQUIRES: die()
 function read_config
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 if [[ -z "${CONFIG_FILE}" ]] || [[ -z "${CONFIG_FILE}" ]]
 then
@@ -1052,7 +1052,7 @@ check_user
 trap 'do_cleanup; exit 1' HUP INT QUIT TERM
 
 # set debugging options
-if (( ARG_DEBUG != 0 ))
+if (( ARG_DEBUG > 0 ))
 then
     case ${ARG_DEBUG_LEVEL} in
         0)
@@ -1068,10 +1068,11 @@ then
             DEBUG_OPTS='-vx'
             ;;
     esac
+set "${DEBUG_OPTS}"
 fi
 
 log "*** start of ${SCRIPT_NAME} [${CMD_LINE}] ***"
-(( ARG_LOG != 0 )) && log "logging takes places in ${LOG_FILE}"
+(( ARG_LOG > 0 )) && log "logging takes places in ${LOG_FILE}"
 
 # check/create lock file & write PID file (only for --run/--archive/--fix-logs)
 (( ARG_ACTION == 4 || ARG_ACTION == 11 || ARG_ACTION == 12 )) && check_lock_dir
@@ -1154,6 +1155,7 @@ case ${ARG_ACTION} in
         print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_RUN
         do
             # re-initialize messages stash (log of failed checks)
+            # shellcheck disable=SC2034
             HC_MSG_VAR=""
             : >${HC_MSG_FILE} 2>/dev/null
             if (( $? > 0 ))
@@ -1261,7 +1263,7 @@ case ${ARG_ACTION} in
                 EXIT_CODE=${RUN_RC}
                 kill -s TERM ${SLEEP_PID} >/dev/null 2>&1
                 # process return codes
-                if (( RUN_RC != 0 ))
+                if (( RUN_RC > 0 ))
                 then
                     # call for display_init with extra code 'ERROR'
                     if (( DO_DISPLAY_INIT == 1 ))

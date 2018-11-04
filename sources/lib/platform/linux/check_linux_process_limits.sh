@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -146,7 +146,7 @@ do
     case "${_PROCESS_LIMIT}" in
         "Max open files")
             # collect ps info
-            (( ARG_DEBUG != 0 )) && debug "${_PROCESS_LIMIT}: collecting information for process class ${_PROCESS}"
+            (( ARG_DEBUG > 0 )) && debug "${_PROCESS_LIMIT}: collecting information for process class ${_PROCESS}"
             _PROCESS_PS=$(_get_psinfo_by_process "${_PROCESS}")
             if [[ -z "${_PROCESS_PS}" ]]
             then
@@ -155,7 +155,7 @@ do
             fi
             print "${_PROCESS_PS}" | while read _PROCESS_PS_PID _PROCESS_PS_USER
             do
-                (( ARG_DEBUG != 0 )) && debug "${_PROCESS_LIMIT}: checking process ${_PROCESS_PS_PID}"
+                (( ARG_DEBUG > 0 )) && debug "${_PROCESS_LIMIT}: checking process ${_PROCESS_PS_PID}"
                 # get current values and check thresholds
                 _MAX_OPEN_FILES=$(_get_open_files ${_PROCESS_PS_PID})
                 # SOFT limit
@@ -210,7 +210,7 @@ do
     case "${_USER_LIMIT}" in
         "Max open files")
             # collect ps info
-            (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
+            (( ARG_DEBUG > 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
             _USER_PS=$(_get_psinfo_by_user "${_USER}")
             if [[ -z "${_USER_PS}" ]]
             then
@@ -219,7 +219,7 @@ do
             fi
             print "${_USER_PS}" | while read _USER_PS_PID _USER_PS_COMM
             do
-                (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: checking process ${_USER_PS_PID}"
+                (( ARG_DEBUG > 0 )) && debug "${_USER_LIMIT}: checking process ${_USER_PS_PID}"
                 # get current values and check thresholds
                 _MAX_OPEN_FILES=$(_get_open_files ${_USER_PS_PID})
                 # SOFT limit
@@ -231,7 +231,7 @@ do
             done
             ;;
         "Max processes")
-            (( ARG_DEBUG != 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
+            (( ARG_DEBUG > 0 )) && debug "${_USER_LIMIT}: collecting information for user ${_USER}"
             _MAX_PROCESSES=$(_get_processes ${_USER})
             # SOFT limit
             _check_limit "${_USER_LIMIT}" soft 0 ${_USER} "" ${_USER_SOFT_THRESHOLD} \
@@ -259,7 +259,7 @@ return 0
 #1992 root
 function _get_psinfo_by_process
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
 ps -C "${1}" -o pid:1,user:1 --no-headers 2>/dev/null
 
@@ -272,7 +272,7 @@ return 0
 #8539 pickup
 function _get_psinfo_by_user
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
 ps -U "${1}" -o pid:1,comm:1 --no-headers 2>/dev/null
 
@@ -293,7 +293,7 @@ typeset _LIMIT_COMMAND=""
 typeset _LIMIT_ENTRY=""
 typeset _LIMIT_FIELD=0
 typeset _MSG_BIT=""
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
 # check for empties
 (( _LIMIT_PID == 0 )) && _LIMIT_PID="N/A"
@@ -370,7 +370,7 @@ return 0
 # -----------------------------------------------------------------------------
 function _get_open_files
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
 ls -f /proc/${1}/fd/ 2>/dev/null | wc -l 2>/dev/null
 
@@ -380,7 +380,7 @@ return 0
 # -----------------------------------------------------------------------------
 function _get_processes
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
 ps -U ${1} --no-headers 2>/dev/null | wc -l 2>/dev/null
 

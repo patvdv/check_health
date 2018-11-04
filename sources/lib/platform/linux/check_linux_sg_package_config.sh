@@ -42,7 +42,7 @@ typeset _SG_CMGETCONF_FILTER="Permission denied|Number of configured"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 PATH=$PATH:/opt/cmcluster/bin
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
@@ -109,7 +109,7 @@ else
         _MSG="unable to gather package configuration for at least one cluster package"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 0
     }
     done

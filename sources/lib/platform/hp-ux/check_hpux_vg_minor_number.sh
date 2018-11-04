@@ -36,7 +36,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -52,13 +52,13 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
-            ;;  
+            ;;
     esac
 done
 
 # get list of major and minor numbers for vgs
 vgdisplay -F | cut -f1 -d':' | cut -f2 -d'=' | while read _VG
-do 
+do
     ls -l ${_VG}/group >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 done
 
@@ -70,13 +70,13 @@ then
     do
         _MSG="MAJ/MIN numbers combination '${_VG_DUPE}' is not unique"
         _STC=1
-        
+
         # handle unit result
         log_hc "$0" ${_STC} "${_MSG}"
     done
 else
     _MSG="no VGs with duplicate MAJ/MIN numbers detected"
-            
+
     # handle unit result
     log_hc "$0" ${_STC} "${_MSG}"
 fi

@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+>#!/usr/bin/env ksh
 #******************************************************************************
 # @(#) check_hpux_file_age.sh
 #******************************************************************************
@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -109,13 +109,13 @@ do
     if (( _DO_REF == 0 ))
     then
         REF_TIME=$(perl -e "use POSIX;\$t=time-(${_FILE_AGE}*60);print(strftime '%m%d%H%M',localtime(\$t))")
-        if (( $? != 0 ))
+        if (( $? > 0 ))
         then
             warn "failed to query reference time (Perl)"
             return 1
         fi
         touch -amt "${REF_TIME}" ${_REF_FILE} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-        if (( $? != 0 ))
+        if (( $? > 0 ))
         then
             warn "failed to create reference time ${TMP_DIR}"
             return 1

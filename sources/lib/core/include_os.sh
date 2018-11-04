@@ -31,11 +31,11 @@
 # REQUIRES: n/a
 function linux_get_distro
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 # linux only
 check_platform 'Linux' || {
-    (( ARG_DEBUG != 0 )) && debug "may only run on platform(s): Linux"
+    (( ARG_DEBUG > 0 )) && debug "may only run on platform(s): Linux"
     return 1
 }
 
@@ -86,11 +86,11 @@ return 0
 # REQUIRES: n/a
 function linux_get_init
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 # linux only
 check_platform 'Linux' || {
-    (( ARG_DEBUG != 0 )) && debug "may only run on platform(s): Linux"
+    (( ARG_DEBUG > 0 )) && debug "may only run on platform(s): Linux"
     return 1
 }
 
@@ -117,7 +117,7 @@ return 0
 # REQUIRES: n/a
 function linux_has_crm
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _CRM_BIN=""
 typeset _HAS_CRM=0
 
@@ -134,7 +134,7 @@ then
     crm status >/dev/null 2>/dev/null
     (( $? == 0 )) && _HAS_CRM=1
 else
-    (( ARG_DEBUG != 0 )) && debug "corosync (crm) is not active here"
+    (( ARG_DEBUG > 0 )) && debug "corosync (crm) is not active here"
     return 1
 fi
 
@@ -152,7 +152,7 @@ return 0
 # REQUIRES: n/a
 function linux_has_docker
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _DOCKER_BIN=""
 typeset _HAS_DOCKER=0
 
@@ -169,7 +169,7 @@ then
     docker ps >/dev/null 2>/dev/null
     (( $? == 0 )) && _HAS_DOCKER=1
 else
-    (( ARG_DEBUG != 0 )) && debug "docker is not active here"
+    (( ARG_DEBUG > 0 )) && debug "docker is not active here"
     return 1
 fi
 
@@ -187,7 +187,7 @@ return 0
 # REQUIRES: n/a
 function linux_has_nm
 {
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _NMCLI_BIN=""
 typeset _HAS_NM=0
 
@@ -203,7 +203,7 @@ then
     # check for active
     _HAS_NM=$(nmcli networking 2>/dev/null | grep -c -i "enabled")
 else
-    (( ARG_DEBUG != 0 )) && debug "NetworkManager is not active here"
+    (( ARG_DEBUG > 0 )) && debug "NetworkManager is not active here"
     return 1
 fi
 

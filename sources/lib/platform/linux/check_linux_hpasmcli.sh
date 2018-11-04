@@ -40,7 +40,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -156,10 +156,10 @@ fi
 
 # --- perform checks ---
 # SHOW FANS
-if (( _DO_ASM_FANS != 0 ))
+if (( _DO_ASM_FANS > 0 ))
 then
     ${_HPASMCLI_BIN} -s 'SHOW FANS' >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW FANS' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW FANS' exited non-zero"
     # look for failures
     grep -E -e '^#' ${_TMP_FILE} 2>/dev/null | grep -vi 'normal' 2>/dev/null |\
         while read _ASM_LINE
@@ -177,10 +177,10 @@ else
 fi
 
 # SHOW DIMM
-if (( _DO_ASM_DIMM != 0 ))
+if (( _DO_ASM_DIMM > 0 ))
 then
     ${_HPASMCLI_BIN} -s 'SHOW DIMM' >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW DIMM' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW DIMM' exited non-zero"
     # look for failures
     grep -i -E -e "(nok|fail)" ${_TMP_FILE} 2>/dev/null |\
         while read _ASM_LINE
@@ -197,10 +197,10 @@ else
 fi
 
 # SHOW POWERSUPPLY
-if (( _DO_ASM_POWR != 0 ))
+if (( _DO_ASM_POWR > 0 ))
 then
     ${_HPASMCLI_BIN} -s 'SHOW POWERSUPPLY' >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW POWERSUPPLY' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW POWERSUPPLY' exited non-zero"
     # look for failures
     grep -i -E -e "(nok|fail)" ${_TMP_FILE} 2>/dev/null |\
         while read _ASM_LINE
@@ -217,10 +217,10 @@ else
 fi
 
 # SHOW SERVER
-if (( _DO_ASM_SRVR != 0 ))
+if (( _DO_ASM_SRVR > 0 ))
 then
     ${_HPASMCLI_BIN} -s 'SHOW SERVER' >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW SERVER' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW SERVER' exited non-zero"
     # look for failures
     grep -i -E -e "(nok|fail)" ${_TMP_FILE} 2>/dev/null |\
         while read _ASM_LINE
@@ -237,10 +237,10 @@ else
     fi
 
 # SHOW TEMP
-if (( _DO_ASM_TEMP != 0 ))
+if (( _DO_ASM_TEMP > 0 ))
 then
     ${_HPASMCLI_BIN} -s 'SHOW TEMP' >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW TEMP' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPASMCLI_BIN} -s SHOW TEMP' exited non-zero"
     # look for failures
     grep -E -e '^#' ${_TMP_FILE} 2>/dev/null |\
         while read _ASM_LINE

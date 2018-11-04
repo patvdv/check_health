@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}"  "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -133,7 +133,7 @@ esac
 # check for dependencies: we need to do DO_ACU_CTRL to have the slot info for all
 # the other checks
 _DO_CHECK=$(( _DO_ACU_ENCL + _DO_ACU_PHYS + _DO_ACU_LOGL ))
-if (( _DO_CHECK != 0 && _DO_ACU_CTRL == 0 ))
+if (( _DO_CHECK > 0 && _DO_ACU_CTRL == 0 ))
 then
     log "switching setting 'do_acu_controller' to 1 to fetch slot info"
     _DO_ACU_CTRL=1
@@ -148,10 +148,10 @@ fi
 
 # --- perform checks ---
 # CONTROLLER(s)
-if (( _DO_ACU_CTRL != 0 ))
+if (( _DO_ACU_CTRL > 0 ))
 then
     ${_HPACUCLI_BIN} controller all show status >${_TMP_FILE} 2>${_TMP_FILE}
-    (( $? != 0 )) && warn "'${_HPACUCLI_BIN} controller all show status' exited non-zero"
+    (( $? > 0 )) && warn "'${_HPACUCLI_BIN} controller all show status' exited non-zero"
     # look for failures
     grep -i -E -e "(nok|fail.*)" ${_TMP_FILE} 2>/dev/null |\
         while read _ACU_LINE
@@ -183,13 +183,13 @@ else
 fi
 
 # ENCLOSURE(s)
-if (( _DO_ACU_ENCL != 0 ))
+if (( _DO_ACU_ENCL > 0 ))
 then
     for _CTRL_SLOT in ${_SLOT_NUMS}
     do
         ${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT} enclosure all show \
             >${_TMP_FILE} 2>${_TMP_FILE}
-        (( $? != 0 )) && \
+        (( $? > 0 )) && \
             warn "'${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT} enclosure all show' exited non-zero"
         # look for failures
         grep -i -E -e "(nok|fail.*)" ${_TMP_FILE} 2>/dev/null |\
@@ -208,13 +208,13 @@ else
 fi
 
 # PHYSICAL DRIVE(s)
-if (( _DO_ACU_PHYS != 0 ))
+if (( _DO_ACU_PHYS > 0 ))
 then
     for _CTRL_SLOT in ${_SLOT_NUMS}
     do
         ${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT} physicaldrive all show status \
             >${_TMP_FILE} 2>${_TMP_FILE}
-        (( $? != 0 )) && \
+        (( $? > 0 )) && \
             warn "'${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT} physicaldrive all show status' exited non-zero"
         # look for failures
         grep -i -E -e "(nok|fail.*)" ${_TMP_FILE} 2>/dev/null |\
@@ -233,13 +233,13 @@ else
     fi
 
 # LOGICAL DRIVE(s)
-if (( _DO_ACU_LOGL != 0 ))
+if (( _DO_ACU_LOGL > 0 ))
 then
     for _CTRL_SLOT in ${_SLOT_NUMS}
     do
         ${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT} logicaldrive all show status \
             >${_TMP_FILE} 2>${_TMP_FILE}
-        (( $? != 0 )) && \
+        (( $? > 0 )) && \
             warn "'${_HPACUCLI_BIN} controller slot=${_CTRL_SLOT}logicaldrive all show status' exited non-zero"
         # look for failures
         grep -i -E -e "(nok|fail)" ${_TMP_FILE} 2>/dev/null |\

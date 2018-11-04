@@ -39,7 +39,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -297,7 +297,7 @@ do
     fi
 
     # bounce failures back and jump to next file
-    if (( _STC != 0 ))
+    if (( _STC > 0 ))
     then
         log_hc "$0" ${_STC} "${_MSG}"
         continue
@@ -327,7 +327,7 @@ do
 done <${_TMP1_FILE}
 
 # update state file (also if TMP2_FILE is empty)
-if (( ARG_LOG != 0 ))
+if (( ARG_LOG > 0 ))
 then
     [[ -s ${_TMP2_FILE} ]] || {
         warn "no files found to check, zeroing new state file"

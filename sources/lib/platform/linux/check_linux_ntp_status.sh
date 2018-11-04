@@ -47,7 +47,7 @@ typeset _NTPQ_BIN="/usr/sbin/ntpq"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
@@ -123,7 +123,7 @@ else
     _MSG="unable to find chronyd or ntpd"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
-    (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
 fi
 
@@ -177,7 +177,7 @@ case "${LINUX_INIT}" in
 esac
 
 # 2) try the pgrep way (note: old pgreps do not support '-c')
-if (( _RC != 0 ))
+if (( _RC > 0 ))
 then
     if (( _USE_CHRONYD > 0 ))
     then
@@ -227,7 +227,7 @@ then
         _MSG="unable to execute {${_CHRONYC_BIN}}"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
-        (( ARG_DEBUG != 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         return 1
     fi
 
