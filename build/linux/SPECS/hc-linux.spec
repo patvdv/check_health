@@ -10,11 +10,11 @@ Group:          Tools/Monitoring
 License:        GNU General Public License either version 2 of the License, or (at your option) any later version
 URL:            http://www.kudos.be
 
-Requires:       ksh
+Requires:       ksh,logrotate
 BuildArch:      noarch
 BuildRoot:      %{_topdir}/%{name}-%{version}-root
-      
-%description 
+
+%description
 The Health Checker is collection of scripts (plugins) designed to perform regular - but not intensive - health checks on UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as well customer specific checks. Checks may include topics such file system mounts, process checks, file consistency etc.
 
 %prep
@@ -44,6 +44,7 @@ cp ../SOURCES/etc/core/templates/mail_header.tpl $RPM_BUILD_ROOT/etc/opt/hc/core
 cp ../SOURCES/etc/core/templates/mail_body.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 cp ../SOURCES/etc/core/templates/mail_footer.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 install -d -m 755 $RPM_BUILD_ROOT/var/opt/hc
+cp ../SOURCES/etc/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
 
 %post
 # ------------------------- CONFIGURATION starts here -------------------------
@@ -130,7 +131,7 @@ then
 else
     echo "INFO: skipping post-uninstall script (RPM upgrade)"
 fi
-    
+
 %files
 %defattr(-,root,root,755)
 %dir /opt/hc
@@ -154,8 +155,11 @@ fi
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_footer.tpl
 %dir /var/opt/hc
+%attr(644, root, root) /etc/logrotate.d/check_health
 
 %changelog
+* Sat Nov 10 2018 <patrick@kudos.be> - 0.1.0
+- Added logrotate file
 * Mon Dec 18 2017 <patrick@kudos.be> - 0.0.9
 - Added report_std.sh
 * Tue Jun 20 2017 <patrick@kudos.be> - 0.0.8

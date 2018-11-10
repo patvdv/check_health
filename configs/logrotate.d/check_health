@@ -1,0 +1,5 @@
+/var/opt/hc/check_health.sh.log {
+    monthly
+    notifempty
+    create 644 root root
+}
