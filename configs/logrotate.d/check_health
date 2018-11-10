@@ -1,5 +1,6 @@
 /var/opt/hc/check_health.sh.log {
     monthly
     notifempty
+    rotate 6
     create 644 root root
 }
