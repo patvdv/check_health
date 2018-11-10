@@ -44,7 +44,7 @@ cp ../SOURCES/etc/core/templates/mail_header.tpl $RPM_BUILD_ROOT/etc/opt/hc/core
 cp ../SOURCES/etc/core/templates/mail_body.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 cp ../SOURCES/etc/core/templates/mail_footer.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 install -d -m 755 $RPM_BUILD_ROOT/var/opt/hc
-cp ../SOURCES/etc/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
+cp ../SOURCES/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
 
 %post
 # ------------------------- CONFIGURATION starts here -------------------------
