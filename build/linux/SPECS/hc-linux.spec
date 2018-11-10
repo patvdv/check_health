@@ -44,6 +44,7 @@ cp ../SOURCES/etc/core/templates/mail_header.tpl $RPM_BUILD_ROOT/etc/opt/hc/core
 cp ../SOURCES/etc/core/templates/mail_body.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 cp ../SOURCES/etc/core/templates/mail_footer.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 install -d -m 755 $RPM_BUILD_ROOT/var/opt/hc
+install -d -m 755 $RPM_BUILD_ROOT/etc/logrotate.d
 cp ../SOURCES/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
 
 %post
@@ -155,6 +156,7 @@ fi
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_footer.tpl
 %dir /var/opt/hc
+%dir /etc/logrotate.d
 %attr(644, root, root) /etc/logrotate.d/check_health
 
 %changelog
