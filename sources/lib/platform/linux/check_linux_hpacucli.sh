@@ -25,6 +25,7 @@
 # @(#) 2013-09-09: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -57,8 +58,6 @@ typeset _DO_ACU_LOGL=1
 typeset _DO_CHECK=0
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
@@ -263,6 +262,9 @@ then
     _MSG="no problems detected by {${_HPACUCLI_BIN}}"
     log_hc "$0" 0 "${_MSG}"
 fi
+
+# do cleanup
+[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1
 
 return 0
 }

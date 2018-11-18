@@ -25,6 +25,7 @@
 # @(#) 2017-04-22: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: added dump_logs() & STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_hplog
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _STATE_FILE="${STATE_PERM_DIR}/discovered.hplog"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -56,10 +57,6 @@ typeset _SEVERITY_ENTRY=""
 typeset _EVENT_ENTRY=""
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
-      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
-      return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
@@ -161,6 +158,10 @@ else
     _MSG="no new HPLOG messages found"
 fi
 log_hc "$0" ${_STC} "${_MSG}"
+
+# do cleanup
+[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
+[[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
 
 return 0
 }

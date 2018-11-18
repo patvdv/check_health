@@ -25,6 +25,7 @@
 # @(#) 2018-07-10: original version [Patrick Van der Veken]
 # @(#) 2018-07-12: better log_healthy handling [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -65,8 +66,6 @@ typeset _USER_PS_PID=""
 typeset _USER_PS_COMM=""
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 0" 0
 # shellcheck disable=SC2064
 trap "rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
 
@@ -363,6 +362,9 @@ then
 else
     warn "limit on (${_LIMIT_TYPE} on '${_LIMIT_NAME}' was not checked (PID=${_LIMIT_PID})"
 fi
+
+# do cleanup
+rm -f ${_INSTANCE_RUN_FILE}.* >/dev/null 2>&1
 
 return 0
 }

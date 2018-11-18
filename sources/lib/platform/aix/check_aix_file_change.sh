@@ -25,6 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2017-05-18: initial version [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_aix_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -65,12 +66,6 @@ typeset _TMP_EXCL_FILE="${TMP_DIR}/.$0.tmp_excl.$$"
 set -o noglob       # no file globbing
 
 # set local trap for clean-up
-# shellcheck disable=SC2064
-trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
-      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
-      [[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1;
-      [[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1;
-      return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
@@ -338,6 +333,12 @@ then
         return 1
     }
 fi
+
+# do cleanup
+[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
+[[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
+[[ -f ${_TMP_INCL_FILE} ]] && rm -f ${_TMP_INCL_FILE} >/dev/null 2>&1
+[[ -f ${_TMP_EXCL_FILE} ]] && rm -f ${_TMP_EXCL_FILE} >/dev/null 2>&1
 
 return 0
 }

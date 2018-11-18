@@ -25,6 +25,7 @@
 # @(#) 2016-06-20: initial version [Patrick Van der Veken]
 # @(#) 2017-05-18: do not update the state file with --no-log [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_syslog
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _STATE_FILE="${STATE_PERM_DIR}/discovered.syslog"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -63,8 +64,6 @@ do
 done
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
@@ -146,6 +145,9 @@ fi
 
 # handle results
 log_hc "$0" ${_STC} "${_MSG}"
+
+# do cleanup
+[[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1
 
 return 0
 }

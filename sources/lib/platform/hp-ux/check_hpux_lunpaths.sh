@@ -25,6 +25,7 @@
 # @(#) 2017-12-20: initial version [Patrick Van der Veken]
 # @(#) 2018-18-22: reworked discovery routine (accommdate large number of LUNS)
 # @(#)             [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-C disk -P wwid"
 typeset _SCSIMGR_BIN="/usr/sbin/scsimgr"
 typeset _SCSIMGR_OPTS="-v get_info all_lun"
-typeset _VERSION="2018-10-22"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -83,10 +84,6 @@ else
 fi
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
-      [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
-      return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1;
       [[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1;
@@ -249,6 +246,10 @@ cat ${_TMP1_FILE} >>${HC_STDOUT_LOG}
 # save scsimgr info for posterity
 printf "\n\n=== scsimgr ===" >>${HC_STDOUT_LOG}
 cat ${_TMP2_FILE} >>${HC_STDOUT_LOG}
+
+# do cleanup
+[[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
+[[ -f ${_TMP2_FILE} ]] && rm -f ${_TMP2_FILE} >/dev/null 2>&1
 
 return 0
 }

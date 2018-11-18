@@ -25,6 +25,7 @@
 # @(#) 2013-05-27: initial version [Patrick Van der Veken]
 # @(#) 2013-05-29: added local trap for cleanup [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_file_age
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -54,8 +55,6 @@ typeset _FILE_NAME=""
 typeset _FILE_DIR=""
 
 # set local trap for cleanup
-# shellcheck disable=SC2064
-trap "[[ -f ${_REF_FILE} ]] && rm -f ${_REF_FILE} >/dev/null 2>&1; return 0" 0
 # shellcheck disable=SC2064
 trap "[[ -f ${_REF_FILE} ]] && rm -f ${_REF_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 

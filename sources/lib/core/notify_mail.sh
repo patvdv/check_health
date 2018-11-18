@@ -70,8 +70,6 @@ typeset _FROM_MSG="${EXEC_USER}@${HOST_NAME}"
 
 # set local trap for cleanup
 # shellcheck disable=SC2064
-trap "[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1; [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1; return 0" 0
-# shellcheck disable=SC2064
 trap "[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1; [[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # set short paths for STDOUT/STDERR logs
