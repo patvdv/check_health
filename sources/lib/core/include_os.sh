@@ -224,7 +224,7 @@ function linux_has_systemd_service
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _RC=0
 
-systemctl list-unit-files 2>/dev/null | grep -c "^{$1}" 2>/dev/null
+systemctl list-unit-files 2>/dev/null | grep -c "^${1}" 2>/dev/null
 _RC=$?
 
 return ${_RC}
