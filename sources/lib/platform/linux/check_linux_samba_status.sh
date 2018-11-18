@@ -27,6 +27,7 @@
 # @(#) 2017-05-08: fix fall-back for sysv->pgrep [Patrick Van der Veken]
 # @(#) 2017-07-23: fix for systemd service names [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_linux_samba_status
 typeset _SMB_INIT_SCRIPT="/etc/init.d/samba"
 typeset _SMB_SYSTEMD_SERVICE="smb.service"
 typeset _NMB_SYSTEMD_SERVICE="nmb.service"
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -50,6 +51,7 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
 typeset _RC=0
+typeset _CHECK_SYSTEMD_SERVICE=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -66,9 +68,23 @@ linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
         # check running NMB
-        systemctl --quiet is-active ${_NMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_NMB_SYSTEMD_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet is-active ${_NMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        else
+            warn "systemd unit file not found {${_NMB_SYSTEMD_SERVICE}}"
+            _RC=1
+        fi
         # check running SMB
-        systemctl --quiet is-active ${_SMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=$(( _STC + 2 ))
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_SMB_SYSTEMD_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet is-active ${_SMB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=$(( _STC + 2 ))
+        else
+            warn "systemd unit file not found {${_SMB_SYSTEMD_SERVICE}}"
+            _RC=1
+        fi
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"

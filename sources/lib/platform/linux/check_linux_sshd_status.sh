@@ -26,6 +26,7 @@
 # @(#) 2017-05-05: fix fall-back for sysv->pgrep [Patrick Van der Veken]
 # @(#) 2017-05-08: set init/systemd based on distro [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
+# @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@
 function check_linux_sshd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-05-21"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -46,6 +47,7 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _SSHD_INIT_SCRIPT=""
 typeset _SSHD_SYSTEMD_SERVICE=""
+typeset _CHECK_SYSTEMD_SERVICE=0
 typeset _STC=0
 typeset _RC=0
 
@@ -75,7 +77,14 @@ esac
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        systemctl --quiet is-active ${_SSHD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_SSHD_SYSTEMD_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet is-active ${_SSHD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+        else
+            warn "systemd unit file not found {${_SSHD_SYSTEMD_SERVICE}}"
+            _RC=1
+        fi
         ;;
     'upstart')
         warn "code for upstart managed systems not implemented, NOOP"

@@ -27,6 +27,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-10-31: added support for chronyd, --dump-logs
 # @(#)             & --log-healthy [Patrick Van der Veken]
+# @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ typeset _CHRONY_INIT_SCRIPT="/etc/init.d/chrony"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
 typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
-typeset _VERSION="2018-10-31"                           # YYYY-MM-DD
+typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _CHRONYC_BIN="/bin/chronyc"
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
@@ -55,6 +56,7 @@ typeset _MSG=""
 typeset _STC=0
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
+typeset _CHECK_SYSTEMD_SERVICE=0
 typeset _CURR_OFFSET=0
 typeset _MAX_OFFSET=0
 typeset _NTP_PEER=""
@@ -135,9 +137,23 @@ case "${LINUX_INIT}" in
     'systemd')
         if (( _USE_CHRONYD > 0 ))
         then
-            systemctl --quiet is-active ${_CHRONYD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_CHRONYD_SYSTEMD_SERVICE}")
+            if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+            then
+                systemctl --quiet is-active ${_CHRONYD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+            else
+                warn "systemd unit file not found {${_CHRONYD_SYSTEMD_SERVICE}}"
+                _RC=1
+            fi
         else
-            systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_NTPD_SYSTEMD_SERVICE}")
+            if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+            then
+                systemctl --quiet is-active ${_NTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+            else
+                warn "systemd unit file not found {${_NTPD_SYSTEMD_SERVICE}}"
+                _RC=1
+            fi
         fi
         ;;
     'upstart')
