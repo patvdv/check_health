@@ -249,6 +249,12 @@ then
 
     # 1) active server
     _CHRONY_PEER="$(grep -E -e '^\^,\*' 2>/dev/null ${HC_STDOUT_LOG} | cut -f3 -d',' 2>/dev/null)"
+    if [[ -z "${_CHRONY_PEER}" ]]
+    then
+        _MSG="chrony is not synchronizing"
+        log_hc "$0" 1 "${_MSG}"
+        return 0
+    fi
     case ${_CHRONY_PEER} in
         \*127.127.1.0*)
             _MSG="chrony is synchronizing against its internal clock"
@@ -298,6 +304,12 @@ else
 
     # 1) active server
     _NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }' 2>/dev/null)"
+    if [[ -z "${_NTP_PEER}" ]]
+    then
+        _MSG="NTP is not synchronizing"
+        log_hc "$0" 1 "${_MSG}"
+        return 0
+    fi
     case ${_NTP_PEER} in
         \*127.127.1.0*)
             _MSG="NTP is synchronizing against its internal clock"

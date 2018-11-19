@@ -115,6 +115,12 @@ fi
 # evaluate ntpq results
 # 1) active server
 _NTP_PEER="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $1 }')"
+if [[ -z "${_NTP_PEER}" ]]
+then
+    _MSG="NTP is not synchronizing"
+    log_hc "$0" 1 "${_MSG}"
+    return 0
+fi
 case ${_NTP_PEER} in
     \*127.127.1.0*)
         _MSG="NTP is synchronizing against its internal clock"
