@@ -11,9 +11,21 @@
 # [default: no]
 log_healthy=yes
 
-# maximum allowed offset (in milliseconds)
+# whether to force the use of chronyd?
+# [default: no]
+force_chrony=no
+
+# whether to force the use of ntpd?
+# [default: no]
+force_ntp=no
+
+# maximum allowed offset (in milliseconds (positive integers only)
 # [default: 500]
 max_offset=500
+
+# use IPv4 for ntpq
+# [default: no]
+ntpq_use_ipv4=no
 
 
 #******************************************************************************

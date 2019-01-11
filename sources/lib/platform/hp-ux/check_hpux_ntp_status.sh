@@ -26,6 +26,8 @@
 # @(#) 2016-12-29: added threshold & config file [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-10-31: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-01-10: added configuration option 'ntpq_use_ipv4', fixed problem
+# @(#)             with offset calculation [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -35,9 +37,10 @@ function check_hpux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2018-10-31"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-10"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
+typeset _NTPQ_OPTS="-pn"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -48,10 +51,12 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
 typeset _CFG_HEALTHY=""
+typeset _CFG_NTPQ_IPV4=""
 typeset _LOG_HEALTHY=0
 typeset _CURR_OFFSET=0
 typeset _MAX_OFFSET=0
 typeset _NTP_PEER=""
+typeset _CHECK_OFFSET=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -87,6 +92,16 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+_CFG_NTPQ_IPV4=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'ntpq_use_ipv4')
+case "${_CFG_NTPQ_IPV4}" in
+    yes|YES|Yes)
+        log "forcing ntpq to use IPv4"
+        _NTPQ_OPTS="${_NTPQ_OPTS}4"
+        ;;
+    *)
+        :   # not set
+        ;;
+esac
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -108,7 +123,7 @@ then
     warn "${_NTPQ_BIN} is not installed here"
     return 1
 else
-    ${_NTPQ_BIN} -np 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
+    ${_NTPQ_BIN} ${_NTPQ_OPTS} 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
     # RC is always 0
 fi
 
@@ -121,7 +136,7 @@ then
     log_hc "$0" 1 "${_MSG}"
     return 0
 fi
-case ${_NTP_PEER} in
+case "${_NTP_PEER}" in
     \*127.127.1.0*)
         _MSG="NTP is synchronizing against its internal clock"
         _STC=1
@@ -139,8 +154,9 @@ then
     _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }')"
     case ${_CURR_OFFSET} in
         +([-0-9])*(.)*([0-9]))
-            # numeric, OK (negatives are OK too!)
-            if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }') != 0 ))
+            # numeric, OK (negatives are OK, force awk into casting c as a float)
+            _CHECK_OFFSET=$(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { sub (/^-/, "", c); print ((c+0.0)>m) }' 2>/dev/null)
+            if (( _CHECK_OFFSET > 0 ))
             then
                 _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
                 _STC=1
@@ -166,7 +182,12 @@ function _show_usage
 cat <<- EOT
 NAME    : $1
 VERSION : $2
-CONFIG  : $3
+CONFIG  : $3 with:
+            log_healthy=<yes|no>
+            max_offset=<max_offset (ms)>
+            force_chrony=<yes|no>
+            force_ntp=<yes|no>
+            ntpq_use_ipv4=<yes|no>
 PURPOSE : Checks the status of NTP synchronization
 
 EOT

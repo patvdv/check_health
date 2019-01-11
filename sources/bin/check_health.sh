@@ -52,11 +52,11 @@ typeset -r TMP_DIR="/var/tmp"
 typeset -r EXEC_USER="root"
 # ------------------------- CONFIGURATION ends here ---------------------------
 # read-only settings (but should not be changed)
-typeset -r SCRIPT_NAME=$(basename "$0")
-typeset -r SCRIPT_DIR=$(dirname "$0")
+typeset -r SCRIPT_NAME=$(basename "$0" 2>/dev/null)
+typeset -r SCRIPT_DIR=$(dirname "$0" 2>/dev/null)
 # shellcheck disable=SC2034
-typeset -r HOST_NAME="$(hostname)"
-typeset -r OS_NAME="$(uname -s)"
+typeset -r HOST_NAME="$(hostname 2>/dev/null)"
+typeset -r OS_NAME="$(uname -s 2>/dev/null)"
 typeset -r LOCK_DIR="${TMP_DIR}/.${SCRIPT_NAME}.lock"
 typeset -r HC_MSG_FILE="${TMP_DIR}/.${SCRIPT_NAME}.hc.msg.$$"   # plugin messages file
 # shellcheck disable=SC2034

@@ -19,7 +19,8 @@
 # @(#) MAIN: check_linux_ntp_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_space2comma(), init_hc(), log_hc(),
+#           linux_has_systemd_service(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2018-03-20: initial version [Patrick Van der Veken]
@@ -28,6 +29,10 @@
 # @(#) 2018-10-31: added support for chronyd, --dump-logs
 # @(#)             & --log-healthy [Patrick Van der Veken]
 # @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
+# @(#) 2019-01-10: add optional configuration+cmd-line parameters 'force_ntp' and
+# @(#)             'force_chrony', added check on chronyd service alive, added
+# @(#)             run user for chronyd+ntpd, added forced IPv4 support for ntpq,
+# @(#)             fixed problem with offset calculation [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -41,10 +46,13 @@ typeset _CHRONY_INIT_SCRIPT="/etc/init.d/chrony"
 typeset _NTPD_INIT_SCRIPT="/etc/init.d/ntpd"
 typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
-typeset _VERSION="2018-11-18"                           # YYYY-MM-DD
+typeset _CHRONYD_USER="chrony"
+typeset _NTPD_USER="ntp"
+typeset _VERSION="2019-01-10"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _CHRONYC_BIN="/bin/chronyc"
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
+typeset _NTPQ_OPTS="-pn"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -54,12 +62,16 @@ typeset _ARGS=$(data_space2comma "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_FORCE_CHRONY=""
+typeset _CFG_FORCE_NTP=""
+typeset _CFG_NTPQ_IPV4=""
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _CHECK_SYSTEMD_SERVICE=0
 typeset _CURR_OFFSET=0
 typeset _MAX_OFFSET=0
 typeset _NTP_PEER=""
+typeset _CHECK_OFFSET=0
 typeset _USE_CHRONYD=0
 typeset _USE_NTPD=0
 
@@ -69,6 +81,14 @@ do
     case "${_ARG}" in
         help)
             _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
+            ;;
+        force_chrony)
+            log "forcing chrony since force_chrony was used"
+            _USE_CHRONYD=1
+            ;;
+        force_ntp)
+            log "forcing ntp since force_ntp was used"
+            _USE_NTPD=1
             ;;
     esac
 done
@@ -97,6 +117,42 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+_CFG_FORCE_CHRONY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'force_chrony')
+case "${_CFG_FORCE_CHRONY}" in
+    yes|YES|Yes)
+        log "forcing chrony since force_chrony was set"
+        _USE_CHRONYD=1
+        ;;
+    *)
+        :   # not set
+        ;;
+esac
+# force_ntp (optional)
+_CFG_FORCE_NTP=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'force_ntp')
+case "${_CFG_FORCE_NTP}" in
+    yes|YES|Yes)
+        log "forcing ntp since force_ntp was set"
+        _USE_NTPD=1
+        ;;
+    *)
+        :   # not set
+        ;;
+esac
+_CFG_NTPQ_IPV4=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'ntpq_use_ipv4')
+case "${_CFG_NTPQ_IPV4}" in
+    yes|YES|Yes)
+        log "forcing ntpq to use IPv4"
+        _NTPQ_OPTS="${_NTPQ_OPTS}4"
+        ;;
+    *)
+        :   # not set
+        ;;
+esac
+if (( _USE_CHRONYD > 0 && _USE_NTPD > 0 ))
+then
+    warn "you cannot force chrony and ntp at the same time"
+    return 1
+fi
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -113,20 +169,55 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# chronyd (prefer) or ntpd (fallback)?
-if [[ -x ${_CHRONYC_BIN} ]]
+# chronyd (prefer) or ntpd (fallback)
+# but do not check if _USE_CHRONYD or _USE_NTPD is already set
+if (( _USE_CHRONYD == 0 && _USE_NTPD == 0 ))
 then
-    _USE_CHRONYD=1
-elif [[ -x ${_NTPQ_BIN} ]]
-then
-    # shellcheck disable=SC2034
-    _USE_NTPD=1
-else
-    _MSG="unable to find chronyd or ntpd"
-    log_hc "$0" 1 "${_MSG}"
-    # dump debug info
-    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-    return 1
+    linux_get_init
+    if [[ -x ${_CHRONYC_BIN} ]]
+    then
+        # check that chrony is actually enabled
+        (( ARG_DEBUG > 0 )) && debug "found ${_CHRONYC_BIN}, checking if the service is enabled"
+        case "${LINUX_INIT}" in
+            'systemd')
+                _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_CHRONYD_SYSTEMD_SERVICE}")
+                if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+                then
+                    systemctl --quiet is-enabled ${_CHRONYD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} && _USE_CHRONYD=1
+                else
+                    warn "systemd unit file not found {${_CHRONYD_SYSTEMD_SERVICE}}"
+                    _USE_CHRONYD=0
+                fi
+                ;;
+            'sysv')
+                chkconfig chronyd >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                if (( $? == 0 ))
+                then
+                    _USE_CHRONYD=1
+                else
+                    _USE_CHRONYD=0
+                fi
+                ;;
+            *)
+                _USE_CHRONYD=0
+                ;;
+        esac
+        (( ARG_DEBUG > 0 )) && debug "chronyd service state: ${_USE_CHRONYD}"
+    fi
+    if (( _USE_CHRONYD == 0 )) && [[ -x ${_NTPQ_BIN} ]]
+    then
+        # shellcheck disable=SC2034
+        _USE_NTPD=1
+        (( ARG_DEBUG > 0 )) && debug "ntpd service state: ${_USE_NTPD}"
+    fi
+    if (( _USE_CHRONYD == 0 && _USE_NTPD == 0 ))
+    then
+        _MSG="unable to find chronyd or ntpd (or they are not enabled)"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 1
+    fi
 fi
 
 #------------------------------------------------------------------------------
@@ -197,9 +288,9 @@ if (( _RC > 0 ))
 then
     if (( _USE_CHRONYD > 0 ))
     then
-        (( $(pgrep -u root chronyd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+        (( $(pgrep -u "${_CHRONYD_USER}" 'chronyd' 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
     else
-        (( $(pgrep -u root ntpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+        (( $(pgrep -u "${_NTPD_USER}" 'ntpd' 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
     fi
 fi
 
@@ -233,7 +324,7 @@ esac
 log_hc "$0" ${_STC} "${_MSG}"
 
 #------------------------------------------------------------------------------
-# check ntpq results
+# check chronyc/ntpq results
 _STC=0
 if (( _USE_CHRONYD > 0 ))
 then
@@ -276,12 +367,14 @@ then
             +([-0-9])*(.)*([0-9]))
                 # numeric, OK (negatives are OK too!)
                 # convert from us to ms
-                _CURR_OFFSET=$(print "${_CURR_OFFSET} * 1000" | bc 2>/dev/null)
+                _CURR_OFFSET=$(print -R "${_CURR_OFFSET} * 1000" | bc 2>/dev/null)
                 if (( $? > 0 )) || [[ -z "${_CURR_OFFSET}" ]]
                 then
                     :
                 fi
-                if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
+                # force awk into casting c as a float
+                _CHECK_OFFSET=$(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { sub (/^-/, "", c); print ((c+0.0)>m) }' 2>/dev/null)
+                if (( _CHECK_OFFSET > 0 ))
                 then
                     _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
                     _STC=1
@@ -299,7 +392,7 @@ then
     fi
 
 else
-    ${_NTPQ_BIN} -np 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
+    ${_NTPQ_BIN} ${_NTPQ_OPTS} 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
     # RC is always 0
 
     # 1) active server
@@ -328,8 +421,9 @@ else
         _CURR_OFFSET="$(grep -E -e '^\*' 2>/dev/null ${HC_STDOUT_LOG} | awk '{ print $9 }' 2>/dev/null)"
         case ${_CURR_OFFSET} in
             +([-0-9])*(.)*([0-9]))
-                # numeric, OK (negatives are OK too!)
-                if (( $(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { print (c>m) }' 2>/dev/null) != 0 ))
+                # numeric, OK (negatives are OK, force awk into casting c as a float)
+                _CHECK_OFFSET=$(awk -v c="${_CURR_OFFSET}" -v m="${_MAX_OFFSET}" 'BEGIN { sub (/^-/, "", c); print ((c+0.0)>m) }' 2>/dev/null)
+                if (( _CHECK_OFFSET > 0 ))
                 then
                     _MSG="NTP offset of ${_CURR_OFFSET} is bigger than the configured maximum of ${_MAX_OFFSET}"
                     _STC=1
@@ -356,7 +450,12 @@ function _show_usage
 cat <<- EOT
 NAME    : $1
 VERSION : $2
-CONFIG  : $3
+CONFIG  : $3 with:
+            log_healthy=<yes|no>
+            max_offset=<max_offset (ms)>
+            force_chrony=<yes|no>
+            force_ntp=<yes|no>
+            ntpq_use_ipv4=<yes|no>
 PURPOSE : Checks the status of NTP service & synchronization.
           Supports chronyd & ntpd.
           Assumes chronyd is the preferred time synchronization.

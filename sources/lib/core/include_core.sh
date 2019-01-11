@@ -1478,7 +1478,7 @@ fi
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
-    printf "%-30s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
+    printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
     # shellcheck disable=SC2183
     printf "%100s\n" | tr ' ' -
 fi
@@ -1562,7 +1562,7 @@ do
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
-            printf "%-30s\t%-8s\t%s\t%s\t%s\t%s\n" \
+            printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\n" \
                 "${FNAME#function *}" \
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
