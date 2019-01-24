@@ -37,6 +37,8 @@ typeset ARCHIVE_FILE=""
 typeset ARCHIVE_RC=0
 typeset YEAR_MONTH=""
 typeset LOG_COUNT=0
+typeset PRE_LOG_COUNT=0
+typeset TODO_LOG_COUNT=0
 typeset ARCHIVE_RC=0
 typeset SAVE_HC_LOG="${HC_LOG}.$$"
 typeset TMP1_FILE="${TMP_DIR}/.$0.tmp1.archive.$$"
@@ -46,16 +48,24 @@ typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 # shellcheck disable=SC2064
 trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
+# get pre-archive log co
+PRE_LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+if (( PRE_LOG_COUNT == 0 ))
+then
+    warn "${HC_LOG} is empty, nothing to archive"
+    return 0
+fi
+
 # isolate messages from HC, find unique %Y-%m combinations
 grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} 2>/dev/null |\
     cut -f1 -d"${LOG_SEP}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null |\
     cut -f1-2 -d'-' 2>/dev/null | sort -u 2>/dev/null |\
-    while read YEAR_MONTH
+    while read -r YEAR_MONTH
 do
     # find all messages for that YEAR-MONTH combination
     grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} >${TMP1_FILE}
-    LOG_COUNT=$(wc -l ${TMP1_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
-    log "# of entries in ${YEAR_MONTH} to archive: ${LOG_COUNT}"
+    TODO_LOG_COUNT=$(wc -l ${TMP1_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+    log "# of entries in ${YEAR_MONTH} to archive: ${TODO_LOG_COUNT}"
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
@@ -73,13 +83,15 @@ do
     sort ${HC_LOG} >${TMP1_FILE}
     comm -23 ${TMP1_FILE} ${ARCHIVE_FILE} 2>/dev/null >${TMP2_FILE}
 
-    if [[ -s ${TMP2_FILE} ]]
+    # check archive action (HC_LOG should not be empty unless it contained
+    # only messages from one single HC plugin before archival)
+    if [[ -s ${TMP2_FILE} ]] || (( PRE_LOG_COUNT == TODO_LOG_COUNT ))
     then
         mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null || {
             warn "failed to move HC log file, aborting"
             return 2
         }
-        LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null )
+        LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
         ARCHIVE_RC=1
     else

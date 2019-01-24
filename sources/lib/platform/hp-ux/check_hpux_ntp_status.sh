@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_ntp_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
@@ -28,6 +28,7 @@
 # @(#) 2018-10-31: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-01-10: added configuration option 'ntpq_use_ipv4', fixed problem
 # @(#)             with offset calculation [Patrick Van der Veken]
+# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ function check_hpux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-10"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 typeset _NTPQ_OPTS="-pn"
@@ -46,7 +47,7 @@ typeset _NTPQ_OPTS="-pn"
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
@@ -180,15 +181,19 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            log_healthy=<yes|no>
-            max_offset=<max_offset (ms)>
-            force_chrony=<yes|no>
-            force_ntp=<yes|no>
-            ntpq_use_ipv4=<yes|no>
-PURPOSE : Checks the status of NTP synchronization
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with:
+               log_healthy=<yes|no>
+               max_offset=<max_offset (ms)>
+               force_chrony=<yes|no>
+               force_ntp=<yes|no>
+               ntpq_use_ipv4=<yes|no>
+EXTRA OPTS  : --hc-args=force_chrony, --hc-args=force_ntp
+PURPOSE     : Checks the status of NTP service & synchronization.
+                Supports chronyd & ntpd.
+                Assumes chronyd is the preferred time synchronization.
+LOG HEALTHY : Supported
 
 EOT
 

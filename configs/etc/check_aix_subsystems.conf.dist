@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_aix_subsystems.conf.dist
+# @(#) check_aix_subsystems.conf
 #******************************************************************************
 # This is a configuration file for the check_aix_subsystems HC plugin.
 # All lines starting with a '#' are comment lines.

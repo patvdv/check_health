@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_aix_file_age.conf.dist
+# @(#) check_aix_file_age.conf
 #******************************************************************************
 # This is a configuration file for the check_aix_file_age HC plugin.
 # All lines starting with a '#' are comment lines.

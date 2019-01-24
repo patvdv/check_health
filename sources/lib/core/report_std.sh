@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -63,7 +63,7 @@ fi
 # --last report
 if (( ARG_LAST > 0 ))
 then
-    printf "\n| %-30s | %-20s | %-14s | %-4s\n" "HC" "Timestamp" "FAIL ID" "STC (combined value)"
+    printf "\n| %-40s | %-20s | %-14s | %-4s\n" "HC" "Timestamp" "FAIL ID" "STC (combined value)"
     # shellcheck disable=SC2183
     printf "%100s\n" | tr ' ' -
     # loop over all HCs
@@ -102,7 +102,7 @@ then
                 ' 2>/dev/null | read _HC_LAST_FAIL_ID _HC_LAST_STC
         fi
         # report on findings
-        printf "| %-30s | %-20s | %-14s | %-4s\n" \
+        printf "| %-40s | %-20s | %-14s | %-4s\n" \
             "${_HC_LAST}" "${_HC_LAST_TIME}" "${_HC_LAST_FAIL_ID}" "${_HC_LAST_STC}"
     done
     # disclaimer
@@ -134,7 +134,7 @@ else
         # global or detailed?
         if (( ARG_DETAIL == 0 ))
         then
-            printf "\n| %-20s | %-14s | %-30s | %-s\n" \
+            printf "\n| %-20s | %-14s | %-40s | %-s\n" \
                 "Timestamp" "FAIL ID" "HC" "Message"
             # shellcheck disable=SC2183
             printf "%120s\n" | tr ' ' -
@@ -146,7 +146,7 @@ else
                 '
                 {
                     if ($5 ~ id_needle && NF <= '"${NUM_LOG_FIELDS}"') {
-                        printf ("| %-20s | %-14s | %-30s | %-s\n", $1, $5, $2, $4)
+                        printf ("| %-20s | %-14s | %-40s | %-s\n", $1, $5, $2, $4)
                     }
                 }
                 ' 2>/dev/null

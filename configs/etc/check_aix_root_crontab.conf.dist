@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_aix_root_crontab.conf.dist
+# @(#) check_aix_root_crontab.conf
 #******************************************************************************
 # This is a configuration file for the check_aix_root_crontab HC plugin.
 # All lines starting with a '#' are comment lines.

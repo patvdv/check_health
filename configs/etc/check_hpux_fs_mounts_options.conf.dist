@@ -12,9 +12,9 @@ ignore_missing_fs=yes
 
 # specify mount points and their options (use the mount options as displayed
 # by the 'mount' command; order of the options is not important)
-# [fs:<mount point>:<mount options>]
-fs:myfs1:myopts1
-fs:myfs2:myopts2
+# [fs:<mount_point>:<mount_options>]
+#fs:my_fs1:my_opts1
+#fs:my_fs2:my_opts2
 
 
 #******************************************************************************

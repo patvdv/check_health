@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_hpux_sfm_status.conf.dist
+# @(#) check_hpux_sfm_status.conf
 #******************************************************************************
 # This is a configuration file for the check_hpux_sfm_status HC plugin.
 # All lines starting with a '#' are comment lines.

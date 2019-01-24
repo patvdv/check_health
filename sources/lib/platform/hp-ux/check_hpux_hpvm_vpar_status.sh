@@ -19,13 +19,14 @@
 # @(#) MAIN: check_hpux_hpvm_vpar_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), dump_logs(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-06-01: initial version [Patrick Van der Veken]
 # @(#) 2017-06-08: return 1 on error [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,14 +37,14 @@ function check_hpux_hpvm_vpar_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _HPVMSTATUS_BIN="/opt/hpvm/bin/hpvmstatus"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _LINE_COUNT=1
 typeset _PAR_ENTRY=""

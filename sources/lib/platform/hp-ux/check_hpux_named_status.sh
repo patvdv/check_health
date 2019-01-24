@@ -19,10 +19,11 @@
 # @(#) MAIN: check_hpux_named_status
 # DOES: see _show_usage()
 # EXPECTS: n/a
-# REQUIRES: data_space2comma(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
 # @(#) 2017-01-07: initial version [Patrick Van der Veken]
+# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_hpux_named_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _NAMED_PID_FILE="/var/run/named/named.pid"
-typeset _VERSION="2017-01-07"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -41,7 +42,7 @@ typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _NAMED_CHECKCONF_BIN=""
 typeset _NAMED_PID=""
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0

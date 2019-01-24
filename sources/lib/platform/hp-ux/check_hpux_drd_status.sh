@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_drd_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), data_get_lvalue_from_config(), data_date2epoch(),
+# REQUIRES: data_comma2space(), data_get_lvalue_from_config(), data_date2epoch(),
 #           data_lc(), data_strip_space(), data_strip_outer_space(),
 #           dump_logs(), init_hc(), log_hc(), warn()
 #
@@ -39,14 +39,14 @@ function check_hpux_drd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _DRD_BIN="/opt/drd/bin/drd"
-typeset _VERSION="2018-10-31"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _RC=0

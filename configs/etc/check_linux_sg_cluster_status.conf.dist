@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_linux_sg_cluster_status.conf.dist
+# @(#) check_linux_sg_cluster_status.conf
 #******************************************************************************
 # This is a configuration file for the check_linux_sg_cluster_status HC plugin.
 # All lines starting with a '#' are comment lines.

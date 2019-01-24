@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_hpux_sg_cluster_config.conf.dist
+# @(#) check_hpux_sg_cluster_config.conf
 #******************************************************************************
 # This is a configuration file for the check_hpux_sg_cluster_config HC plugin.
 # All lines starting with a '#' are comment lines.

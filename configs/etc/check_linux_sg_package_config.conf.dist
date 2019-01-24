@@ -1,5 +1,5 @@
 #******************************************************************************
-# @(#) check_linux_sg_package_config.conf.dist
+# @(#) check_linux_sg_package_config.conf
 #******************************************************************************
 # This is a configuration file for the check_linux_sg_package_config HC plugin.
 # All lines starting with a '#' are comment lines.

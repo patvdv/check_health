@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_patch_version
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), data_get_lvalue_from_config(), data_dequote(),
+# REQUIRES: data_comma2space(), data_get_lvalue_from_config(), data_dequote(),
 #           dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
@@ -27,6 +27,7 @@
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-22: added check on fileset state [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
+# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,14 +41,14 @@ typeset _SWLIST_BIN="/usr/sbin/swlist"
 typeset _SWLIST_OPTS=""
 typeset _SHOW_PATCHES_BIN="/usr/contrib/bin/show_patches"
 typeset _SHOW_PATCHES_OPTS=""
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _CFG_HEALTHY=""

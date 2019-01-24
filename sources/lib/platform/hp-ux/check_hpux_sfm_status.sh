@@ -19,11 +19,12 @@
 # @(#) MAIN: check_hpux_sfm_statuss
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_space2comma(), data_contains_string(), data_is_numeric(),
+# REQUIRES: data_comma2space(), data_contains_string(), data_is_numeric(),
 #           init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2018-10-28: initial version [Patrick Van der Veken]
+# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,14 +37,14 @@ typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _SFMCONFIG_BIN="/opt/sfm/bin/sfmconfig"
 typeset _EVWEB_BIN="/opt/sfm/bin/evweb"
 typeset _CIMPROVIDER_BIN="/opt/wbem/bin/cimprovider"
-typeset _VERSION="2018-10-28"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
-typeset _ARGS=$(data_space2comma "$*")
+typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0

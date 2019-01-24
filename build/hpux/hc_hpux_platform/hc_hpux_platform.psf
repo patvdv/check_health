@@ -66,6 +66,7 @@ This is the OS/platform plugin package"
         file            -m 755 check_hpux_file_change.sh
         file            -m 755 check_hpux_fs_mounts.sh
         file            -m 755 check_hpux_fs_mounts_options.sh
+        file            -m 755 check_hpux_fs_usage.sh
         file            -m 755 check_hpux_ignite_backup.sh
         file            -m 755 check_hpux_ioscan.sh
         file            -m 755 check_hpux_guid_status.sh
@@ -108,6 +109,7 @@ This is the OS/platform plugin package"
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist
         file            -m 644 check_hpux_fs_mounts_options.conf.dist
+        file            -m 644 check_hpux_fs_usage.conf.dist
         file            -m 644 check_hpux_hpvm_vpar_status.conf.dist
         file            -m 644 check_hpux_ignite_backup.conf.dist
         file            -m 644 check_hpux_ioscan.conf.dist
