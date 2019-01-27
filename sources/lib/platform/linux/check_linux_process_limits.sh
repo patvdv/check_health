@@ -26,7 +26,7 @@
 # @(#) 2018-07-12: better log_healthy handling [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-01-27: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +36,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -125,7 +125,7 @@ do
     fi
     if [[ -n "${_PROCESS_SOFT_THRESHOLD}" ]]
     then
-        data_is_numeric ${_PROCESS_SOFT_THRESHOLD}
+        data_is_numeric "${_PROCESS_SOFT_THRESHOLD}"
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -134,7 +134,7 @@ do
     fi
     if [[ -n "${_PROCESS_HARD_THRESHOLD}" ]]
     then
-        data_is_numeric ${_PROCESS_HARD_THRESHOLD}
+        data_is_numeric "${_PROCESS_HARD_THRESHOLD}"
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -189,7 +189,7 @@ do
     fi
     if [[ -n "${_USER_SOFT_THRESHOLD}" ]]
     then
-        data_is_numeric ${_USER_SOFT_THRESHOLD}
+        data_is_numeric "${_USER_SOFT_THRESHOLD}"
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -198,7 +198,7 @@ do
     fi
     if [[ -n "${_USER_HARD_THRESHOLD}" ]]
     then
-        data_is_numeric ${_USER_HARD_THRESHOLD}
+        data_is_numeric "${_USER_HARD_THRESHOLD}"
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"

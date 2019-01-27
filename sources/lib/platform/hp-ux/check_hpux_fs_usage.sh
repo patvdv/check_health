@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-01-24: initial version [Patrick Van der Veken]
+# @(#) 2019-01-27: regex fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_hpux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -175,7 +176,7 @@ then
                 warn "missing filesystem name and/or threshold in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
                 continue
             fi
-            data_is_numeric ${_CFG_INODES_THRESHOLD}
+            data_is_numeric "${_CFG_INODES_THRESHOLD}"
             if (( $? > 0 ))
             then
                 warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -186,8 +187,9 @@ then
                 (( ARG_DEBUG > 0 )) && debug "found out-of-bounds inodes threshold for ${_CFG_FS}, using general threshold"
                 _CFG_INODES_THRESHOLD=${_CFG_MAX_INODES_USAGE}
             fi
+            # add space to grep must be non-greedy!
             _INODES_USAGE=$(grep -E -e "^${_CFG_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $2}' 2>/dev/null)
-            data_is_numeric ${_INODES_USAGE}
+            data_is_numeric "${_INODES_USAGE}"
             if (( $? > 0 ))
             then
                 warn "discovered value for inode usage is incorrect [${_CFG_FS}:${_INODES_USAGE}]"
@@ -222,7 +224,7 @@ then
                 warn "missing filesystem name and/or threshold in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
                 continue
             fi
-            data_is_numeric ${_CFG_SPACE_THRESHOLD}
+            data_is_numeric "${_CFG_SPACE_THRESHOLD}"
             if (( $? > 0 ))
             then
                 warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -233,8 +235,9 @@ then
                 (( ARG_DEBUG > 0 )) && debug "found out-of-bounds space threshold for ${_CFG_FS}, using general threshold"
                 _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
             fi
+            # add space to grep must be non-greedy!
             _SPACE_USAGE=$(grep -E -e "^${_CFG_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $3}' 2>/dev/null)
-            data_is_numeric ${_SPACE_USAGE}
+            data_is_numeric "${_SPACE_USAGE}"
             if (( $? > 0 ))
             then
                 warn "discovered value for space usage is incorrect [${_CFG_FS}:${_SPACE_USAGE}]"
@@ -262,8 +265,9 @@ else
         while read _FS
     do
         # a) --- inodes ---
+        # add space to grep must be non-greedy!
         _INODES_USAGE=$(grep "^${_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $2}' 2>/dev/null)
-        data_is_numeric ${_INODES_USAGE}
+        data_is_numeric "${_INODES_USAGE}"
         if (( $? > 0 ))
         then
             warn "discovered value for inode usage is incorrect [${_FS}:${_INODES_USAGE}]"
@@ -283,8 +287,9 @@ else
             log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_MAX_INODES_USAGE}
         fi
         # b) --- space ---
+        # add space to grep must be non-greedy!
         _SPACE_USAGE=$(grep "^${_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $3}' 2>/dev/null)
-        data_is_numeric ${_SPACE_USAGE}
+        data_is_numeric "${_SPACE_USAGE}"
         if (( $? > 0 ))
         then
             warn "discovered value for space usage is incorrect [${_FS}:${_SPACE_USAGE}]"

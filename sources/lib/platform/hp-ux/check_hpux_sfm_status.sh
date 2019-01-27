@@ -24,7 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2018-10-28: initial version [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-01-27: arguments fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +37,7 @@ typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _SFMCONFIG_BIN="/opt/sfm/bin/sfmconfig"
 typeset _EVWEB_BIN="/opt/sfm/bin/evweb"
 typeset _CIMPROVIDER_BIN="/opt/wbem/bin/cimprovider"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -152,7 +152,7 @@ then
     then
         _WAIT_TEST_EVENT=60
     else
-        data_is_numeric ${_WAIT_TEST_EVENT}
+        data_is_numeric "${_WAIT_TEST_EVENT}"
         if (( $? > 0 ))
         then
             warn "invalid wait test event value '${_WAIT_TEST_EVENT}' in configuration file at ${_CONFIG_FILE}"

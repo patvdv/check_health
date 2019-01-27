@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-01-24"                               # YYYY-MM-DD
+typeset _VERSION="2019-01-27"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -196,6 +196,14 @@ else
     else
         printf "\n%-s\n" "SUMMARY: 0 failed HC events found."
     fi
+fi
+
+# general note: history or not?
+if (( ARG_HISTORY > 0 ))
+then
+    print "NOTE: showing results with all history (archive) included (--with-history)"
+else
+    print "NOTE: showing results only of current log entries (use --with-history to view all entries)"
 fi
 
 # check consistency of log(s)

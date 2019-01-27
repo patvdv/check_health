@@ -557,11 +557,6 @@ then
     then
         die "you cannot specify '--today' with '--id'"
     fi
-    # switch on history for --last & --today
-    if (( ARG_LAST > 0 )) || (( ARG_TODAY > 0 ))
-    then
-        ARG_HISTORY=1
-    fi
 fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_LAST > 0 ))
 then
@@ -853,7 +848,7 @@ then
     # determine ALL_MSG_STC (sum of all STCs)
     ALL_MSG_STC=$(print "${HC_MSG_VAR}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 }} END { print stc }' 2>/dev/null)
     (( ARG_DEBUG > 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
-    data_is_numeric ${ALL_MSG_STC} || die "HC all STC computes to a non-numeric value"
+    data_is_numeric "${ALL_MSG_STC}" || die "HC all STC computes to a non-numeric value"
 else
     # nothing to do
     return 0
