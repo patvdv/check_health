@@ -27,12 +27,18 @@ max_inodes_usage=90
 # [default: 90]
 max_space_usage=90
 
-# specify mount points and their maximum usage (in %). Leave undefined to
-# perform check on all active filesystems. When not defining individual thresholds
-# for a given filesystem, the general threshold will be used (see above)
+# specify mount points and their maximum usage (in %). When not defining a threshold
+# for a given filesystem, the general threshold will be used (see above). When
+# defining a threshold of 0 (zero), then the check will for this give filesystem
+# will be skipped (this allows for exclusion of filesystems)
 # [fs:<mount_point>:<max_inode_usage_%>:<max_space_usage_%]
+# Examples:
+# check myfs1 with a custom inodes + space usage threshold
 #fs:myfs1:70:95
-#fs:myfs2:75:90
+# check myfs2 with the general inodes usage threshold & a custom space usage threshold
+#fs:myfs2::80
+# check myfs3 with a custom inodes usage threshold & do not check the space usage
+#fs:myfs3:99:0
 
 
 #******************************************************************************

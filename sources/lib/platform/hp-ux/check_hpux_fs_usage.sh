@@ -24,6 +24,8 @@
 # @(#) HISTORY:
 # @(#) 2019-01-24: initial version [Patrick Van der Veken]
 # @(#) 2019-01-27: regex fix [Patrick Van der Veken]
+# @(#) 2019-01-30: refactored to support custom defintions with all
+#                  filesystems check [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +35,7 @@ function check_hpux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-27"                           # YYYY-MM-DD
+typeset _VERSION="2019-01-30"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -50,7 +52,6 @@ typeset _CFG_CHECK_INODES_USAGE=""
 typeset _CFG_CHECK_SPACE_USAGE=""
 typeset _CFG_MAX_INODES_USAGE=""
 typeset _CFG_MAX_SPACE_USAGE=""
-typeset _CFG_FS=""
 typeset _CFG_INODES_THRESHOLD=""
 typeset _CFG_SPACE_THRESHOLD=""
 typeset _FS=""
@@ -58,7 +59,6 @@ typeset _DO_INODES=0
 typeset _DO_SPACE=0
 typeset _INODES_USAGE=1
 typeset _SPACE_USAGE=1
-typeset _LINE_COUNT=1
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -159,154 +159,124 @@ then
     return 1
 fi
 
-# check for each configured filesystem or for all
-if (( $(grep -c -i '^fs:' ${_CONFIG_FILE} 2>/dev/null) > 0 ))
+# 1) validate inodes (df -Pil)
+if (( _DO_INODES > 0 ))
 then
-    # 1) --- configured FS ---
-    # a) --- inodes ---
-    if (( _DO_INODES > 0 ))
-    then
-        _LINE_COUNT=1
-        grep -i '^fs:' ${_CONFIG_FILE} 2>/dev/null |\
-            while IFS=':' read _ _CFG_FS _CFG_INODES_THRESHOLD _
-        do
-            # report on missing FS name of threshold
-            if [[ -z "${_CFG_FS}" ]] && [[ -z "${_CFG_INODES_THRESHOLD}" ]]
-            then
-                warn "missing filesystem name and/or threshold in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-                continue
-            fi
-            data_is_numeric "${_CFG_INODES_THRESHOLD}"
-            if (( $? > 0 ))
-            then
-                warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-                continue
-            fi
-            if (( _CFG_INODES_THRESHOLD == 0 || _CFG_INODES_THRESHOLD >= 100 ))
-            then
-                (( ARG_DEBUG > 0 )) && debug "found out-of-bounds inodes threshold for ${_CFG_FS}, using general threshold"
-                _CFG_INODES_THRESHOLD=${_CFG_MAX_INODES_USAGE}
-            fi
-            # add space to grep must be non-greedy!
-            _INODES_USAGE=$(grep -E -e "^${_CFG_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $2}' 2>/dev/null)
-            data_is_numeric "${_INODES_USAGE}"
-            if (( $? > 0 ))
-            then
-                warn "discovered value for inode usage is incorrect [${_CFG_FS}:${_INODES_USAGE}]"
-                continue
-            fi
-            # check against the threshold
-            if (( _INODES_USAGE > _CFG_INODES_THRESHOLD ))
-            then
-                _MSG="${_CFG_FS} exceedes its inode threshold (${_INODES_USAGE}%>${_CFG_INODES_THRESHOLD}%)"
-                _STC=1
-            else
-                _MSG="${_CFG_FS} does not exceede its inode threshold (${_INODES_USAGE}%<=${_CFG_INODES_THRESHOLD}%)"
-                _STC=0
-            fi
-            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-            then
-                log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_INODES_THRESHOLD}
-            fi
-            _LINE_COUNT=$(( _LINE_COUNT + 1 ))
-        done
-    fi
-    # a) --- space ---
-    if (( _DO_SPACE > 0 ))
-    then
-        _LINE_COUNT=1
-        grep -i '^fs:' ${_CONFIG_FILE} 2>/dev/null |\
-            while IFS=':' read _ _CFG_FS _ _CFG_SPACE_THRESHOLD _
-        do
-            # report on missing FS name of threshold
-            if [[ -z "${_CFG_FS}" ]] && [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
-            then
-                warn "missing filesystem name and/or threshold in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-                continue
-            fi
-            data_is_numeric "${_CFG_SPACE_THRESHOLD}"
-            if (( $? > 0 ))
-            then
-                warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-                continue
-            fi
-            if (( _CFG_SPACE_THRESHOLD == 0 || _CFG_SPACE_THRESHOLD >= 100 ))
-            then
-                (( ARG_DEBUG > 0 )) && debug "found out-of-bounds space threshold for ${_CFG_FS}, using general threshold"
-                _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
-            fi
-            # add space to grep must be non-greedy!
-            _SPACE_USAGE=$(grep -E -e "^${_CFG_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $3}' 2>/dev/null)
-            data_is_numeric "${_SPACE_USAGE}"
-            if (( $? > 0 ))
-            then
-                warn "discovered value for space usage is incorrect [${_CFG_FS}:${_SPACE_USAGE}]"
-                continue
-            fi
-            # check against the threshold
-            if (( _SPACE_USAGE > _CFG_SPACE_THRESHOLD ))
-            then
-                _MSG="${_CFG_FS} exceedes its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
-                _STC=1
-            else
-                _MSG="${_CFG_FS} does not exceede its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
-                _STC=0
-            fi
-            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-            then
-                log_hc "$0" ${_STC} "${_MSG}" ${_SPACE_USAGE} ${_CFG_SPACE_THRESHOLD}
-            fi
-            _LINE_COUNT=$(( _LINE_COUNT + 1 ))
-        done
-    fi
-else
-    # 2) --- ALL FS ---
+    (( ARG_DEBUG > 0 )) && debug "checking inodes..."
     grep '^\/' ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $1}' 2>/dev/null |\
         while read _FS
     do
-        # a) --- inodes ---
-        # add space to grep must be non-greedy!
+        (( ARG_DEBUG > 0 )) && debug "parsing inodes data for filesystem: ${_FS}"
+        # add space to grep; must be non-greedy!
         _INODES_USAGE=$(grep "^${_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $2}' 2>/dev/null)
         data_is_numeric "${_INODES_USAGE}"
         if (( $? > 0 ))
         then
-            warn "discovered value for inode usage is incorrect [${_FS}:${_INODES_USAGE}]"
+            warn "discovered value for inodes usage is incorrect [${_FS}:${_INODES_USAGE}]"
+            (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
             continue
         fi
-        # check against the threshold
-        if (( _INODES_USAGE > _CFG_MAX_INODES_USAGE ))
+        # which threshold to use (general or custom?)
+        _CFG_FS_LINE=$(grep -E -e "^fs:${_FS}:" ${_CONFIG_FILE} 2>/dev/null)
+        if [[ -n "${_CFG_FS_LINE}" ]]
         then
-            _MSG="${_FS} exceedes its inode threshold (${_INODES_USAGE}%>${_CFG_MAX_INODES_USAGE}%)"
+            (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_FS} in configuration file ${_CONFIG_FILE}"
+            _CFG_INODES_THRESHOLD=$(print "${_CFG_FS_LINE}" | cut -f3 -d':' 2>/dev/null)
+            # null value means general threshold
+            if [[ -z "${_CFG_INODES_THRESHOLD}" ]]
+            then
+                (( ARG_DEBUG > 0 )) && debug "found empty inodes threshold for ${_FS}, using general threshold"
+                _CFG_INODES_THRESHOLD=${_CFG_MAX_INODES_USAGE}
+            fi
+            data_is_numeric "${_CFG_INODES_THRESHOLD}"
+            if (( $? > 0 ))
+            then
+                warn "inodes parameter is not numeric for ${_FS} in configuration file ${_CONFIG_FILE}"
+                continue
+            fi
+            # zero value means disabled check
+            if (( _CFG_INODES_THRESHOLD == 0 ))
+            then
+                (( ARG_DEBUG > 0 )) && debug "found zero inodes threshold for ${_FS}, disabling check"
+                continue
+            fi
+        else
+            (( ARG_DEBUG > 0 )) && debug "no custom inodes threshold for ${_FS}, using general threshold"
+            _CFG_INODES_THRESHOLD=${_CFG_MAX_INODES_USAGE}
+        fi
+        # check against the tresholdd
+        if (( _INODES_USAGE > _CFG_INODES_THRESHOLD ))
+        then
+            _MSG="${_FS} exceedes its inode threshold (${_INODES_USAGE}%>${_CFG_INODES_THRESHOLD}%)"
             _STC=1
         else
-            _MSG="${_FS} does not exceede its inode threshold (${_INODES_USAGE}%<=${_CFG_MAX_INODES_USAGE}%)"
+            _MSG="${_FS} does not exceede its inode threshold (${_INODES_USAGE}%<=${_CFG_INODES_THRESHOLD}%)"
             _STC=0
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_MAX_INODES_USAGE}
+            log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_INODES_THRESHOLD}
         fi
-        # b) --- space ---
-        # add space to grep must be non-greedy!
-        _SPACE_USAGE=$(grep "^${_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $3}' 2>/dev/null)
+    done
+fi
+
+# 2) validate space (df -Pl)
+if (( _DO_SPACE > 0 ))
+then
+    (( ARG_DEBUG > 0 )) && debug "checking space..."
+    grep '^\/' ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $1}' 2>/dev/null |\
+        while read _FS
+    do
+        (( ARG_DEBUG > 0 )) && debug "parsing space data for filesystem: ${_FS}"
+        # add space to grep; must be non-greedy!
+        _SPACE_USAGE=$(grep -E -e "^${_FS} " ${HC_STDOUT_LOG} 2>/dev/null | awk '{print $3}' 2>/dev/null)
         data_is_numeric "${_SPACE_USAGE}"
         if (( $? > 0 ))
         then
             warn "discovered value for space usage is incorrect [${_FS}:${_SPACE_USAGE}]"
+            (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
             continue
         fi
-        # check against the threshold
-        if (( _SPACE_USAGE > _CFG_MAX_SPACE_USAGE ))
+        # which threshold to use (general or custom?)
+        _CFG_FS_LINE=$(grep -E -e "^fs:${_FS}:" ${_CONFIG_FILE} 2>/dev/null)
+        if [[ -n "${_CFG_FS_LINE}" ]]
         then
-            _MSG="${_FS} exceedes its space threshold (${_SPACE_USAGE}%>${_CFG_MAX_SPACE_USAGE}%)"
+            (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_FS} in configuration file ${_CONFIG_FILE}"
+            _CFG_SPACE_THRESHOLD=$(print "${_CFG_FS_LINE}" | cut -f4 -d':' 2>/dev/null)
+            # null value means general threshold
+            if [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
+            then
+                (( ARG_DEBUG > 0 )) && debug "found empty space threshold for ${_FS}, using general threshold"
+                _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
+            fi
+            data_is_numeric "${_CFG_SPACE_THRESHOLD}"
+            if (( $? > 0 ))
+            then
+                warn "space parameter is not numeric for ${_FS} in configuration file ${_CONFIG_FILE}"
+                continue
+            fi
+            # zero value means disabled check
+            if (( _CFG_SPACE_THRESHOLD == 0 ))
+            then
+                (( ARG_DEBUG > 0 )) && debug "found zero space threshold for ${_FS}, disabling check"
+                continue
+            fi
+        else
+            (( ARG_DEBUG > 0 )) && debug "no custom space threshold for ${_FS}, using general threshold"
+            _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
+        fi
+        # check against the treshold
+        if (( _SPACE_USAGE > _CFG_SPACE_THRESHOLD ))
+        then
+            _MSG="${_FS} exceedes its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
             _STC=1
         else
-            _MSG="${_FS} does not exceede its space threshold (${_SPACE_USAGE}%<=${_CFG_MAX_SPACE_USAGE}%)"
+            _MSG="${_FS} does not exceede its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
             _STC=0
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_SPACE_USAGE} ${_CFG_MAX_SPACE_USAGE}
+            log_hc "$0" ${_STC} "${_MSG}" ${_SPACE_USAGE} ${_CFG_SPACE_THRESHOLD}
         fi
     done
 fi
