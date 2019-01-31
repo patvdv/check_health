@@ -9,7 +9,7 @@
 # specify whether to also log passed health checks
 # (warning: this may rapidly grow the HC log)
 # [default: no]
-log_healthy=yes
+log_healthy="yes"
 
 # OE version that should be checked (version string as displayed by 'swlist')
 # [default: none]
@@ -21,7 +21,7 @@ required_patches=""
 
 # check that all installed filesets are configured?
 # [default: yes]
-check_filesets=yes
+check_filesets="yes"
 
 # list of filesets to exclude from the check (comma-separated list)
 # [default: none]

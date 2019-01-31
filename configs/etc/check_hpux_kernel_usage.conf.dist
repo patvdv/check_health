@@ -13,9 +13,10 @@ max_kcusage=90
 # specify individual kernel parameters and their maximum usage threshold (percentage)
 # definitions here will overrides max_kcusage for these parameters
 # [param:<param_name>:<param_threshold>]
-param:nproc:70
+# Examples:
+# param:nproc:70
 
-# specify parameters that should be excluded from the check 
+# specify parameters that should be excluded from the check
 # comma-separated list (as shown by kctune/kcusage)
 # (does not override param:: lines from above)
 # [ default: none ]

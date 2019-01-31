@@ -9,15 +9,15 @@
 # specify whether to also log passed health checks
 # (warning: this may rapidly grow the HC log)
 # [default: no]
-log_healthy=yes
+log_healthy="yes"
 
 # specify whether to perform inode usage check
 # [default: yes]
-check_inodes_usage=yes
+check_inodes_usage="yes"
 
 # specify whether to perform space usage check
 # [default: yes]
-check_space_usage=yes
+check_space_usage="yes"
 
 # specify the maximum % of inodes usage a filesystem may reach (general threshold)
 # [default: 90]
@@ -31,6 +31,7 @@ max_space_usage=90
 # for a given filesystem, the general threshold will be used (see above). When
 # defining a threshold of 0 (zero), then the check will for this give filesystem
 # will be skipped (this allows for exclusion of filesystems)
+# Format:
 # [fs:<mount_point>:<max_inode_usage_%>:<max_space_usage_%]
 # Examples:
 # check myfs1 with a custom inodes + space usage threshold

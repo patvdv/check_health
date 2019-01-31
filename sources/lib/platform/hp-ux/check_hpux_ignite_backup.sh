@@ -28,6 +28,7 @@
 # @(#) 2016-06-03: small fix [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-01-31: Improve discovery routine + add log_healthy [Patrick Van der Veken] 
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,9 @@ function check_hpux_ignite_backup
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 # backup DONE identifier
 typeset _IGNITE_NEEDLE="^DONE"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _IGNITE_SERVER_FILE="/var/opt/ignite/server/ignite.defs"
+typeset _IGNITE_CLIENTS_DIR="/var/opt/ignite/clients"
+typeset _VERSION="2019-01-31"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -50,6 +53,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _BACKUP_AGE=0
 typeset _EXCLUDE_HOSTS=""
 typeset _IGNITE_HOST=""
@@ -89,24 +94,55 @@ esac
 log "backup age to check: ${_BACKUP_AGE} days"
 _EXCLUDE_HOSTS=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'exclude_hosts')
 [[ -n "${_EXCLUDE_HOSTS}" ]] && log "excluding hosts: $(print ${_EXCLUDE_HOSTS})"
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+
+# check if this host is an Ignite-UX server
+if [[ ! -f ${_IGNITE_SERVER_FILE} ]]
+then
+    warn "host is not an Ignite-UX server"
+    return 1
+fi
 
 # perform check on Ignite 'client_status' files
-if [[ -d /var/opt/ignite/clients ]]
+if [[ -d ${_IGNITE_CLIENTS_DIR} ]]
 then
     _OLD_PWD="$(pwd)"
     # shellcheck disable=SC2164
-    cd /var/opt/ignite/clients
+    cd ${_IGNITE_CLIENTS_DIR}
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
-      _MSG="unable to run command: cd /var/opt/ignite/clients"
-      log_hc "$0" 1 "${_MSG}"
+      warn "unable to run command: {cd ${_IGNITE_CLIENTS_DIR}}"
       # dump debug info
       (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
       return 1
     fi
 
     # check backup states
-    find * -prune -type l | while read _IGNITE_HOST
+    find -- * -prune -type l 2>/dev/null | while read -r _IGNITE_HOST
     do
         # check exclude
         [[ "${_EXCLUDE_HOSTS#*${_IGNITE_HOST}}" != "${_EXCLUDE_HOSTS}" ]] && continue
@@ -146,12 +182,15 @@ then
         fi
 
         # handle unit result
-        log_hc "$0" ${_STC} "${_MSG}"
-        _STC=0
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+            _STC=0
+        fi
     done
 
     # check backup ages
-    find * -prune -type l | while read _IGNITE_HOST
+    find -- * -prune -type l 2>/dev/null | while read -r _IGNITE_HOST
     do
         # check exclude
         [[ "${_EXCLUDE_HOSTS#*${_IGNITE_HOST}}" != "${_EXCLUDE_HOSTS}" ]] && continue
@@ -175,23 +214,27 @@ then
         fi
 
         # handle unit result
-        log_hc "$0" ${_STC} "${_MSG}"
-        _STC=0
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+            _STC=0
+        fi
     done
 
     # shellcheck disable=SC2164
     cd "${_OLD_PWD}"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
-      _MSG="unable to run command: cd /var/opt/ignite/clients"
+      _MSG="unable to run command: {cd ${_IGNITE_CLIENTS_DIR}}"
       log_hc "$0" 1 "${_MSG}"
       # dump debug info
       (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
       return 1
     fi
 else
-    _MSG="Host is not an Ignite/UX server"
-    log_hc "$0" ${_STC} "${_MSG}"
+    warn "could not access/find the Ignite-UX's clients directory at ${_IGNITE_CLIENTS_DIR}"
+    return 1
 fi
 
 return 0
@@ -208,6 +251,7 @@ CONFIG  : $3 with:
 PURPOSE : Checks the state and age of saved Ignite-UX client backups (should only be
           run only on the Ignite-UX server). Backups with warnings are considered
           to OK. Backups older than \$backup_age will not pass the health check.
+LOG HEALTHY : Supported
 
 EOT
 

@@ -9,11 +9,11 @@
 # specify whether to also log passed health checks (yes|no)
 # (warning: this may rapidly grow the HC log)
 # [default: no]
-log_healthy=yes
+log_healthy="yes"
 
 # specify whether to check for new events? (yes|no)
 # [default: yes]
-check_events=yes
+check_events="yes"
 
 # specify the age interval for which to check events
 # (format: X:mm|X:hh|X:dd|X:yy, where X stands for an integer and
@@ -32,7 +32,7 @@ events_severity="CRITICAL"
 
 # specify whether to send a test event? (yes|no)
 # [default: no]
-send_test_event=yes
+send_test_event="yes"
 
 # specify wait time for test event (seconds)
 # [default: 60]

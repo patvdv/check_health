@@ -10,6 +10,7 @@
 # [ctid;runtime_status;boot_status]
 # runtime_status should be 'running' or 'stopped'
 # boot_status should be 'yes' or 'no'
+# Examples:
 #100;running;yes
 
 

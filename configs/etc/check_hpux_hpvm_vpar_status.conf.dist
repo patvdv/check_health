@@ -10,6 +10,7 @@
 # [parid;runtime_status;boot_status]
 # runtime_status should be 'on' or 'off'
 # boot_status should be 'auto' or 'manual'
+# Examples:
 #1;on;auto
 
 

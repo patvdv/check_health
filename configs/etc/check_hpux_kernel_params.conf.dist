@@ -8,8 +8,9 @@
 
 # specify kernel parameters and their values or expression (as reported by kctune)
 # [param:<param_name>:<param_value>]
-param:nproc:5000
-param:filecache_max:50%
+# Examples:
+#param:nproc:5000
+#param:filecache_max:50%
 
 
 #******************************************************************************

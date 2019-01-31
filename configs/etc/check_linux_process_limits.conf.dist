@@ -17,7 +17,8 @@ log_healthy="no"
 # user:<user name>;<limit name>;<soft threshold in %>;<hard threshold in %>
 # note: <limit name> must exactly match the descriptor in /proc/<PID>/limits
 #       thresholds are optional (will not be checked when not specified)
-user;postfix;Max open files;;75
+# Examples:
+#user;postfix;Max open files;;75
 
 # -- process stanzas --
 # supported limit checks: Max open files
@@ -25,7 +26,8 @@ user;postfix;Max open files;;75
 # process:<process name>;<limit name>;<soft threshold in %>;<hard threshold in %>
 # note: <limit name> must exactly match the descriptor in /proc/<PID>/limits
 #       thresholds are optional (will not be checked when not specified)
-process;nfsd;Max open files;100;80
+# Examples:
+#process;nfsd;Max open files;100;80
 
 
 #******************************************************************************

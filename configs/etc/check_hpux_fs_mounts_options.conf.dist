@@ -8,7 +8,7 @@
 
 # specify whether non-mounted FS should be alerted on (yes|no)
 # [default: yes]
-ignore_missing_fs=yes
+ignore_missing_fs="yes"
 
 # specify mount points and their options (use the mount options as displayed
 # by the 'mount' command; order of the options is not important)

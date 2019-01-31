@@ -7,9 +7,10 @@
 #******************************************************************************
 
 # client name; maximum amount of warnings allowed; maximum backup age (hours/days/weeks)
-testclient1;0;10h
-testclient2;0;2d
-testclient3;0;5w
+# Examples:
+#testclient1;0;10h
+#testclient2;0;2d
+#testclient3;0;5w
 
 
 #******************************************************************************

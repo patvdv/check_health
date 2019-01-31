@@ -8,7 +8,7 @@
 
 # check clone age? (yes|no)
 # [default: yes]
-check_clone=yes
+check_clone="yes"
 
 # maximum days before the drd clone gets flagged as 'too old'
 # [default: 30]
@@ -16,7 +16,7 @@ clone_age=30
 
 # check sync age? (yes|no)
 # [default: yes]
-check_sync=yes
+check_sync="yes"
 
 # maximum days before the drd sync gets flagged as 'too old'
 # [default: 30]
