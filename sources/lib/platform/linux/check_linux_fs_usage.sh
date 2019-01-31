@@ -222,10 +222,10 @@ then
         # check against the treshold
         if (( _INODES_USAGE > _CFG_INODES_THRESHOLD ))
         then
-            _MSG="${_FS} exceedes its inode threshold (${_INODES_USAGE}%>${_CFG_INODES_THRESHOLD}%)"
+            _MSG="${_FS} exceeds its inode threshold (${_INODES_USAGE}%>${_CFG_INODES_THRESHOLD}%)"
             _STC=1
         else
-            _MSG="${_FS} does not exceede its inode threshold (${_INODES_USAGE}%<=${_CFG_INODES_THRESHOLD}%)"
+            _MSG="${_FS} does not exceed its inode threshold (${_INODES_USAGE}%<=${_CFG_INODES_THRESHOLD}%)"
             _STC=0
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -286,10 +286,10 @@ then
         # check against the treshold
         if (( _SPACE_USAGE > _CFG_SPACE_THRESHOLD ))
         then
-            _MSG="${_FS} exceedes its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
+            _MSG="${_FS} exceeds its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
             _STC=1
         else
-            _MSG="${_FS} does not exceede its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
+            _MSG="${_FS} does not exceed its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
             _STC=0
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
