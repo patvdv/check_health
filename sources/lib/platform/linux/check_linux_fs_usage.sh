@@ -24,8 +24,9 @@
 # @(#) HISTORY:
 # @(#) 2019-01-24: initial version [Patrick Van der Veken]
 # @(#) 2019-01-27: regex fix [Patrick Van der Veken]
-# @(#) 2019-01-30: refactored to support custom defintions with all
+# @(#) 2019-01-30: refactored to support custom definitions with all
 #                  filesystems check [Patrick Van der Veken]
+# @(#) 2019-02-04: fix in cleanup
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_linux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-30"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-04"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -64,7 +65,7 @@ typeset _SPACE_FILE="${TMP_DIR}/.$0.space.$$"
 
 # set local trap for cleanup
 # shellcheck disable=SC2064
-trap "rm -f ${_SPACE_FILE}.* ${_INODES_FILE}.* >/dev/null 2>&1; return 1" 1 2 3 15
+trap "rm -f ${_SPACE_FILE} ${_INODES_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -303,7 +304,7 @@ then
 fi
 
 # do cleanup
-rm -f  ${_INODES_FILE}.* ${_SPACE_FILE}.* >/dev/null 2>&1
+rm -f  ${_INODES_FILE} ${_SPACE_FILE} >/dev/null 2>&1
 
 return 0
 }

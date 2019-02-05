@@ -27,6 +27,7 @@
 #           + include functions
 #           For other pre-requisites see the documentation in display_usage()
 # REQUIRES (OPTIONAL): display_*(), notify_*(), report_*()
+# EXISTS: 0=no errors encountered, >0=some errors encountered
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-01-24"
+typeset -r SCRIPT_VERSION="2019-01-31"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -1172,7 +1173,7 @@ case ${ARG_ACTION} in
                     display_init "${HC_RUN}" "" "MISSING"
                 else
                     warn "cannot find HC: ${HC_RUN}"
-                    EXIT_CODE=${RUN_RC}
+                    EXIT_CODE=1
                 fi
                 continue
             fi
@@ -1185,7 +1186,7 @@ case ${ARG_ACTION} in
                     display_init "${HC_RUN}" "" "DISABLED"
                 else
                     warn "may not run disabled HC: ${HC_RUN}"
-                    EXIT_CODE=${RUN_RC}
+                    EXIT_CODE=0
                 fi
                 continue
             fi
