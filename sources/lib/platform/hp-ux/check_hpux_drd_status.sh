@@ -29,6 +29,7 @@
 # @(#) 2018-10-18: changed boot status [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-10-31: better result check for DRD output [Patrick Van der Veken]
+# @(#) 2019-02-08: fix for mirrored boot disks [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -135,7 +136,7 @@ then
     _ORIGINAL_DISK=$(data_strip_space "$(grep "Original Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d':')")
     _CLONE_DISK=$(data_strip_space "$(grep 'Clone Disk:' ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d':')")
 
-    _BOOTED_DISK=$(grep "Booted Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d'(' | cut -f1 -d ')')
+    _BOOTED_DISK=$(grep "Booted Disk[s]*:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d'(' | cut -f1 -d ')')
     _ACTIVE_DISK=$(grep "Activated Disk:" ${HC_STDOUT_LOG} 2>/dev/null | cut -f2 -d'(' | cut -f1 -d ')')
 
     # check boot status: after a fresh clone -> booted == activated == original

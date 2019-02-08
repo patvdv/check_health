@@ -19,7 +19,8 @@
 # @(#) MAIN: check_linux_vz_ct_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_is_numeric(), data_lc(), dump_logs(),
+#           init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
@@ -30,6 +31,7 @@
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-02-08: added support for log_healthy + fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +42,8 @@ function check_linux_vz_ct_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VZLIST_BIN="/usr/sbin/vzlist"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VZLIST_OPTS="-a -H -o ctid,status,onboot"
+typeset _VERSION="2019-02-08"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,6 +52,10 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
+typeset _MSG=""
+typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _LINE_COUNT=1
 typeset _CT_ENTRY=""
 typeset _CT_ID=""
@@ -58,8 +65,6 @@ typeset _CT_CFG_BOOT=""
 typeset _CT_RUN_BOOT=""
 typeset _CT_ENTRY=""
 typeset _CT_MATCH=""
-typeset _MSG=""
-typeset _STC=0
 typeset _RC=0
 
 # handle arguments (originally comma-separated)
@@ -72,6 +77,39 @@ do
     esac
 done
 
+# handle configuration file
+[[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
+if [[ ! -r ${_CONFIG_FILE} ]]
+then
+    warn "unable to read configuration file at ${_CONFIG_FILE}"
+    return 1
+fi
+# read configuration values
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+
 # check openvz
 if [[ ! -x ${_VZLIST_BIN} || -z "${_VZLIST_BIN}" ]]
 then
@@ -80,9 +118,9 @@ then
 fi
 
 # get container stati
-${_VZLIST_BIN} -a -H -o ctid,status,onboot >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+${_VZLIST_BIN} ${_VZLIST_OPTS} >${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
 (( $? > 0 )) && {
-    _MSG="unable to run command: {vzlist}"
+    _MSG="unable to run command {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
     (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
@@ -90,30 +128,27 @@ ${_VZLIST_BIN} -a -H -o ctid,status,onboot >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG
 }
 
 # check configuration values
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CT_ENTRY
+grep -E -e '^ct:' ${_CONFIG_FILE} 2>/dev/null | cut -f2- -d':' 2>/dev/null |\
+    while read -r _CT_ENTRY
 do
     # field split
-    _CT_ID="$(print ${_CT_ENTRY} | cut -f1 -d';')"
-    _CT_CFG_STATUS=$(data_lc "$(print \"${_CT_ENTRY}\" | cut -f2 -d';' 2>/dev/null)")
-    _CT_CFG_BOOT=$(data_lc "$(print \"${_CT_ENTRY}\" | cut -f3 -d';' 2>/dev/null)")
+    _CT_ID=$(print "${_CT_ENTRY}" | cut -f1 -d':' 2>/dev/null)
+    _CT_CFG_STATUS=$(data_lc "$(print ${_CT_ENTRY} | cut -f2 -d':' 2>/dev/null)")
+    _CT_CFG_BOOT=$(data_lc "$(print ${_CT_ENTRY} | cut -f3 -d':' 2>/dev/null)")
 
     # check config
-    case "${_CT_ID}" in
-        +([0-9])*(.)*([0-9]))
-            # numeric, OK
-            ;;
-        *)
-            # not numeric
-            warn "invalid container ID '${_CT_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
-            ;;
-    esac
+    data_is_numeric "${_CT_ID}"
+    if (( $? > 0 ))
+    then
+        warn "invalid container ID '${_CT_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+        continue
+    fi
     case "${_CT_CFG_STATUS}" in
         running|stopped)
             ;;
         *)
             warn "invalid container status '${_CT_CFG_STATUS}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
+            continue
             ;;
     esac
     case "${_CT_CFG_BOOT}" in
@@ -121,28 +156,28 @@ do
             ;;
         *)
             warn "invalid container boot value '${_CT_CFG_BOOT}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
+            continue
             ;;
     esac
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
 
-
 # perform checks
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CT_ENTRY
+grep -E -e '^ct:' ${_CONFIG_FILE} 2>/dev/null | cut -f2- -d':' 2>/dev/null |\
+    while read -r _CT_ENTRY
 do
     # field split
-    _CT_ID="$(print ${_CT_ENTRY} | cut -f1 -d';')"
-    _CT_CFG_STATUS="$(print ${_CT_ENTRY} | cut -f2 -d';')"
-    _CT_CFG_BOOT="$(print ${_CT_ENTRY} | cut -f3 -d';')"
+    _CT_ID=$(print "${_CT_ENTRY}" | cut -f1 -d':' 2>/dev/null)
+    _CT_CFG_STATUS=$(data_lc "$(print ${_CT_ENTRY} | cut -f2 -d':' 2>/dev/null)")
+    _CT_CFG_BOOT=$(data_lc "$(print ${_CT_ENTRY} | cut -f3 -d':' 2>/dev/null)")
 
     # check run-time values
     _CT_MATCH=$(grep -i "^[[:space:]]*${_CT_ID}" ${HC_STDOUT_LOG} 2>/dev/null)
     if [[ -n "${_CT_MATCH}" ]]
     then
         # field split
-        _CT_RUN_STATUS=$(data_lc "$(print \"${_CT_MATCH}\" | tr -s ' ' ';' 2>/dev/null | cut -f3 -d';' 2>/dev/null)")
-        _CT_RUN_BOOT=$(data_lc "$(print \"${_CT_MATCH}\" | tr -s ' ' ';' 2>/dev/null | cut -f4 -d';' 2>/dev/null)")
+        _CT_RUN_STATUS=$(data_lc "$(print ${_CT_MATCH} | awk '{print $2}' 2>/dev/null)")
+        _CT_RUN_BOOT=$(data_lc "$(print ${_CT_MATCH} | awk '{print $3}' 2>/dev/null)")
 
         if [[ "${_CT_RUN_STATUS}" = "${_CT_CFG_STATUS}" ]]
         then
@@ -152,7 +187,10 @@ do
              _MSG="container ${_CT_ID} has a wrong status [${_CT_RUN_STATUS}]"
              _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_STATUS}" "${_CT_CFG_STATUS}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_STATUS}" "${_CT_CFG_STATUS}"
+        fi
 
         if [[ "${_CT_RUN_BOOT}" = "${_CT_CFG_BOOT}" ]]
         then
@@ -162,10 +200,13 @@ do
              _MSG="container ${_CT_ID} has a wrong boot flag [${_CT_RUN_BOOT}]"
              _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_BOOT}" "${_CT_CFG_BOOT}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_BOOT}" "${_CT_CFG_BOOT}"
+        fi
     else
-        warn "could not determine status for container ${_CT_ID} from command output {${_VZLIST_BIN}}"
-        _RC=1
+        warn "could not determine status for container ${_CT_ID} from command output {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
+        _RC=$(( _RC + 1 ))
     fi
 done
 
@@ -176,11 +217,12 @@ return ${_RC}
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            <ctid>;<runtime_status>;<boot_status>
-PURPOSE : Checks whether OpenVZ containers are running or not
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with:
+               ct:<ctid>:<runtime_status>:<boot_status>
+PURPOSE     : Checks whether OpenVZ containers are running or not
+LOG HEALTHY : Supported
 
 EOT
 

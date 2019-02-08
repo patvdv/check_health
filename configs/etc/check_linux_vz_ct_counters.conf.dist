@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_linux_vz_ct_status.conf
+# @(#) check_linux_vz_ct_counters.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_openvz_ct_status HC plugin.
+# This is a configuration file for the check_linux_vz_ct_counters HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
@@ -11,13 +11,11 @@
 # [default: no]
 log_healthy="yes"
 
-# specify properties as displayed by the 'vzlist -a -H -o ctid,status,onboot' command
-# [ct:<ct_id>:<runtime_status>:<boot_status>]
-# runtime_status should be 'running' or 'stopped'
-# boot_status should be 'yes' or 'no'
+# specify containers for which to check the UBC
+# Format:
+# [ct:<ct_id>]
 # Examples:
-#ct:100:running:yes
-
+# ct:100
 
 #******************************************************************************
 # End of FILE

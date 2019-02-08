@@ -52,6 +52,7 @@ cp ../SOURCES/lib/platform/linux/check_linux_sg_cluster_status.sh $RPM_BUILD_ROO
 cp ../SOURCES/lib/platform/linux/check_linux_sg_package_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
 cp ../SOURCES/lib/platform/linux/check_linux_sg_package_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_sg_qs_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
+cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
 cp ../SOURCES/etc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
@@ -69,6 +70,7 @@ cp ../SOURCES/etc/check_linux_sg_cluster_config.conf.dist $RPM_BUILD_ROOT/etc/op
 cp ../SOURCES/etc/check_linux_sg_cluster_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
 cp ../SOURCES/etc/check_linux_sg_package_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_config.conf.dist
 cp ../SOURCES/etc/check_linux_sg_package_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_status.conf.dist
+cp ../SOURCES/etc/check_linux_vz_ct_counters.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
 cp ../SOURCES/etc/check_linux_vz_ct_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_status.conf.dist
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/templates
@@ -135,6 +137,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 %dir /etc/opt/hc
 %attr(644, root, root) /etc/opt/hc/check_linux_burp_backup.conf.dist
@@ -152,6 +155,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_sg_cluster_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_sg_package_config.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_sg_package_status.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_vz_ct_counters.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_vz_ct_status.conf.dist
 %dir /etc/opt/hc/core
 %dir /etc/opt/hc/core/templates
@@ -159,6 +163,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Thu Feb 07 2019 <patrick@kudos.be> - 0.1.3
+- Added check_linux_vz_ct_counters
 * Tue Jan 22 2019 <patrick@kudos.be> - 0.1.2
 - Added check_linux_fs_usage
 * Tue Jul 10 2018 <patrick@kudos.be> - 0.1.1
