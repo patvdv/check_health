@@ -143,7 +143,7 @@ case "${_CFG_CHECK_TYPE}" in
     medium|MEDIUM|Medium)
         _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --medium-check"
         ;;
-    extended|EXTENDED|extended)
+    extended|EXTENDED|Extended)
         _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --extended"
         ;;
     *)
