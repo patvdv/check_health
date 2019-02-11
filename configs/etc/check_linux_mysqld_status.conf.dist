@@ -1,0 +1,63 @@
+#******************************************************************************
+# @(#) check_linux_mysqld_status.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_mysqld_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify whether to perform table checks (mysqlcheck)
+# MySQL privileges required: SHOW DATABASES, SELECT (global or per database)
+# [default: yes]
+do_check="yes"
+
+# specify whether the type of check to execute
+# Format: <quick|medium|extended>
+# [default: quick]
+check_type="quick"
+
+# list of databases to check (comma-separated). Null value means all databases.
+# [default: null]
+check_databases=""
+
+# list of databases to excluded from checking (comma-separated).
+# overrules the 'check_databases' parameter
+# [default: null]
+exclude_databases=""
+
+# list of tables to excluded from checking (comma-separated)
+# (must be fully qualified names)
+# [default: null]
+exclude_tables=""
+
+# specify whether to gather statistics (mysqladmin) (statistics are only logged
+# when a failed HC is logged)
+# [default: yes]
+# MySQL privileges required: SHOW DATABASES, SELECT (global)
+do_stats="yes"
+
+# specify the MySQL user account (mysqlcheck/mysqlshow)
+# [default: null]
+mysql_user=""
+
+# specify the MySQL user password (mysqlcheck/mysqlshow)
+# [default: null]
+mysql_password=""
+
+# specify the MySQL host name (mysqlcheck/mysqlshow)
+# [default: localhost]
+mysql_host="localhost"
+
+# specify the MySQL host port (mysqlcheck/mysqlshow)
+# [default: 3306]
+mysql_port="3306"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -86,6 +86,70 @@ return ${_RC}
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_is_string()
+# DOES: checks if a string (haystack) matches a string (needle).
+# EXPECTS: $1=haystack [string]; $2=needle [string]
+# OUTPUTS: n/a
+# RETURNS: 0=not found; 1=found
+# REQUIRES: n/a
+function data_is_string
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+typeset _HAYSTACK="${1}"
+typeset _NEEDLE="${2}"
+
+[[ "${_STRING}" = "${_NEEDLE}" ]] && return 1
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_list_contains_string()
+# DOES: checks if a comma-separated list of strings (haystack) contains a substring (needle).
+# EXPECTS: $1=haystack [string]; $2=needle [string]
+# OUTPUTS: n/a
+# RETURNS: 0=not found; 1=found
+# REQUIRES: data_contains_string()
+function data_list_contains_string
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+typeset _HAYSTACK="${1}"
+typeset _NEEDLE="${2}"
+typeset _STRING=""
+
+print "${_HAYSTACK}" | tr ',' '\n' 2>/dev/null | while read -r _STRING
+do
+    data_contains_string "${_STRING}" "${_NEEDLE}" || return 1
+done
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_list_is_string()
+# DOES: checks if a comma-separated list of strings (haystack) matches a string (needle).
+# EXPECTS: $1=haystack [string]; $2=needle [string]
+# OUTPUTS: n/a
+# RETURNS: 0=not found; 1=found
+# REQUIRES: n/a
+function data_list_is_string
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+typeset _HAYSTACK="${1}"
+typeset _NEEDLE="${2}"
+
+print "${_HAYSTACK}" | tr ',' '\n' 2>/dev/null | while read -r _STRING
+do
+    [[ "${_STRING}" = "${_NEEDLE}" ]] && return 1
+done
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_quote()
 # DOES: magically quotes a needle in a string (default needle is: %)
 # EXPECTS: to be magically quoted [string]; $2=needle [string]
@@ -751,18 +815,18 @@ typeset _CONVERT_DATE=""
 _CONVERT_DATE=$(date -d @"${_UNIX_EPOCH}" 2>/dev/null)
 if (( $? > 0 ))
 then
-	# try the perl way
-	_CONVERT_DATE=$(perl -e "print scalar(localtime(${_UNIX_EPOCH}))" 2>/dev/null)
-	if (( $? > 0 ))
-	then
-		# no luck, we just return the UNIX epoch again
-		print "${_UNIX_EPOCH}"
-		return 1
-	else
-		print "${_CONVERT_DATE}"
-	fi
+    # try the perl way
+    _CONVERT_DATE=$(perl -e "print scalar(localtime(${_UNIX_EPOCH}))" 2>/dev/null)
+    if (( $? > 0 ))
+    then
+    # no luck, we just return the UNIX epoch again
+    print "${_UNIX_EPOCH}"
+    return 1
+    else
+    print "${_CONVERT_DATE}"
+    fi
 else
-	print "${_CONVERT_DATE}"
+    print "${_CONVERT_DATE}"
 fi
 
 return 0

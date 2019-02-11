@@ -34,6 +34,7 @@ cp ../SOURCES/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc
 cp ../SOURCES/lib/platform/linux/check_linux_fs_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_usage.sh
 cp ../SOURCES/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_httpd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_httpd_status.sh
+cp ../SOURCES/lib/platform/linux/check_linux_mysqld_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_named_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_named_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_ntp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_ntp_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_postfix_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_postfix_status.sh
@@ -63,6 +64,7 @@ cp ../SOURCES/etc/check_linux_hpasmcli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/chec
 cp ../SOURCES/etc/check_linux_hpacucli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpacucli.conf.dist
 cp ../SOURCES/etc/check_linux_hplog.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hplog.conf.dist
 cp ../SOURCES/etc/check_linux_hpssacli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpssacli.conf.dist
+cp ../SOURCES/etc/check_linux_mysqld_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_mysqld_status.conf.dist
 cp ../SOURCES/etc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
 cp ../SOURCES/etc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
 cp ../SOURCES/etc/check_linux_root_crontab.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_root_crontab.conf.dist
@@ -119,6 +121,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fs_usage.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_httpd_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_named_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_ntp_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_postfix_status.sh
@@ -148,6 +151,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_hpacucli.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_hplog.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_hpssacli.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_mysqld_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_ntp_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_process_limits.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_root_crontab.conf.dist
@@ -163,6 +167,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Sun Feb 10 2019 <patrick@kudos.be> - 0.1.4
+- Added check_linux_mysqld_status
 * Thu Feb 07 2019 <patrick@kudos.be> - 0.1.3
 - Added check_linux_vz_ct_counters
 * Tue Jan 22 2019 <patrick@kudos.be> - 0.1.2
