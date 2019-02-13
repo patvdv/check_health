@@ -22,7 +22,8 @@
 # REQUIRES: data_comma2space(), init_hc(), log_hc()
 #
 # @(#) HISTORY:
-# @(#) 2018-02-08: initial version [Patrick Van der Veken]
+# @(#) 2018-02-08: initial version [Patrick Van der Veken]µ
+# @(#) 2018-02-13: fix to avoid log check if cron is not active [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_hpux_cron_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CRON_LOG_FILE="/var/adm/cron/log"
 typeset _WAIT_TIME=10
-typeset _VERSION="2019-02-08"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-13"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -92,6 +93,8 @@ esac
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
 then
     log_hc "$0" ${_STC} "${_MSG}"
+    # return if cron is not running
+    (( _STC > 0 )) && return 1
 fi
 
 # ---- log state ----

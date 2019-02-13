@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-02-10"
+typeset -r SCRIPT_VERSION="2019-02-13"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -86,6 +86,11 @@ typeset EXIT_CODE=0
 typeset FDIR=""
 typeset FFILE=""
 typeset FPATH=""
+typeset HC_ARCHIVE=""
+typeset HC_CHECK=""
+typeset HC_DISABLE=""
+typeset HC_ENABLE=""
+typeset HC_RUN=""
 typeset HC_FAIL_ID=""
 # shellcheck disable=SC2034
 typeset HC_FILE_LINE=""
@@ -370,14 +375,14 @@ if (( ARG_CHECK_HOST == 0 ))
 then
     if (( ARG_ACTION < 6 || ARG_ACTION == 10 )) && [[ -z "${ARG_HC}" ]]
     then
-        print -u2 "ERROR: you specify a value for parameter '--hc'"
+        print -u2 "ERROR: you must specify a value for the '--hc' parameter"
         exit 1
     fi
     if (( ARG_ACTION == 5 )) || [[ -n "${ARG_HC_ARGS}" ]]
     then
         case "${ARG_HC}" in
             *,*)
-                print -u2 "ERROR: you can only specify a value for '--hc' in combination with '--show'"
+                print -u2 "ERROR: you can only specify a single value for '--hc' in combination with '--show'"
                 exit 1
                 ;;
         esac
@@ -386,7 +391,7 @@ then
     then
         case "${ARG_HC}" in
             *,*)
-                print -u2 "ERROR: you can only specify a value for '--hc' in combination with '--archive'"
+                print -u2 "ERROR: you can only specify a single value for '--hc' in combination with '--archive'"
                 exit 1
                 ;;
         esac
@@ -534,7 +539,7 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--disable-all | enable-all) | [--fix-logs [--with-history]] |
+    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
@@ -547,7 +552,8 @@ then
     cat << EOT
 Parameters:
 
---archive       : move events from the HC log file into archive log files
+--archive       : move events from the HC log file into archive log files (one HC)
+--archive-all   : move events for all HCs from the HC log file into archive log files
 --check         : display HC state.
 --check-host    : execute all configured HC(s) (see check_host.conf)
 --config-file   : custom configuration file for a HC (may only be specified when executing a single HC plugin)
@@ -725,6 +731,15 @@ do
                 ARG_ACTION=10
             fi
             ARG_LOCK=1
+            ;;
+        -archive-all|--archive-all)
+            if (( ARG_ACTION > 0 ))
+            then
+                print -u2 "ERROR: you cannot request two actions at the same time"
+                exit 1
+            else
+                ARG_ACTION=13
+            fi
             ;;
         -check|--check)
             ARG_ACTION=1
@@ -1351,9 +1366,9 @@ case ${ARG_ACTION} in
     9)  # list HC plugins
         list_hc "" "${ARG_LIST}"
         ;;
-    10) # archive log entries
+    10) # archive current log entries for a HC
         exists_hc "${ARG_HC}" && die "cannot find HC: ${ARG_HC}"
-        log "archiving log entries for ${ARG_HC}..."
+        log "archiving current log entries for ${ARG_HC}..."
         archive_hc "${ARG_HC}"
         ARCHIVE_RC=$?
         case ${ARCHIVE_RC} in
@@ -1388,6 +1403,28 @@ case ${ARG_ACTION} in
                 EXIT_CODE=1
                 ;;
         esac
+        ;;
+    13)  # archive current log entries for all HCs
+        list_hc "list" | while read -r HC_ARCHIVE
+        do
+            # check for HC (function)
+            exists_hc "${HC_ARCHIVE}" && die "cannot find HC: ${HC_ARCHIVE}"
+            log "archiving current log entries for HC: ${HC_ARCHIVE}"
+            archive_hc "${HC_ARCHIVE}"
+            ARCHIVE_RC=$?
+            case ${ARCHIVE_RC} in
+                0)
+                    log "no archiving needed for ${HC_ARCHIVE}"
+                    ;;
+                1)
+                    log "successfully archived log entries for ${HC_ARCHIVE}"
+                    ;;
+                2)
+                    log "failed to archive log entries for ${HC_ARCHIVE} [RC=${ARCHIVE_RC}]"
+                    EXIT_CODE=1
+                    ;;
+            esac
+        done
         ;;
 esac
 

@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2018-02-08: initial version [Patrick Van der Veken]
+# @(#) 2018-02-13: fix to avoid log check if syslogd is not active [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_hpux_syslogd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _SYSLOGD_PID_FILE="/var/run/syslog.pid"
 typeset _SYSLOGD_LOG_FILE="/var/adm/syslog.log"
-typeset _VERSION="2019-02-08"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-13"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -113,6 +114,8 @@ esac
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
 then
     log_hc "$0" ${_STC} "${_MSG}"
+    # return if syslogd is not running
+    (( _STC > 0 )) && return 1
 fi
 
 # ---- log state ----
