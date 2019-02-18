@@ -114,7 +114,7 @@ return 0
 # EXPECTS: n/a
 # OUTPUTS: 0=not active/installed; 1=active/installed
 # RETURNS: 0=success; 1=error
-# REQUIRES: n/a
+# REQUIRES: Corosync
 function linux_has_crm
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -149,7 +149,7 @@ return 0
 # EXPECTS: n/a
 # OUTPUTS: 0=not active/installed; 1=active/installed
 # RETURNS: 0=success; 1=error
-# REQUIRES: n/a
+# REQUIRES: Docker
 function linux_has_docker
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -184,7 +184,7 @@ return 0
 # EXPECTS: n/a
 # OUTPUTS: 0=not active/installed; 1=active/installed
 # RETURNS: 0=success; 1=error
-# REQUIRES: n/a
+# REQUIRES: NetworkManager
 function linux_has_nm
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -218,7 +218,7 @@ return 0
 # EXPECTS: name of service [string]
 # OUTPUTS: 0=not installed; 1=installed
 # RETURNS: 0=success; 1=error
-# REQUIRES: n/a
+# REQUIRES: systemd
 function linux_has_systemd_service
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
@@ -228,6 +228,31 @@ systemctl list-unit-files 2>/dev/null | grep -c "^${1}" 2>/dev/null
 _RC=$?
 
 return ${_RC}
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: linux_exec_ssh()
+# DOES: execute a shell command remotely via SSH
+# EXPECTS: 1=options [string], 2=user [string], 3=host [string], 4=command [string]
+# RETURNS: exit code of remote command
+# OUTPUTS: STDOUT from SSH call
+# REQUIRES: ssh command-line utility
+function linux_exec_ssh
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+typeset _SSH_OPTS="${1}"
+typeset _SSH_USER="${2}"
+typeset _SSH_HOST="${3}"
+typeset _SSH_COMMAND="${4}"
+
+if [[ -z "${_SSH_USER}" || -z "${_SSH_HOST}" || -z "${_SSH_COMMAND}" ]]
+then
+    return 255
+fi
+# shellcheck disable=SC2086
+ssh ${_SSH_OPTS} -l ${_SSH_USER} ${_SSH_HOST} ${_SSH_COMMAND} 2>>${HC_STDERR_LOG} </dev/null
+
+return $?
 }
 
 #******************************************************************************

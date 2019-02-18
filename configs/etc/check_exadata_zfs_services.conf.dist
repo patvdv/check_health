@@ -1,0 +1,38 @@
+#******************************************************************************
+# @(#) check_exadata_zfs_services.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_zfs_services HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the SSH session to the ZFS appliance(s)
+# [default: root]
+ssh_user=""
+
+# specify the private key file for the SSH session to the ZFS appliance(s)
+# [default: ~root/.ssh/id_rsa]
+ssh_key_file=""
+
+# specify additional options for the SSH session to the ZFS appliance(s)
+# [default: null]
+ssh_opts=""
+
+# specify the ZFS hostname(s), services name(s) and their desired state.
+# In order to check share(s) for a given ZFS appliance at least one configuration
+# entry must be present: either a wildcard or custom entry.
+# Format:
+#  zfs:<host_name>:<service_name>:<online|disabled>
+# Examples:
+# check on myzfs1 that svc1 is online
+# zfs:myzfs1:svc1:online
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

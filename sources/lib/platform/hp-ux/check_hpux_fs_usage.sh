@@ -26,6 +26,7 @@
 # @(#) 2019-01-27: regex fix [Patrick Van der Veken]
 # @(#) 2019-01-30: refactored to support custom defintions with all
 #                  filesystems check [Patrick Van der Veken]
+# @(#) 2019-02-18: fixes + help update
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-30"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -215,7 +216,7 @@ then
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_INODES_THRESHOLD}
+            log_hc "$0" ${_STC} "${_MSG}" "${_INODES_USAGE}" "${_CFG_INODES_THRESHOLD}"
         fi
     done
 fi
@@ -276,7 +277,7 @@ then
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_SPACE_USAGE} ${_CFG_SPACE_THRESHOLD}
+            log_hc "$0" ${_STC} "${_MSG}" "${_SPACE_USAGE}" "${_CFG_SPACE_THRESHOLD}"
         fi
     done
 fi
@@ -293,6 +294,7 @@ VERSION : $2
 CONFIG  : $3 with formatted stanzas (optional):
             fs:<fs_name>:<max_inodes_usage_in_%>:<max_space_usage_in%>
           Other options:
+            log_healthy=<yes|no>
             check_inodes_usage=<yes|no>
             check_space_usage=<yes|no>
             max_inodes_usage=<general_inodes_usage_treshold>

@@ -369,6 +369,7 @@ cat <<- EOT
 NAME        : $1
 VERSION     : $2
 CONFIG      : $3 with parameters:
+               log_healthy=<yes|no>
                mysql_user=<mysql_user_account>
                mysql_password=<mysql_user_password>
                mysql_host=<database_host>

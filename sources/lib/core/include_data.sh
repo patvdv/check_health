@@ -41,7 +41,8 @@ _LVALUE=$(grep -i "^${_PARAMETER} *=" ${_CONFIG_FILE} | cut -f2- -d'=')
 
 if [[ -n "${_LVALUE}" ]]
 then
-    print "$(data_dequote \"${_LVALUE}\")"
+    # do not escape inside quotes
+    print -R "$(data_dequote "${_LVALUE}")"
 else
     _RC=1
 fi

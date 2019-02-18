@@ -1,0 +1,53 @@
+#******************************************************************************
+# @(#) check_exadata_zfs_share_usage.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_zfs_share_usage HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the SSH session to the ZFS appliance(s)
+# [default: root]
+ssh_user=""
+
+# specify the private key file for the SSH session to the ZFS appliance(s)
+# [default: ~root/.ssh/id_rsa]
+ssh_key_file=""
+
+# specify additional options for the SSH session to the ZFS appliance(s)
+# [default: null]
+ssh_opts=""
+
+# specify the maximum % of space usage a share may reach (general threshold)
+# [default: 90]
+max_space_usage=90
+
+# specify the ZFS hostname(s), project+share name(s) and their maximum usage (in %)
+# When not defining a threshold for a given share, the general threshold will
+# be used (see above). When defining a threshold of 0 (zero), then the check
+# will for this give share will be skipped (this allows for exclusion of shares)
+# In order to check share(s) for a given ZFS appliance at least one configuration
+# entry must be present: either a wildcard or custom entry.
+# Format:
+#  zfs:<host_name>:<project_name|*>:<share_name|*>:[<usage_threshold_%>]
+# Examples:
+# check share1 on myzfs1 with a custom threshold of 75%
+# zfs:myzfs1:projectX:share1:75
+# check all shares of myzfs2 with a custom threshold of 85%
+# zfs:myzfs2:*:*:85
+# check all shares of myzfs3 with the general threshold
+# zfs:myzfs3:*:*:
+# disable all shares of myzfs4 from checking
+# zfs:myzfs4:*:*:0
+# disable check of share7 on myzfs5
+# zfs:myzfs5:projectY:share7:0
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -1,0 +1,44 @@
+#******************************************************************************
+# @(#) check_exadata_zfs_share_usage.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_zfs_share_usage HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the SSH session to the ZFS appliance(s)
+# [default: root]
+ssh_user=""
+
+# specify the private key file for the SSH session to the ZFS appliance(s)
+# [default: ~root/.ssh/id_rsa]
+ssh_key_file=""
+
+# specify additional options for the SSH session to the ZFS appliance(s)
+# [default: null]
+ssh_opts=""
+
+# specify the ZFS hostname(s), log name(s) & alert levels. Filters
+# should be comma-separated. Following logs are supported (filters in brackets)
+#  alert (critical,major,minor
+#  fltlog (critical,major,minor)
+#  system (error)
+#  scrk (failed)
+# Format:
+#  zfs:<host_name>:<alert|fltlog|audit|scrk|system>:<minor,major,critical>]
+# Examples:
+# check all major events in the fltlog on myzfs1
+# zfs:myzfs1:fltlog:major
+# check for all major & critical events in the audit and fltlog on myzfs2
+# zfs:myzfs2:audit:major,critical
+# zfs:myzfs2:fltlog:major,critical
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

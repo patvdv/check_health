@@ -27,6 +27,7 @@
 # @(#) 2019-01-30: refactored to support custom definitions with all
 #                  filesystems check [Patrick Van der Veken]
 # @(#) 2019-02-04: fix in cleanup
+# @(#) 2019-02-18: fixes + help update
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_linux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-02-04"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -231,7 +232,7 @@ then
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_INODES_USAGE} ${_CFG_MAX_INODES_USAGE}
+            log_hc "$0" ${_STC} "${_MSG}" "${_INODES_USAGE}" "${_CFG_MAX_INODES_USAGE}"
         fi
     done
     # add df output to stdout log_hc
@@ -295,7 +296,7 @@ then
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
-            log_hc "$0" ${_STC} "${_MSG}" ${_SPACE_USAGE} ${_CFG_SPACE_THRESHOLD}
+            log_hc "$0" ${_STC} "${_MSG}" "${_SPACE_USAGE}" "${_CFG_SPACE_THRESHOLD}"
         fi
     done
     # add df output to stdout log_hc
@@ -318,6 +319,7 @@ VERSION     : $2
 CONFIG      : $3 with formatted stanzas (optional):
                fs:<fs_name>:<max_INODES_USAGE_in_%>:<max_space_usage_in%>
               Other options:
+               log_healthy=<yes|no>
                check_inodes_usage=<yes|no>
                check_space_usage=<yes|no>
                max_inodes_usage=<general_inodes_usage_treshold>
