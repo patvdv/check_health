@@ -79,8 +79,8 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
 %dir /etc/opt/hc
-%attr(644, root, root) /etc/opt/hc/check_exadata_zfs_logs.dist
-%attr(644, root, root) /etc/opt/hc/check_exadata_zfs_services.dist
+%attr(644, root, root) /etc/opt/hc/check_exadata_zfs_logs.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_exadata_zfs_services.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_zfs_share_replication.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_zfs_share_usage.conf.dist
 
