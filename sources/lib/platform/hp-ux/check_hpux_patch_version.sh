@@ -19,8 +19,8 @@
 # @(#) MAIN: check_hpux_patch_version
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_get_lvalue_from_config(), data_dequote(),
-#           dump_logs(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_contains_string(), data_get_lvalue_from_config(),
+#           data_dequote(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2018-05-11: initial version [Patrick Van der Veken]
@@ -28,6 +28,7 @@
 # @(#) 2018-10-22: added check on fileset state [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-02-19: fix in exclude checking [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -232,7 +233,8 @@ then
         do
             _FILESET=$(print "${_FILESET_LINE}" | awk '{print $1}' 2>/dev/null)
             # check exclude(s)
-            if [[ "${_EXCLUDE_FILESETS#*${_FILESET}}" = "${_EXCLUDE_FILESETS}" ]]
+            data_contains_string "${_EXCLUDE_FILESETS}" "${_FILESET}"
+            if (( $? == 0 ))
             then
                 _MSG="fileset ${_FILESET} is not in a configured state"
                 log_hc "$0" 1 "${_MSG}"
