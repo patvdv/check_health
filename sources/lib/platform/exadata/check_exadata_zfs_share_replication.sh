@@ -19,11 +19,12 @@
 # @(#) MAIN: check_exadata_zfs_share_replication
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), linux_exec_ssh(),
-#           log_hc(), warn()
+# REQUIRES: data_comma2space(), data_contains_string(), data_get_lvalue_from_config(),
+#           dump_logs(), init_hc(), linux_exec_ssh(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
+# @(#) 2019-02-19: fix for <unknown> replication value [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-02-18"                           # YYYY-MM-DD
+typeset _VERSION="2019-02-19"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -284,13 +285,22 @@ do
         log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_RESULT}" "${_CFG_REPLICATION_RESULT}"
     fi
     # check replication lag
-    if (( _REPLICATION_LAG > _CFG_REPLICATION_LAG ))
+    # caveat: replication lag is <unknown> at initial replication
+    data_contains_string "${_REPLICATION_LAG}" "unknown"
+    if (( $? > 0 ))
     then
-        _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is too big [${_REPLICATION_LAG}>${_CFG_REPLICATION_LAG}]"
+        _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is unknown"
+        _REPLICATION_LAG=-1
         _STC=1
     else
-        _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_LAG}<=${_CFG_REPLICATION_LAG}]"
-        _STC=0
+        if (( _REPLICATION_LAG > _CFG_REPLICATION_LAG ))
+        then
+            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is too big [${_REPLICATION_LAG}>${_CFG_REPLICATION_LAG}]"
+            _STC=1
+        else
+            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_LAG}<=${_CFG_REPLICATION_LAG}]"
+            _STC=0
+        fi
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
