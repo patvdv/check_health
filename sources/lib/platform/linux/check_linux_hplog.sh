@@ -105,6 +105,7 @@ else
     # delete last 'OR'
     _HPLOG_SEVERITIES=${_HPLOG_SEVERITIES%?}
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1

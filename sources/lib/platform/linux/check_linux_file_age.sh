@@ -75,6 +75,7 @@ then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1
@@ -87,7 +88,7 @@ esac
 
 # check for old-style configuration file (non-prefixed stanzas)
 _IS_OLD_STYLE=$(grep -c -E -e "^file:" ${_CONFIG_FILE} 2>/dev/null)
-if (( _IS_OLD_STYLE > 0 ))
+if (( _IS_OLD_STYLE == 0 ))
 then
     warn "no 'file:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
     return 1

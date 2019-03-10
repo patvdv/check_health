@@ -149,6 +149,7 @@ case "${_DO_ASM_TEMP}" in
         _DO_ASM_TEMP=1
         ;;
 esac
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1

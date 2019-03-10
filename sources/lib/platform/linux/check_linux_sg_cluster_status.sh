@@ -91,7 +91,7 @@ esac
 
 # check for old-style configuration file (non-prefixed stanzas)
 _IS_OLD_STYLE=$(grep -c -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null)
-if (( _IS_OLD_STYLE > 0 ))
+if (( _IS_OLD_STYLE == 0 ))
 then
     warn "no 'sg:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
     return 1

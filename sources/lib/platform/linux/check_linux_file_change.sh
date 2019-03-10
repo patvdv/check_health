@@ -116,6 +116,7 @@ case "${_DO_META_CHECK}" in
         log "check for meta characters is enabled"
         ;;
 esac
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1

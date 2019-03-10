@@ -19,7 +19,8 @@
 # @(#) MAIN: check_linux_burp_backup
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_is_numeric(), data_strip_outer_space(),
+#           init_hc(), log_hc(), warn()
 #           GNU date that can calculate UNIX epoch seconds from given date,
 #           BURP server must be be able to impersonate configured clients
 #
@@ -97,7 +98,7 @@ esac
 
 # check for old-style configuration file (non-prefixed stanzas)
 _IS_OLD_STYLE=$(grep -c -E -e "^client:" ${_CONFIG_FILE} 2>/dev/null)
-if (( _IS_OLD_STYLE > 0 ))
+if (( _IS_OLD_STYLE == 0 ))
 then
     warn "no 'client:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
     return 1
@@ -119,15 +120,12 @@ fi
 
 # check for capable GNU date
 _GNU_DATE=$(date --date="1 day ago" '+%s' 2>/dev/null)
-case "${_GNU_DATE}" in
-    +([0-9])*(.)*([0-9]))
-        # numeric, OK
-        ;;
-    *)
-        warn "no capable GNU date found here"
-        return 1
-        ;;
-esac
+data_is_numeric "${_GNU_DATE}"
+if (( $? > 0 ))
+then
+    warn "no capable GNU date found here"
+    return 1
+fi
 
 # find burp
 _BURP_BIN="$(which burp 2>/dev/null)"
@@ -246,12 +244,14 @@ do
                 # first check client override
                 _BURP_BACKUP_DIR=""; _BURP_CLIENTCONF_DIR=""
                 _BURP_CLIENTCONF_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'clientconfdir')
+                _BURP_CLIENTCONF_DIR=$(data_strip_outer_space "${_BURP_CLIENTCONF_DIR}")
                 if [[ -n "${_BURP_CLIENTCONF_DIR}" ]]
                 then
                     _BURP_CLIENTCONF_FILE=${_BURP_CLIENTCONF_DIR}/${_BURP_CLIENT}
                     if [[ -r ${_BURP_CLIENTCONF_FILE} ]]
                     then
                         _BURP_BACKUP_DIR=$(_CONFIG_FILE="${_BURP_CLIENTCONF_FILE}" data_get_lvalue_from_config 'directory')
+                        _BURP_BACKUP_DIR=$(data_strip_outer_space "${_BURP_BACKUP_DIR}")
                     else
                         warn "no client configuration file for client ${_BURP_CLIENT}, trying server configuration next"
                     fi
@@ -260,6 +260,7 @@ do
                 if [[ -z "${_BURP_BACKUP_DIR}" ]]
                 then
                     _BURP_BACKUP_DIR=$(_CONFIG_FILE="${_BURP_SERVER_CONFIG_FILE}" data_get_lvalue_from_config 'directory')
+                    _BURP_BACKUP_DIR=$(data_strip_outer_space "${_BURP_BACKUP_DIR}")
                     if [[ -z "${_BURP_BACKUP_DIR}" ]]
                     then
                         warn "could not determine backup directory from 'clientconfdir' or 'directory' directives' for client ${_BURP_CLIENT}"

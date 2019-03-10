@@ -9,7 +9,7 @@
 # specify whether to also log passed health checks
 # (warning: this may rapidly grow the HC log)
 # [default: no]
-log_healthy="no"
+log_healthy="yes"
 
 # -- user stanzas --
 # supported limit checks: Max open files; Max processes

@@ -142,6 +142,7 @@ then
     log "switching setting 'do_acu_controller' to 1 to fetch slot info"
     _DO_ACU_CTRL=1
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
     yes|YES|Yes)
         _LOG_HEALTHY=1
