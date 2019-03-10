@@ -28,8 +28,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-03-09: change format of stanzas in configuration file &
-# @(#)             added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -348,7 +347,11 @@ do
     printf "%s|%s|%s\n" "${_FILE_TO_CHECK}" "${_FILE_TYPE}" "${_FILE_CKSUM}" >>${_TMP2_FILE}
 
     # report with curr/exp values
-    log_hc "$0" ${_STC} "${_MSG}" "${_FILE_CKSUM}" "${_STATE_FILE_CKSUM}"
+    if (( _LOG_HEALTHY > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}" "${_FILE_CKSUM}" "${_STATE_FILE_CKSUM}"
+        continue
+    fi
 done <${_TMP1_FILE}
 
 # update state file (also if TMP2_FILE is empty)
@@ -381,7 +384,7 @@ NAME        : $1
 VERSION     : $2
 CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
-              with formatted stanzas:
+              and  formatted stanzas:
                 incl:<full path>
                 excl:<full path>
 PURPOSE     : a KISS file integrity checker (like AIDE). Supports includes and excludes
