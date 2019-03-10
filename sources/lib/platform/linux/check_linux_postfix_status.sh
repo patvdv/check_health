@@ -39,7 +39,7 @@ function check_linux_postfix_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
 typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
