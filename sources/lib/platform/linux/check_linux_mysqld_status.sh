@@ -24,6 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-02-10: initial version [Patrick Van der Veken]
+# @(#) 2019-03-09: text files [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ typeset _MYSQLD_INIT_SCRIPT="/etc/init.d/mysqld"
 typeset _MYSQLD_SYSTEMD_SERVICE="mysqld.service"
 typeset _MARIADB_INIT_SCRIPT="/etc/init.d/mariadb"
 typeset _MARIADB_SYSTEMD_SERVICE="mariadb.service"
-typeset _VERSION="2019-02-10"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -100,7 +101,7 @@ esac
 _CFG_MYSQL_USER=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'mysql_user')
 if [[ -z "${_CFG_MYSQL_USER}" ]]
 then
-    warn "no value for 'mysql_user specified in ${_CONFIG_FILE}"
+    warn "no value for 'mysql_user' specified in ${_CONFIG_FILE}"
     _DO_MYSQLCHECK=0
 else
     _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --user=${_CFG_MYSQL_USER}"
@@ -110,7 +111,7 @@ fi
 _CFG_MYSQL_PASSWORD=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'mysql_password')
 if [[ -z "${_CFG_MYSQL_PASSWORD}" ]]
 then
-    warn "no value for 'mysql_password specified in ${_CONFIG_FILE}"
+    warn "no value for 'mysql_password' specified in ${_CONFIG_FILE}"
     _DO_MYSQLCHECK=0
 else
     _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --password=${_CFG_MYSQL_PASSWORD}"
@@ -120,7 +121,7 @@ fi
 _CFG_MYSQL_HOST=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'mysql_host')
 if [[ -z "${_CFG_MYSQL_HOST}" ]]
 then
-    warn "no value for 'mysql_host specified in ${_CONFIG_FILE}, using localhost"
+    warn "no value for 'mysql_host' specified in ${_CONFIG_FILE}, using localhost"
 else
     _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --host=${_CFG_MYSQL_HOST}"
     _MYSQLSHOW_OPTS="${_MYSQLSHOW_OPTS} --host=${_CFG_MYSQL_HOST}"
@@ -129,7 +130,7 @@ fi
 _CFG_MYSQL_PORT=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'mysql_port')
 if [[ -z "${_CFG_MYSQL_PORT}" ]]
 then
-    warn "no value for 'mysql_port specified in ${_CONFIG_FILE}, using 3306"
+    warn "no value for 'mysql_port' specified in ${_CONFIG_FILE}, using 3306"
 else
     _MYSQLCHECK_OPTS="${_MYSQLCHECK_OPTS} --port=${_CFG_MYSQL_PORT}"
     _MYSQLSHOW_OPTS="${_MYSQLSHOW_OPTS} --port=${_CFG_MYSQL_PORT}"

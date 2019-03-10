@@ -13,9 +13,9 @@ log_healthy="yes"
 
 # specify containers for which to check the UBC
 # Format:
-# [ct:<ct_id>]
+#  [ct:<ct_id>]
 # Examples:
-# ct:100
+#ct:100
 
 #******************************************************************************
 # End of FILE

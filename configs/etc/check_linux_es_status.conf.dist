@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_linux_burp_backup.conf
+# @(#) check_linux_es_status.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_burp_backup HC plugin.
+# This is a configuration file for the check_linux_es_status HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
@@ -11,13 +11,9 @@
 # [default: no]
 log_healthy="yes"
 
-# specify client & backup details
-# Format:
-#   client:<client_name>:<max_warnings_allowed>:<max_backup_age>(d|h|w)
-# Examples:
-#client:host1:0:10h
-#client:host2:0:2d
-#client:host3:0:5w
+# specify the URL of the Elasticsearch instance (host:port)
+# [default: http://localhost:9200]
+es_url="http://localhost:9200"
 
 
 #******************************************************************************

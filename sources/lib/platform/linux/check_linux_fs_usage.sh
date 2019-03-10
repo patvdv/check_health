@@ -316,15 +316,15 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3 with formatted stanzas (optional):
-               fs:<fs_name>:<max_INODES_USAGE_in_%>:<max_space_usage_in%>
-              Other options:
-               log_healthy=<yes|no>
-               check_inodes_usage=<yes|no>
-               check_space_usage=<yes|no>
-               max_inodes_usage=<general_inodes_usage_treshold>
-               max_space_usage=<general_space_usage_treshold>
-EXT OPTS    : --hc-args=check_inodes, --hc-args=check_space
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                check_inodes_usage=<yes|no>
+                check_space_usage=<yes|no>
+                max_inodes_usage=<general_inodes_usage_treshold>
+                max_space_usage=<general_space_usage_treshold>
+              with formatted stanzas (optional):
+                fs:<fs_name>:<max_inodes_usage_%>:<max_space_usage_%>
+EXT OPTIONS : --hc-args=check_inodes, --hc-args=check_space
 PURPOSE     : Checks the inodes & space usage for the configured or all (local) filesystems
 LOG HEALTHY : Supported
 

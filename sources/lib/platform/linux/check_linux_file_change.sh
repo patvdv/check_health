@@ -28,6 +28,8 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: change format of stanzas in configuration file &
+# @(#)             added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +39,7 @@ function check_linux_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -48,6 +50,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _DO_META_CHECK=0
 typeset _CFG_STATE_FILE=""
 typeset _STATE_FILE=""
@@ -112,6 +116,29 @@ case "${_DO_META_CHECK}" in
         log "check for meta characters is enabled"
         ;;
 esac
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check for checksum tools
 _OPENSSL_BIN="$(which openssl 2>>${HC_STDERR_LOG})"
@@ -294,7 +321,7 @@ do
     fi
 
     # bounce failures back and jump to next file
-    if (( _STC > 0 ))
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
         log_hc "$0" ${_STC} "${_MSG}"
         continue
@@ -349,24 +376,26 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with formatted stanzas:
-            incl:<full path>
-            excl:<full path>
-PURPOSE : a KISS file integrity checker (like AIDE). Supports includes and excludes
-          of files and directories (automatically expanded). Excludes have a higher
-          priority than includes. Integrity checks will only be performed on files.
-          Will detect changed, new & deleted files (but not when deleted files
-          occur in an expanded directory tree). If you wish to detect deleted files:
-          use only direct file references in the configuration file. Uses by preference
-          openssl for hash calculation, with cksum as fall-back).
-          Updated and deleted files will cause a HC failure, new files will not.
-          CAVEAT EMPTOR: use only to check a relatively small number of files.
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+              with formatted stanzas:
+                incl:<full path>
+                excl:<full path>
+PURPOSE     : a KISS file integrity checker (like AIDE). Supports includes and excludes
+              of files and directories (automatically expanded). Excludes have a higher
+              priority than includes. Integrity checks will only be performed on files.
+              Will detect changed, new & deleted files (but not when deleted files
+              occur in an expanded directory tree). If you wish to detect deleted files:
+              use only direct file references in the configuration file. Uses by preference
+              openssl for hash calculation, with cksum as fall-back).
+              Updated and deleted files will cause a HC failure, new files will not.
+              CAVEAT EMPTOR: use only to check a relatively small number of files.
                          Processing a big number of files is likely to take
                          ages and probably will cause the plugin to time out
                          (see HC_TIME_OUT). YMMV.
-
+LOG HEALTHY : Supported
 
 EOT
 

@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_hplog
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-22: initial version [Patrick Van der Veken]
@@ -27,6 +27,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -49,6 +50,8 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
 typeset _STC_COUNT=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _TMP1_FILE="${TMP_DIR}/.$0.tmp1.$$"
 typeset _TMP2_FILE="${TMP_DIR}/.$0.tmp2.$$"
 typeset _HPLOG_BIN=""
@@ -102,6 +105,29 @@ else
     # delete last 'OR'
     _HPLOG_SEVERITIES=${_HPLOG_SEVERITIES%?}
 fi
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check hplog utility
 if [[ ! -x ${_HPLOG_BIN} || -z "${_HPLOG_BIN}" ]]
@@ -117,7 +143,7 @@ ${_HPLOG_BIN} -v >${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
     log_hc "$0" 1 "${_MSG}"
     # dump debug info
     (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-    return 0
+    return 1
 }
 
 # check state file
@@ -142,7 +168,6 @@ while read -r _EVENT_ENTRY
 do
     _MSG="${_EVENT_ENTRY}"
     _STC_COUNT=$(( _STC_COUNT + 1 ))
-    # handle unit result
     log_hc "$0" 1 "${_MSG}"
 done <${_TMP2_FILE}
 if (( _STC_COUNT > 0 ))
@@ -158,7 +183,10 @@ then
 else
     _MSG="no new HPLOG messages found"
 fi
-log_hc "$0" ${_STC} "${_MSG}"
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 # do cleanup
 [[ -f ${_TMP1_FILE} ]] && rm -f ${_TMP1_FILE} >/dev/null 2>&1
@@ -171,13 +199,15 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            hplog_bin=<location_of_hplog_tool>
-            hplog_severities=<list_of_severities_to_search_for>
-PURPOSE : Checks for errors from the HP Proliant 'hpacucli' tool (see HP Proliant
-          support pack (PSP))
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                hplog_bin=<location_of_hplog_tool>
+                hplog_severities=<list_of_severities_to_search_for>
+PURPOSE     : Checks for errors from the HP Proliant 'hpacucli' tool (see HP Proliant
+              support pack (PSP))
+LOG HEALTHY : Supported
 
 EOT
 

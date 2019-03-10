@@ -28,6 +28,8 @@
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: changed format of stanzas in configuration file &
+# @(#)             added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +39,7 @@ function check_linux_sg_package_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -50,12 +52,15 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _SG_ENTRY=""
 typeset _SG_MATCH=""
 typeset _SG_PACKAGE=""
 typeset _SG_CFG_PARAM=""
 typeset _SG_CFG_VALUE=""
 typeset _SG_RUN_VALUE=""
+typeset _IS_OLD_STYLE=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -74,6 +79,38 @@ then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# check for old-style configuration file (non-prefixed stanzas)
+_IS_OLD_STYLE=$(grep -c -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null)
+if (( _IS_OLD_STYLE > 0 ))
+then
+    warn "no 'sg:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
+    return 1
+fi
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check & get serviceguard status
 if [[ ! -x ${_SG_DAEMON} ]]
@@ -87,13 +124,14 @@ else
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
         (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-        return 0
+        return 1
     }
 fi
 
 # do package status checks
 # (replace ':' by '|' for cmcviewcl output)
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null | while read _SG_ENTRY
+grep -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null |\
+    while read -r _ _SG_ENTRY
 do
     # field split
     _SG_PACKAGE="$(print ${_SG_ENTRY} | cut -f1 -d':')"
@@ -114,7 +152,10 @@ do
             _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a wrong value [${_SG_RUN_VALUE}]"
             _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_SG_RUN_VALUE}" "${_SG_CFG_VALUE}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_SG_RUN_VALUE}" "${_SG_CFG_VALUE}"
+        fi
     else
         warn "could not determine status for ${_SG_PACKAGE}/${_SG_CFG_PARAM} from command output {cmviewcl}"
     fi
@@ -127,10 +168,14 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+              and formatted stanzas:
+                sg:<package_name>:<parameter>=<value>
 PURPOSE : Checks the status of Serviceguard package parameters (SG 11.16+)
+LOG HEALTHY : Supported
 
 EOT
 

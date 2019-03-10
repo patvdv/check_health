@@ -6,8 +6,17 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
 # list of commands (or strings) that should appear in active cron entries
-/usr/bin/cfg2html-linux
+# Format:
+#  cron:<cron_entry>
+# Examples:
+#cron:/usr/bin/cfg2html-linux
+
 
 #******************************************************************************
 # End of FILE

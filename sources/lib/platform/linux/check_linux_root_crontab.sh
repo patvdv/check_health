@@ -19,12 +19,14 @@
 # @(#) MAIN: check_linux_root_crontab
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-09-19: initial version [Patrick Van der Veken]
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: changed format of stanzas in configuration file &
+# @(#)             added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +36,7 @@ function check_linux_root_crontab
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -45,9 +47,12 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _CRON_LINE=""
 typeset _CRON_ENTRY=""
 typeset _CRON_MATCH=0
+typeset _IS_OLD_STYLE=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -65,6 +70,37 @@ if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
+fi
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# check for old-style configuration file (non-prefixed stanzas)
+_IS_OLD_STYLE=$(grep -c -E -e "^cron:" ${_CONFIG_FILE} 2>/dev/null)
+if (( _IS_OLD_STYLE > 0 ))
+then
+    warn "no 'cron:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
+    return 1
+fi
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
 fi
 
 # collect data, since Linux can have multiple cron sources we will
@@ -85,7 +121,7 @@ print "=== /etc/cron.(hourly|daily|weekly|monthly) ===" >>${HC_STDOUT_LOG}
 print "=== /etc/cron.d ===" >>${HC_STDOUT_LOG}
 if [[ -d /etc/cron.d ]]
 then
-    cat /etc/cron.d/* | while read _CRON_LINE
+    cat /etc/cron.d/* 2>/dev/null | while read _CRON_LINE
     do
         if [[ $(print "${_CRON_LINE}" | awk '{print $6}' 2>/dev/null) == "root" ]]
         then
@@ -95,7 +131,7 @@ then
 fi
 
 # perform check
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _CRON_ENTRY
+grep -E -e "^cron:" ${_CONFIG_FILE} 2>/dev/null  | while IFS=":" read -r _ _CRON_ENTRY
 do
     _CRON_MATCH=$(grep -v '^#' ${HC_STDOUT_LOG} 2>/dev/null |\
         grep -c -E -e "${_CRON_ENTRY}" 2>/dev/null)
@@ -112,8 +148,11 @@ do
             ;;
     esac
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
     _STC=0
 done
 
@@ -124,10 +163,14 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks the content of the 'root' user crontab for required entries
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+              and formatted stanzas:
+                cron:<cron_entry>
+PURPOSE     : Checks the content of the 'root' user crontab for required entries
+LOG HEALTHY : Supported
 
 EOT
 

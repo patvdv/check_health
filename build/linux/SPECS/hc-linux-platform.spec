@@ -28,11 +28,12 @@ install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform/linux
 cp ../SOURCES/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
+cp ../SOURCES/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
+cp ../SOURCES/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_file_age.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_age.sh
 cp ../SOURCES/lib/platform/linux/check_linux_file_change.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_change.sh
 cp ../SOURCES/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
 cp ../SOURCES/lib/platform/linux/check_linux_fs_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_usage.sh
-cp ../SOURCES/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_httpd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_httpd_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_mysqld_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
 cp ../SOURCES/lib/platform/linux/check_linux_named_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_named_status.sh
@@ -57,6 +58,7 @@ cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/o
 cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
 cp ../SOURCES/etc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
+cp ../SOURCES/etc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
 cp ../SOURCES/etc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
 cp ../SOURCES/etc/check_linux_file_change.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_change.conf.dist
 cp ../SOURCES/etc/check_linux_fs_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -115,11 +117,12 @@ echo "INFO: finished post-uninstall script"
 %dir /opt/hc/lib/platform
 %dir /opt/hc/lib/platform/linux
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_backup.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_es_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_age.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_change.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fs_usage.sh
-%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_httpd_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_named_status.sh
@@ -144,6 +147,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 %dir /etc/opt/hc
 %attr(644, root, root) /etc/opt/hc/check_linux_burp_backup.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_es_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_age.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_change.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -167,6 +171,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Sat Mar 09 2019 <patrick@kudos.be> - 0.1.5
+- Added check_linux_es_status
 * Sun Feb 10 2019 <patrick@kudos.be> - 0.1.4
 - Added check_linux_mysqld_status
 * Thu Feb 07 2019 <patrick@kudos.be> - 0.1.3

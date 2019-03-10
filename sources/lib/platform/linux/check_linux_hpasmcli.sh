@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_hpasmcli
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-09-07: initial version [Patrick Van der Veken]
@@ -28,6 +28,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_linux_hpasmcli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -48,6 +49,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC_COUNT=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _TMP_FILE="${TMP_DIR}/.$0.tmp.$$"
 typeset _HPASMCLI_BIN=""
 typeset _ASM_LINE=""
@@ -146,6 +149,30 @@ case "${_DO_ASM_TEMP}" in
         _DO_ASM_TEMP=1
         ;;
 esac
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+
 
 # check for HP tools
 if [[ ! -x ${_HPASMCLI_BIN} || -z "${_HPASMCLI_BIN}" ]]
@@ -167,7 +194,6 @@ then
         _FAN_UNIT="$(print ${_ASM_LINE} | cut -f1 -d' ')"
         _MSG="failure in 'SHOW FANS', unit ${_FAN_UNIT}"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
-        # handle unit result
         log_hc "$0" 1 "${_MSG}"
     done
     print "=== ASM fans ===" >>${HC_STDOUT_LOG}
@@ -187,7 +213,6 @@ then
     do
         _MSG="failure in 'SHOW DIMM'"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
-        # handle unit result
         log_hc "$0" 1 "${_MSG}"
     done
     print "=== ASM DIMMs ===" >>${HC_STDOUT_LOG}
@@ -207,7 +232,6 @@ then
     do
         _MSG="failure in 'SHOW POWERSUPPLY'"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
-        # handle unit result
         log_hc "$0" 1 "${_MSG}"
     done
     print "=== ASM power supply ===" >>${HC_STDOUT_LOG}
@@ -227,7 +251,6 @@ then
     do
         _MSG="failure in 'SHOW SERVER'"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
-        # handle unit result
         log_hc "$0" 1 "${_MSG}"
     done
     print "=== ASM server ===" >>${HC_STDOUT_LOG}
@@ -257,7 +280,6 @@ then
                 _MSG="failure in 'SHOW TEMP', unit ${_TEMP_UNIT}"
                 _MSG="${_MSG} has ${_TEMP_VALUE} >= ${_THRES_VALUE}"
                 _STC_COUNT=$(( _STC_COUNT + 1 ))
-                # handle unit result
                 log_hc "$0" 1 "${_MSG}" "${_TEMP_VALUE}" "${_THRES_VALUE}"
             fi
         fi
@@ -269,7 +291,7 @@ else
 fi
 
 # report OK situation
-if (( _STC_COUNT == 0 ))
+if (( _LOG_HEALTHY > 0 && _STC_COUNT == 0 ))
 then
     _MSG="no problems detected by {${_HPASMCLI_BIN}}"
     log_hc "$0" 0 "${_MSG}"
@@ -285,17 +307,19 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-			hpasmcli_bin=<location_of_hpasmcli_tool>
-            do_asm_fans=0|1
-            do_asm_dimm=0|1
-            do_asm_powersupply=0|1
-            do_asm_server=0|1
-            do_asm_temperature=0|1
-PURPOSE : Checks for errors from the HP Proliant 'hpasmcli' tool (see HP Proliant
-	      support pack (PSP))
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with paramets:
+                log_healthy=<yes|no>
+			    hpasmcli_bin=<location_of_hpasmcli_tool>
+                do_asm_fans=<0|1>
+                do_asm_dimm=<0|1>
+                do_asm_powersupply=<0|1>
+                do_asm_server=<0|1>
+                do_asm_temperature=<0|1>
+PURPOSE     : Checks for errors from the HP Proliant 'hpasmcli' tool (see HP Proliant
+	          support pack (PSP))
+LOG HEALTHY : Supported
 
 EOT
 

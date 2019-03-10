@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_burp_backup
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(),init_hc(), log_hc(),
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #           GNU date that can calculate UNIX epoch seconds from given date,
 #           BURP server must be be able to impersonate configured clients
 #
@@ -29,6 +29,8 @@
 # @(#) 2018-08-25: support for burp v2 [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: changed format of stanzas in configuration file &
+# @(#)             added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +42,7 @@ function check_linux_burp_backup
 typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -51,6 +53,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _BURP_BIN=""
 typeset _BURP_AGE=""
 typeset _BURP_BACKUP_DIR=""
@@ -60,6 +64,7 @@ typeset _BURP_VERSION=""
 typeset _BURP_WARNINGS=""
 typeset _GNU_DATE=""
 typeset _COUNT=1
+typeset _IS_OLD_STYLE=0
 typeset _NOW="$(date '+%Y%m%d %H%M' 2>/dev/null)"       # format: YYYYMMDD HHMM
 
 # handle arguments (originally comma-separated)
@@ -78,6 +83,38 @@ if [[ ! -r ${_CONFIG_FILE} ]]
 then
     warn "unable to read configuration file at ${_CONFIG_FILE}"
     return 1
+fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# check for old-style configuration file (non-prefixed stanzas)
+_IS_OLD_STYLE=$(grep -c -E -e "^client:" ${_CONFIG_FILE} 2>/dev/null)
+if (( _IS_OLD_STYLE > 0 ))
+then
+    warn "no 'client:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
+    return 1
+fi
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
 fi
 
 # check for capable GNU date
@@ -146,8 +183,8 @@ case "${_BURP_VERSION}" in
 esac
 
 # check backup runs of clients
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=';' read _BURP_CLIENT _BURP_WARNINGS _BURP_AGE
+grep -E -e "^client:" ${_CONFIG_FILE} 2>/dev/null |\
+    while IFS=':' read _ _BURP_CLIENT _BURP_WARNINGS _BURP_AGE
 do
     typeset _BACKUP_AGING=""
     typeset _BACKUP_DATE=""
@@ -278,11 +315,14 @@ do
                 :
                 ;;
         esac
-        log_hc "$0" ${_STC} "${_MSG}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+        fi
         _COUNT=$(( _COUNT + 1 ))
 
         # save STDOUT
-        if (( _STC =! 0 ))
+        if (( _STC > 0 ))
         then
             print "=== ${_BURP_CLIENT}: ${_BACKUP_RUN} ===" >>${HC_STDOUT_LOG}
             ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
@@ -301,12 +341,15 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            backup_age=<days_till_last_backup>
-PURPOSE : Checks the status and age of saved burp client backups.
-          Should only berun only on a burp backup server (supports burp v1 and v2)
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+              and formatted stanzas:
+                client:<client_name>:<max_warnings_allowed>:<max_backup_age>(d|h|w)
+PURPOSE     : Checks the status and age of saved burp client backups.
+              Should only be run only on a burp backup server (supports burp v1 and v2)
+LOG HEALTHY : Supported
 
 EOT
 

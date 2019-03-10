@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_samba_status
 # DOES: see _show_usage()
 # EXPECTS: n/a
-# REQUIRES: data_comma2space(), linux_get_init(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), linux_get_init(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-05-17: initial version [Patrick Van der Veken]
@@ -29,6 +29,7 @@
 # @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
 # @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +41,7 @@ function check_linux_samba_status
 typeset _SMB_INIT_SCRIPT="/etc/init.d/samba"
 typeset _SMB_SYSTEMD_SERVICE="smb.service"
 typeset _NMB_SYSTEMD_SERVICE="nmb.service"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -51,6 +52,7 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _RC=0
 typeset _CHECK_SYSTEMD_SERVICE=0
 
@@ -63,6 +65,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # 1) try using the init ways
 linux_get_init
@@ -139,7 +155,10 @@ case ${_STC} in
         _MSG="could not determine status of NMB/SMB"
         ;;
 esac
-log_hc "$0" ${_STC} "${_MSG}"
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 return 0
 }
@@ -148,10 +167,10 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks whether SAMBA daemons are running
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks whether SAMBA daemons are running
+LOG HEALTHY : Supported
 
 EOT
 

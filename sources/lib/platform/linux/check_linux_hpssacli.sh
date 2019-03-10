@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_hpssacli
 # DOES: _show_usage()
 # EXPECTS: _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), data_is_numeric(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2016-04-01: initial version [Patrick Van der Veken]
@@ -27,6 +27,8 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added code for data_is_numeric() & support for
+# @(#)             --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +38,7 @@ function check_linux_hpssacli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -47,6 +49,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC_COUNT=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _TMP_FILE="${TMP_DIR}/.$0.tmp.$$"
 typeset _HPSSACLI_BIN=""
 typeset _SSA_LINE=""
@@ -138,6 +142,29 @@ then
     log "switching setting 'do_ssa_controller' to 1 to fetch slot info"
     _DO_SSA_CTRL=1
 fi
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check for HP tools
 if [[ ! -x ${_HPSSACLI_BIN} || -z "${_HPSSACLI_BIN}" ]]
@@ -158,7 +185,6 @@ then
     do
         _MSG="failure in controller"
         _STC_COUNT=$(( _STC_COUNT + 1 ))
-        # handle unit result
         log_hc "$0" 1 "${_MSG}"
     done
     print "=== SSA controller(s) ===" >>${HC_STDOUT_LOG}
@@ -167,16 +193,13 @@ then
     cat ${_TMP_FILE} | grep "in Slot [0-9]" 2>/dev/null | while read _SSA_LINE
     do
         _SLOT_NUM="$(print ${_SSA_LINE} | cut -f6 -d' ' 2>/dev/null)"
-        case "${_DO_SSA_LOGL}" in
-            +([0-9])*([0-9]))
-                # numeric OK
-                _SLOT_NUMS="${_SLOT_NUMS} ${_SLOT_NUM}"
-                ;;
-            *)
-                # non-numeric
-                warn "found RAID controller at illegal slot?: ${_SLOT_NUM}"
-                ;;
-        esac
+        data_is_numeric "${_SLOT_NUM}"
+        if (( $? == 0 ))
+        then
+            _SLOT_NUMS="${_SLOT_NUMS} ${_SLOT_NUM}"
+        else
+            warn "found RAID controller at illegal slot?: ${_SLOT_NUM}"
+        fi
     done
 else
     warn "${_HPSSACLI_BIN}: do_ssa_controller check is not enabled"
@@ -197,7 +220,6 @@ then
         do
             _MSG="failure in enclosure for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
-            # handle unit result
             log_hc "$0" 1 "${_MSG}"
         done
         print "=== SSA enclosure(s) ===" >>${HC_STDOUT_LOG}
@@ -222,7 +244,6 @@ then
         do
             _MSG="failure in physical drive(s) for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
-            # handle unit result
             log_hc "$0" 1 "${_MSG}"
         done
         print "=== SSA physical drive(s) ===" >>${HC_STDOUT_LOG}
@@ -247,7 +268,6 @@ then
         do
             _MSG="failure in logical drive(s) for controller ${_CTRL_SLOT}"
             _STC_COUNT=$(( _STC_COUNT + 1 ))
-            # handle unit result
             log_hc "$0" 1 "${_MSG}"
         done
         print "=== SSA logical drive(s) ===" >>${HC_STDOUT_LOG}
@@ -258,7 +278,7 @@ else
 fi
 
 # report OK situation
-if (( _STC_COUNT == 0 ))
+if (( _LOG_HEALTHY > 0 && _STC_COUNT > 0 ))
 then
     _MSG="no problems detected by {${_HPSSACLI_BIN}}"
     log_hc "$0" 0 "${_MSG}"
@@ -273,16 +293,18 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            hpssacli_bin=<location_of_hpssacli_tool>
-            do_ssa_controller=0|1
-            do_ssa_enclosure=0|1
-            do_ssa_physical=0|1
-            do_ssa_logical=0|1
-PURPOSE : Checks for errors from the HP Proliant 'hpssacli' tool (see HP Proliant
-          support pack (PSP))
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                hpssacli_bin=<location_of_hpssacli_tool>
+                do_ssa_controller=<0|1>
+                do_ssa_enclosure=<0|1>
+                do_ssa_physical=<0|1>
+                do_ssa_logical=<0|1>
+PURPOSE     : Checks for errors from the HP Proliant 'hpssacli' tool (see HP Proliant
+              support pack (PSP))
+LOG HEALTHY : Supported
 
 EOT
 

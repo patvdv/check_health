@@ -6,6 +6,11 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
 # location of 'hpasmcli' tool
 hpasmcli_bin="/sbin/hpasmcli"
 
@@ -23,6 +28,7 @@ do_asm_server=1
 
 # SHOW TEMPERATURE (0=off, 1=on) [default: 1]
 do_asm_temperature=1
+
 
 #******************************************************************************
 # End of FILE
