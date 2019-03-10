@@ -29,6 +29,7 @@
 # @(#) 2018-10-22: small fixes [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: text updates [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_hpux_ovpa_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _OVPA_BIN="/opt/perf/bin/perfstat"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -162,7 +163,8 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3 with:
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
                 ovpa_daemons=<list_of_ovpa_processes_to_check>
 PURPOSE     : Checks the status of OVPA processes (OpenView Performance Agent)
 LOG HEALTHY : Supported

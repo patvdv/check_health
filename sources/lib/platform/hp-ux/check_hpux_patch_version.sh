@@ -29,6 +29,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-02-19: fix in exclude checking [Patrick Van der Veken]
+# @(#) 2019-03-09: text updates [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -42,7 +43,7 @@ typeset _SWLIST_BIN="/usr/sbin/swlist"
 typeset _SWLIST_OPTS=""
 typeset _SHOW_PATCHES_BIN="/usr/contrib/bin/show_patches"
 typeset _SHOW_PATCHES_OPTS=""
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -256,16 +257,18 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            required_patches=<list_of_patches_to_check>
-            required_oe=<OE_version>
-            check_filesets=<yes|no>
-            exclude_filesets=<list_of_filesets_to_exclude>
-PURPOSE : Checks whether the required OE (Operating Environment) version is installed
-          Checks whether the required patches are installed
-          Checks whether filesets are in a configured state
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                required_patches=<list_of_patches_to_check>
+                required_oe=<OE_version>
+                check_filesets=<yes|no>
+                exclude_filesets=<list_of_filesets_to_exclude>
+PURPOSE     : Checks whether the required OE (Operating Environment) version is installed
+              Checks whether the required patches are installed
+              Checks whether filesets are in a configured state
+LOG HEALTHY : Supported
 
 EOT
 

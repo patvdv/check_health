@@ -27,6 +27,7 @@
 # @(#)             [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-09-03: small variable fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-C disk -P wwid"
 typeset _SCSIMGR_BIN="/usr/sbin/scsimgr"
 typeset _SCSIMGR_OPTS="-v get_info all_lun"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -58,7 +59,6 @@ typeset _ACTIVE_PATH_COUNT=""
 typeset _ALL_PATH_COUNT=""
 typeset _FAILED_PATH_COUNT=""
 typeset _STANDBY_PATH_COUNT=""
-typeset _WWID=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -210,7 +210,7 @@ awk 'BEGIN { wwid = ""; active_paths = ""; all_paths = ""; failed_paths = ""; st
             print wwid "|" disks[wwid] "|" paths_active[wwid] "|" paths_all[wwid] "|" paths_failed[wwid] "|" paths_standby[wwid]
         }
     }' ${_TMP1_FILE} ${_TMP2_FILE} 2>/dev/null |\
-while IFS='|' read -r _WWID _HW_PATH _ACTIVE_PATH_COUNT _ALL_PATH_COUNT _FAILED_PATH_COUNT _STANDBY_PATH_COUNT
+while IFS='|' read -r _ _HW_PATH _ACTIVE_PATH_COUNT _ALL_PATH_COUNT _FAILED_PATH_COUNT _STANDBY_PATH_COUNT
 do
     if [[ -z "${_ACTIVE_PATH_COUNT}" ]] ||
        [[ -z "${_ALL_PATH_COUNT}" ]] ||
@@ -259,10 +259,10 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-
-PURPOSE : Check the active and failed (non-active) lunpaths of DISK devices
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Check the active and failed (non-active) lunpaths of DISK devices
+LOG HEALTHY : Supported
 
 EOT
 

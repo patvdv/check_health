@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2018-02-08: initial version [Patrick Van der Veken]
 # @(#) 2018-02-13: fix to avoid log check if syslogd is not active [Patrick Van der Veken]
+# @(#) 2019-03-09: text updates [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_syslogd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _SYSLOGD_PID_FILE="/var/run/syslog.pid"
 typeset _SYSLOGD_LOG_FILE="/var/adm/syslog.log"
-typeset _VERSION="2019-02-13"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -159,7 +160,6 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3
 PURPOSE     : Checks whether syslogd service is running and whether syslogd
               is actually logging to ${_SYSLOGD_LOG_FILE}.
 LOG HEALTHY : Supported

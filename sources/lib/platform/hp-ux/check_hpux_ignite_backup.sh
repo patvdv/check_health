@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_ignite_backup
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-05-28: initial version [Patrick Van der Veken]
@@ -28,7 +28,8 @@
 # @(#) 2016-06-03: small fix [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-01-31: Improve discovery routine + add log_healthy [Patrick Van der Veken] 
+# @(#) 2019-01-31: improve discovery routine + add log_healthy [Patrick Van der Veken]
+# @(#) 2019-03-09: text updates [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -42,7 +43,7 @@ typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _IGNITE_NEEDLE="^DONE"
 typeset _IGNITE_SERVER_FILE="/var/opt/ignite/server/ignite.defs"
 typeset _IGNITE_CLIENTS_DIR="/var/opt/ignite/clients"
-typeset _VERSION="2019-01-31"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -244,13 +245,15 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            backup_age=<days_till_last_backup>
-PURPOSE : Checks the state and age of saved Ignite-UX client backups (should only be
-          run only on the Ignite-UX server). Backups with warnings are considered
-          to OK. Backups older than \$backup_age will not pass the health check.
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                backup_age=<days_till_last_backup>
+                exclude_hosts=<list_of_hosts>
+PURPOSE     : Checks the state and age of saved Ignite-UX client backups (should only be
+              run only on the Ignite-UX server). Backups with warnings are considered
+              to OK. Backups older than \$backup_age will not pass the health check.
 LOG HEALTHY : Supported
 
 EOT

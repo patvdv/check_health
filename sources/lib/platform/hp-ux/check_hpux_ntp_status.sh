@@ -29,6 +29,7 @@
 # @(#) 2019-01-10: added configuration option 'ntpq_use_ipv4', fixed problem
 # @(#)             with offset calculation [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: Text updates [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -38,7 +39,7 @@ function check_hpux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 typeset _NTPQ_OPTS="-pn"
@@ -183,12 +184,12 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3 with:
-               log_healthy=<yes|no>
-               max_offset=<max_offset (ms)>
-               force_chrony=<yes|no>
-               force_ntp=<yes|no>
-               ntpq_use_ipv4=<yes|no>
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                max_offset=<max_offset (ms)>
+                force_chrony=<yes|no>
+                force_ntp=<yes|no>
+                ntpq_use_ipv4=<yes|no>
 EXTRA OPTS  : --hc-args=force_chrony, --hc-args=force_ntp
 PURPOSE     : Checks the status of NTP service & synchronization.
                 Supports chronyd & ntpd.

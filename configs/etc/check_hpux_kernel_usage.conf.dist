@@ -6,15 +6,21 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # specify a general maximum usage threshold (percentage)
 # [ default: 90% ]
 max_kcusage=90
 
 # specify individual kernel parameters and their maximum usage threshold (percentage)
 # definitions here will overrides max_kcusage for these parameters
-# [param:<param_name>:<param_threshold>]
+# Format:
+#   [param:<param_name>:<param_threshold>]
 # Examples:
-# param:nproc:70
+#param:nproc:70
 
 # specify parameters that should be excluded from the check
 # comma-separated list (as shown by kctune/kcusage)

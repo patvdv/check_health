@@ -25,6 +25,7 @@
 # @(#) 2017-04-23: initial version [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_hpux_httpd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _HTTPD_PID_FILE="/var/run/httpd/httpd.pid"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -47,6 +48,7 @@ typeset _HTTPD_BIN=""
 typeset _HTTPD_PID=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _RC=0
 
 # handle arguments (originally comma-separated)
@@ -58,6 +60,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # ---- process state ----
 # 1) try using the PID way
@@ -94,7 +110,11 @@ case ${_STC} in
         _MSG="could not determine status of httpd"
         ;;
 esac
-log_hc "$0" ${_STC} "${_MSG}"
+# report result
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 # ---- config state ----
 _HTTPD_BIN="$(which httpd 2>>${HC_STDERR_LOG})"
@@ -110,7 +130,11 @@ then
         _MSG="httpd configuration files have syntax error(s) {httpd -s}"
         _STC=1
     fi
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 fi
 
 return 0
@@ -120,10 +144,10 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks whether httpd (apache) is running
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks whether httpd (apache) is running
+LOG HEALTHY : Supported
 
 EOT
 

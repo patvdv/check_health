@@ -6,12 +6,18 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # specify properties as displayed by the 'vzlist -a -H -o ctid,status,onboot' command
-# [parid;runtime_status;boot_status]
+# Format:
+#  [vpar:<parid>:<runtime_status>:<boot_status>]
 # runtime_status should be 'on' or 'off'
 # boot_status should be 'auto' or 'manual'
 # Examples:
-#1;on;auto
+#vpar:1:on:auto
 
 
 #******************************************************************************

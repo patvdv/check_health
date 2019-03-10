@@ -172,7 +172,7 @@ CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
               and formatted stanzas:
                 sg:<param>=<value>
-PURPOSE       : Checks the status of Serviceguard cluster parameters (SG 11.16+)
+PURPOSE     : Checks the status of Serviceguard cluster parameters (SG 11.16+)
 LOG HEALTHY : Supported
 
 EOT

@@ -19,12 +19,13 @@
 # @(#) MAIN: check_hpux_autopath
 # DOES: see _show_usage().
 # EXPECTS: n/a
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2013-08-29: initial version [Patrick Van der Veken]
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_autopath
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _AUTOPATH_BIN="/sbin/autopath"
 typeset _AUTOPATH_NEEDLE="Failed"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -47,6 +48,7 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
 typeset _STC_COUNT=0
+typeset _LOG_HEALTHY=0
 typeset _AUTOPATH_LINE=""
 typeset _DEVICE=""
 
@@ -59,6 +61,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check autopath presence
 if [[ ! -x ${_AUTOPATH_BIN} ]]
@@ -87,13 +103,16 @@ do
     _STC=1
     _STC_COUNT=$(( _STC_COUNT + 1 ))
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
     _STC=0
 done
 
 # report OK situation
-if (( _STC_COUNT == 0 ))
+if (( _LOG_HEALTHY > 0 && _STC_COUNT == 0 ))
 then
     _MSG="no failed paths detected by {${_AUTOPATH_BIN}}"
     log_hc "$0" 0 "${_MSG}"
@@ -106,11 +125,11 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks whether failed paths exist for StorageWorks disk arrays
-          using the 'autopath' utility.
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks whether failed paths exist for StorageWorks disk arrays
+              using the 'autopath' utility.
+LOG HEALTHY : Supported
 
 EOT
 

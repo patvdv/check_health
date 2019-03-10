@@ -27,6 +27,8 @@
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added code for data_is_numeric(), changed format of configuration
+# @(#)             file (; -> :) & added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +39,7 @@ function check_hpux_hpvm_vpar_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _HPVMSTATUS_BIN="/opt/hpvm/bin/hpvmstatus"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -57,6 +59,8 @@ typeset _PAR_ENTRY=""
 typeset _PAR_MATCH=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _RC=0
 
 # handle arguments (originally comma-separated)
@@ -68,6 +72,46 @@ do
             ;;
     esac
 done
+
+# handle configuration file
+[[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
+if [[ ! -r ${_CONFIG_FILE} ]]
+then
+    warn "unable to read configuration file at ${_CONFIG_FILE}"
+    return 1
+fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# check for old-style configuration file (non-prefixed stanzas)
+_IS_OLD_STYLE=$(grep -c -E -e "^vpar:" ${_CONFIG_FILE} 2>/dev/null)
+if (( _IS_OLD_STYLE == 0 ))
+then
+    warn "no 'vpar:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
+    return 1
+fi
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check HPVM
 if [[ ! -x ${_HPVMSTATUS_BIN} || -z "${_HPVMSTATUS_BIN}" ]]
@@ -86,24 +130,14 @@ ${_HPVMSTATUS_BIN} -M >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 }
 
 # check configuration values
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _PAR_ENTRY
+grep -E -e "^vpar:" ${_CONFIG_FILE} 2>/dev/null | while IFS=":" read -r _ _PAR_ID _PAR_CFG_STATUS _PAR_CFG_BOOT
 do
-    # field split
-    _PAR_ID=$(print "${_PAR_ENTRY}" | cut -f1 -d';')
-    _PAR_CFG_STATUS=$(data_lc "$(print \"${_PAR_ENTRY}\" | cut -f2 -d';')")
-    _PAR_CFG_BOOT=$(data_lc "$(print \"${_PAR_ENTRY}\" | cut -f3 -d';')")
-
     # check configuration
-    case "${_PAR_ID}" in
-        +([0-9])*(.)*([0-9]))
-            # numeric, OK
-            ;;
-        *)
-            # not numeric
-            warn "invalid partition ID '${_PAR_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
-            ;;
-    esac
+    data_is_numeric "${_PAR_ID}"
+    if (( $? > 0 ))
+    then
+        warn "invalid partition ID '${_PAR_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+    fi
     case "${_PAR_CFG_STATUS}" in
         on|off)
             ;;
@@ -124,13 +158,8 @@ do
 done
 
 # perform checks
-grep -v -E -e '^$' -e '^#' ${_CONFIG_FILE} 2>/dev/null | while read _PAR_ENTRY
+grep -E -e "^vpar:" ${_CONFIG_FILE} 2>/dev/null | while IFS=":" read -r _ _PAR_ID _PAR_CFG_STATUS _PAR_CFG_BOOT
 do
-    # field split
-    _PAR_ID=$(print "${_PAR_ENTRY}" | cut -f1 -d';')
-    _PAR_CFG_STATUS=$(data_lc "$(print \"${_PAR_ENTRY}\" | cut -f2 -d';')")
-    _PAR_CFG_BOOT=$(data_lc "$(print \"${_PAR_ENTRY}\" | cut -f3 -d';')")
-
     # check run-time values (we need to make the needle sufficiently less greedy)
     _PAR_MATCH=$(grep -i "^.*:.*:${_PAR_ID}::Integrity" ${HC_STDOUT_LOG} 2>/dev/null)
     if [[ -n "${_PAR_MATCH}" ]]
@@ -157,7 +186,10 @@ do
              _MSG="partition ${_PAR_ID} has a wrong boot flag [${_PAR_RUN_BOOT}]"
              _STC=1
         fi
-        log_hc "$0" ${_STC} "${_MSG}" "${_PAR_RUN_BOOT}" "${_PAR_CFG_BOOT}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_PAR_RUN_BOOT}" "${_PAR_CFG_BOOT}"
+        fi
     else
         warn "could not determine status for partition ${_PAR_ID} from command output {${_HPVMSTATUS_BIN}}"
         _RC=1
@@ -171,11 +203,14 @@ return ${_RC}
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            <parid>;<runtime_status>;<boot_status>
-PURPOSE : Checks the status of vPars (on a VSP)
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+              and formatted stanzas:
+                vpar:<parid>:<runtime_status>:<boot_status>
+PURPOSE     : Checks the status of vPars (on a VSP)
+LOG HEALTHY : Supported
 
 EOT
 

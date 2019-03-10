@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2016-04-28: initial version [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@
 function check_hpux_vg_minor_number
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -43,6 +44,7 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _VG=""
 typeset _VG_DUPE=""
 typeset _VG_DUPES=""
@@ -57,8 +59,23 @@ do
     esac
 done
 
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
+
 # get list of major and minor numbers for vgs
-vgdisplay -F | cut -f1 -d':' | cut -f2 -d'=' | while read _VG
+vgdisplay -F 2>>${HC_STDERR_LOG} | cut -f1 -d':' 2>/dev/null | cut -f2 -d'=' 2>/dev/null |\
+    while read -r _VG
 do
     ls -l ${_VG}/group >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 done
@@ -67,19 +84,25 @@ done
 _VG_DUPES="$(awk '{ print $5":"$6 }' ${HC_STDOUT_LOG} | sort | uniq -d)"
 if [[ -n ${_VG_DUPES} ]]
 then
-    print "${_VG_DUPES}" | while read _VG_DUPE
+    print "${_VG_DUPES}" | while read -r _VG_DUPE
     do
         _MSG="MAJ/MIN numbers combination '${_VG_DUPE}' is not unique"
         _STC=1
 
-        # handle unit result
-        log_hc "$0" ${_STC} "${_MSG}"
+        # report result
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+        fi
     done
 else
     _MSG="no VGs with duplicate MAJ/MIN numbers detected"
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 fi
 
 return 0
@@ -89,10 +112,11 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks whether all volume groups have a unique minor number
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks whether all volume groups have a unique minor number
+LOG HEALTHY : Supported
+
 
 EOT
 

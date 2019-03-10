@@ -6,6 +6,11 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # comma-separated list of HW device classes that should be checked
 # [default: ctl,diag,disk,ext_bus,fc,fcp,i2o,ipmi,lan,lvm,olar,vxvm]
 ioscan_classes="ctl,diag,disk,ext_bus,fc,fcp,i2o,ipmi,lan,lvm,olar,vxvm"

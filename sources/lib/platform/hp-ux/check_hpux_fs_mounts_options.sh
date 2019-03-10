@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_fs_mounts_options
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2016-04-04: original version [Patrick Van der Veken]
@@ -27,6 +27,7 @@
 # @(#) 2017-07-31: added support for current/expected value output [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_hpux_fs_mounts_options
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -47,6 +48,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _CONFIG_FS=""
 typeset _CONFIG_OPTS=""
 typeset _CURR_OPTS=""
@@ -80,6 +83,30 @@ then
     # default
     _IGNORE_FS="yes"
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # collect data (mount only)
 mount >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
@@ -110,15 +137,18 @@ do
         # compare strings (also flags FS that are not mounted)
         if [[ "${_CURR_SORTED_OPTS}" != "${_CFG_SORTED_OPTS}" ]]
         then
-                _MSG="${_CONFIG_FS} is not mounted with the correct options"
-                _STC=1
+            _MSG="${_CONFIG_FS} is not mounted with the correct options"
+            _STC=1
         else
-                _MSG="${_CONFIG_FS} is mounted with the correct options"
+            _MSG="${_CONFIG_FS} is mounted with the correct options"
         fi
     fi
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}" "${_CURR_OPTS}" "${_CONFIG_OPTS}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}" "${_CURR_OPTS}" "${_CONFIG_OPTS}"
+    fi
     _STC=0
 done
 
@@ -129,13 +159,15 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with formatted stanzas:
-            fs:<my_fs1>:<my_fs_opts1>
-          Other options:
-            ignore_missing_fs=yes|no
-PURPOSE : Checks whether file systems are mounted with correct options
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                ignore_missing_fs=<yes|no>
+              and formatted stanzas:
+                fs:<my_fs1>:<my_fs_opts1>
+PURPOSE     : Checks whether file systems are mounted with correct options
+LOG HEALTHY : Supported
 
 EOT
 

@@ -19,7 +19,7 @@
 # @(#) MAIN: check_hpux_syslog
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2016-06-20: initial version [Patrick Van der Veken]
@@ -27,6 +27,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_hpux_syslog
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _STATE_FILE="${STATE_PERM_DIR}/discovered.syslog"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,6 +50,8 @@ typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
 typeset _STC_COUNT=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _TMP_FILE="${TMP_DIR}/.$0.tmp.$$"
 typeset _CLASSES_LINE=""
 typeset _SYSLOG_FILE=""
@@ -92,6 +95,30 @@ else
     _SYSLOG_CLASSES=$(print "${_CLASSES_LINE}" | sed 's/,/(\\[[0-9]+\\])\?:\|/g')
     # add PID qualifier to last item
     _SYSLOG_CLASSES="${_SYSLOG_CLASSES}(\[[0-9]+\])?:"
+fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
 fi
 
 # check SYSLOG file
@@ -144,8 +171,11 @@ else
     _MSG="no new SYSLOG messages found"
 fi
 
-# handle results
-log_hc "$0" ${_STC} "${_MSG}"
+# report results
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 # do cleanup
 [[ -f ${_TMP_FILE} ]] && rm -f ${_TMP_FILE} >/dev/null 2>&1
@@ -157,15 +187,17 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            syslog_file=<path_to_syslog_file>
-            syslog_classes=<list_of_facility_classes_to_search_for>
-PURPOSE : Provides a KISS syslog monitor (keep tracks of already discovered messages in
-          a state file and compares new lines in SYSLOG to the ones kept in the
-          state file. The plugin will sort both state & SYSLOG data before doing
-          the comparison.
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                syslog_file=<path_to_syslog_file>
+                syslog_classes=<list_of_facility_classes_to_search_for>
+PURPOSE     : Provides a KISS syslog monitor (keep tracks of already discovered messages in
+              a state file and compares new lines in SYSLOG to the ones kept in the
+              state file. The plugin will sort both state & SYSLOG data before doing
+              the comparison.
+LOG HEALTHY : Supported
 
 EOT
 

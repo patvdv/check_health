@@ -6,8 +6,14 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # specify kernel parameters and their values or expression (as reported by kctune)
-# [param:<param_name>:<param_value>]
+# Format:
+#   [param:<param_name>:<param_value>]
 # Examples:
 #param:nproc:5000
 #param:filecache_max:50%

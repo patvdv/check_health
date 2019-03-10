@@ -6,8 +6,17 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # list of commands (or strings) that should appear in active cron entries
-/opt/cfg2html/cfg2html_hpux.sh
+# Format:
+#  cron:<cron_entry>
+# Examples:
+#cron:/opt/cfg2html/cfg2html_hpux.sh
+
 
 #******************************************************************************
 # End of FILE

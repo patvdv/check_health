@@ -19,7 +19,8 @@
 # @(#) MAIN: check_hpux_kernel_usage
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc()
+# REQUIRES: data_comma2space(), data_is_numeric(), dump_logs(), init_hc(),
+#           log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-12-22: original version [Patrick Van der Veken]
@@ -28,6 +29,8 @@
 # @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added code for data_is_numeric() &
+# @(#)             support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +41,7 @@ function check_hpux_kernel_usage
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _KCUSAGE_BIN="/usr/sbin/kcusage"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,6 +52,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _MAX_KCUSAGE=0
 typeset _EXCLUDED_PARAMS=""
 typeset _HANDLED_PARAMS=""
@@ -90,6 +95,30 @@ if [[ -n "${_EXCLUDED_PARAMS}" ]]
 then
     log "excluding following kernel parameters: ${_EXCLUDED_PARAMS}"
 fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check & get kcusage information
 if [[ ! -x ${_KCUSAGE_BIN} ]]
@@ -126,21 +155,19 @@ do
         return 1
     fi
     # check if the threshold value is correct (integer)
-    case "${_CONFIG_VALUE}" in
-        [0-9]*)
-            # numeric, OK
-            if (( _CONFIG_VALUE < 1 || _CONFIG_VALUE > 99 ))
-            then
-                warn "incorrect threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-                return 1
-            fi
-            ;;
-        *)
-            # not numeric
-            warn "invalid threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+    data_is_numeric "${_CONFIG_VALUE}"
+    if (( $? == 0 ))
+    then
+        if (( _CONFIG_VALUE < 1 || _CONFIG_VALUE > 99 ))
+        then
+            warn "incorrect threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
             return 1
-            ;;
-    esac
+        fi
+    else
+        # not numeric
+        warn "invalid threshold value '${_CONFIG_VALUE}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+        return 1
+    fi
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
 
@@ -164,8 +191,11 @@ do
     # push to handled list
     _HANDLED_PARAMS="${_HANDLED_PARAMS}\n${_PARAM_NAME}"
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_CONFIG_VALUE}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_CONFIG_VALUE}"
+    fi
     _STC=0
 done
 
@@ -198,8 +228,11 @@ do
             _MSG="${_PARAM_NAME} is below the general threshold (${_CHECK_VALUE}% <= ${_MAX_KCUSAGE}%)"
         fi
 
-        # handle unit result
-        log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_MAX_KCUSAGE}"
+        # report result
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_CHECK_VALUE}" "${_MAX_KCUSAGE}"
+        fi
         _STC=0
     fi
 done
@@ -211,14 +244,16 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with formatted stanzas:
-            param:<my_param1>:<my_param1_threshold_%>
-          Other options:
-            max_kcusage=<threshold_%>
-            exclude_params=<list_of_exluded_parameters>
-PURPOSE : Checks the current usage of kernel paremeter resources
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                max_kcusage=<threshold_%>
+                exclude_params=<list_of_excluded_parameters>
+              and formatted stanzas:
+                param:<param_name>:<param_value>
+PURPOSE     : Checks the current usage of kernel paremeter resources
+LOG HEALTHY : Supported
 
 EOT
 

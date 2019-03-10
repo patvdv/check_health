@@ -142,6 +142,8 @@ case ${_STC} in
         _MSG="could not determine status of sshd"
         ;;
 esac
+
+# report results
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
 then
     log_hc "$0" ${_STC} "${_MSG}"

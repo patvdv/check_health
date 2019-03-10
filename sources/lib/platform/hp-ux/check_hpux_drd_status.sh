@@ -30,6 +30,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-10-31: better result check for DRD output [Patrick Van der Veken]
 # @(#) 2019-02-08: fix for mirrored boot disks [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +41,7 @@ function check_hpux_drd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _DRD_BIN="/opt/drd/bin/drd"
-typeset _VERSION="2019-02-08"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -50,6 +51,8 @@ init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _RC=0
 typeset _CHECK_CLONE=""
 typeset _CHECK_SYNC=""
@@ -111,6 +114,30 @@ then
     _CHECK_SYNC="yes"
 fi
 _SYNC_MAX_AGE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'sync_age')
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # get drd status
 if [[ ! -x ${_DRD_BIN} ]]
@@ -145,10 +172,16 @@ then
         [[ "${_BOOTED_DISK}"  = "${_ACTIVE_DISK}" ]]
     then
         _MSG="host was booted from original disk (${_ACTIVE_DISK})"
-        log_hc "$0" 0 "${_MSG}"
+        if (( _LOG_HEALTHY > 0 ))
+        then
+            log_hc "$0" 0 "${_MSG}"
+        fi
     else
         _MSG="host was booted from clone disk (${_ACTIVE_DISK})"
-        log_hc "$0" 0 "${_MSG}"
+        if (( _LOG_HEALTHY > 0 ))
+        then
+            log_hc "$0" 0 "${_MSG}"
+        fi
     fi
 
     # check EFI status
@@ -156,7 +189,10 @@ then
     if [[ "${_EFI_CLONE}" = "AUTO file present, Boot loader present" ]]
     then
         _MSG="clone disk ${_CLONE_DISK} has a bootable EFI partition"
-        log_hc "$0" 0 "${_MSG}"
+        if (( _LOG_HEALTHY > 0 ))
+        then
+            log_hc "$0" 0 "${_MSG}"
+        fi
     else
         _MSG="clone disk ${_CLONE_DISK} does not have a bootable EFI partition"
         log_hc "$0" 1 "${_MSG}"
@@ -165,7 +201,10 @@ then
     if [[ "${_EFI_ORIGINAL}" = "AUTO file present, Boot loader present" ]]
     then
         _MSG="original disk ${_ORIGINAL_DISK} has a bootable EFI partition"
-        log_hc "$0" 0 "${_MSG}"
+        if (( _LOG_HEALTHY > 0 ))
+        then
+            log_hc "$0" 0 "${_MSG}"
+        fi
     else
         _MSG="original disk ${_ORIGINAL_DISK} does not have a bootable EFI partition"
         log_hc "$0" 1 "${_MSG}"
@@ -195,7 +234,10 @@ then
             if (( _CLONE_EPOCH > (_NOW_EPOCH - (_CLONE_MAX_AGE * 24 * 60 * 60)) ))
             then
                 _MSG="clone age is younger than ${_CLONE_MAX_AGE} days [${_CLONE_DATE}]"
-                log_hc "$0" 0 "${_MSG}"
+                if (( _LOG_HEALTHY > 0 ))
+                then
+                    log_hc "$0" 0 "${_MSG}"
+                fi
             else
                 _MSG="clone age is older than ${_CLONE_MAX_AGE} days [${_CLONE_DATE}]"
                 log_hc "$0" 1 "${_MSG}"
@@ -232,7 +274,10 @@ then
             if (( _SYNC_EPOCH > (_NOW_EPOCH - (_SYNC_MAX_AGE * 24 * 60 * 60)) ))
             then
                 _MSG="sync age is younger than ${_SYNC_MAX_AGE} days [${_SYNC_DATE}]"
-                log_hc "$0" 0 "${_MSG}"
+                if (( _LOG_HEALTHY > 0 ))
+                then
+                    log_hc "$0" 0 "${_MSG}"
+                fi
             else
                 _MSG="sync age is older than ${_SYNC_MAX_AGE} days [${_SYNC_DATE}]"
                 log_hc "$0" 1 "${_MSG}"
@@ -259,16 +304,18 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            check_clone=<yes|no>
-            clone_age=<max_age_of_clone_in_days>
-            check_sync=<yes|no>
-            sync_age=<max_age_of_sync_in_days>
-PURPOSE : Checks whether the DRD clone was correctly created
-          Checks for correct EFI partitions
-          Checks the age of the DRD clone and/or sync
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                check_clone=<yes|no>
+                clone_age=<max_age_of_clone_in_days>
+                check_sync=<yes|no>
+                sync_age=<max_age_of_sync_in_days>
+PURPOSE     : Checks whether the DRD clone was correctly created
+              Checks for correct EFI partitions
+              Checks the age of the DRD clone and/or sync
+LOG HEALTHY : Supported
 
 EOT
 

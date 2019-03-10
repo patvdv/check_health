@@ -27,6 +27,7 @@
 # @(#) 2019-01-30: refactored to support custom defintions with all
 #                  filesystems check [Patrick Van der Veken]
 # @(#) 2019-02-18: fixes + help update
+# @(#) 2019-03-09: text fixes
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_hpux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-02-18"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -289,17 +290,19 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with formatted stanzas (optional):
-            fs:<fs_name>:<max_inodes_usage_in_%>:<max_space_usage_in%>
-          Other options:
-            log_healthy=<yes|no>
-            check_inodes_usage=<yes|no>
-            check_space_usage=<yes|no>
-            max_inodes_usage=<general_inodes_usage_treshold>
-            max_space_usage=<general_space_usage_treshold>
-PURPOSE : Checks the inodes & space usage for the configured or all (local) filesystems
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                check_inodes_usage=<yes|no>
+                check_space_usage=<yes|no>
+                max_inodes_usage=<general_inodes_usage_treshold>
+                max_space_usage=<general_space_usage_treshold>
+              with formatted stanzas (optional):
+                fs:<fs_name>:<max_inodes_usage_%>:<max_space_usage_%>
+EXT OPTIONS : --hc-args=check_inodes, --hc-args=check_space
+PURPOSE     : Checks the inodes & space usage for the configured or all (local) filesystems
+LOG HEALTHY : Supported
 
 EOT
 

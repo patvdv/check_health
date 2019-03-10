@@ -6,9 +6,16 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
-# list of required package statuses (format : "package_name:parameter=value")
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# list of required package statuses
+# Format:
+#  sg:<package_name>:<parameter>=<value>
 # Examples:
-#my_package|status=up
+#sg:my_package:status=up
 
 
 #******************************************************************************
