@@ -6,29 +6,38 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # list of required active subsystems
-sendmail
-syslogd
-portmap
-inetd
-snmpd
-hostmibd
-snmpmibd
-aixmibd
-#nimsh
-biod
-rpc.statd
-rpc.lockd
-automountd
-qdaemon
-writesrv
-sshd
-xntpd
-cimsys
-ctrmc
-IBM.ServiceRM
-IBM.DRM
-IBM.CSMAgentRM
+# Format:
+#  subsys:<subsystem_name>
+# Examples:
+#subsys:sendmail
+#subsys:syslogd
+#subsys:portmap
+#subsys:inetd
+#subsys:snmpd
+#subsys:hostmibd
+#subsys:snmpmibd
+#subsys:aixmibd
+#subsys:nimsh
+#subsys:biod
+#subsys:rpc.statd
+#subsys:rpc.lockd
+#subsys:qdaemon
+#subsys:automountd
+#subsys:writesrv
+#subsys:sshd
+#subsys:xntpd
+#subsys:cimsys
+#subsys:ctrmc
+#subsys:IBM.ServiceRM
+#subsys:IBM.DRM
+#subsys:IBM.CSMAgentRM
+
 
 #******************************************************************************
 # End of FILE

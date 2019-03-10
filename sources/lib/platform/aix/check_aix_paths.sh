@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2013-05-07: initial version [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@
 function check_aix_paths
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX"                      # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -43,6 +44,7 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _PATH=""
 
 # handle arguments (originally comma-separated)
@@ -54,6 +56,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # collect data
 lspath >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
@@ -71,8 +87,11 @@ case ${_PATH} in
         ;;
 esac
 
-# handle results
-log_hc "$0" ${_STC} "${_MSG}"
+# report result
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 return 0
 }
@@ -81,10 +100,10 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks whether any hardware paths are missing {lspath}
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks whether any hardware paths are missing {lspath}
+LOG HEALTHY : Supported
 
 EOT
 

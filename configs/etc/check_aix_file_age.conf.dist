@@ -6,9 +6,18 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
-# file (full path); maximum age in minutes since last change
-/var/adm/ras/syslog.caa;600
-/var/log/ntp.log;30
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# specify file details
+# Format:
+#   file:<file_path>:<max_age_minutes_since_last_change>
+# Examples:
+#file:/var/log/messages:60
+#file:/var/log/ntp.log:30
+
 
 #******************************************************************************
 # End of FILE

@@ -6,6 +6,11 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # name of the state file to use (will be relative to /var/opt/hc/state/persistent
 # [default: discovered.file_change]
 state_file=discovered.file_change

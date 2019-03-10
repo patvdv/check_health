@@ -6,6 +6,11 @@
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
 # full path to the location of mksysb images, the tool expects sub-directories
 # per host underneath this location
 backup_path=/export/images
@@ -16,6 +21,7 @@ mksysb_log=mksysb.log
 # maximum days before backup gets flagged as 'too old'
 # [default: 14]
 backup_age=14
+
 
 #******************************************************************************
 # End of FILE

@@ -24,6 +24,7 @@
 # @(#) HISTORY:
 # @(#) 2013-05-28: initial version [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_aix_sysbackup
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 # mksysb identifier prefix of error code(s)
 typeset _MKSYSB_NEEDLE="^0512"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX"                      # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -46,6 +47,8 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CFG_HEALTHY=""
+typeset _LOG_HEALTHY=0
 typeset _BACKUP_PATH=""
 typeset _BACKUP_HOST=""
 typeset _BACKUP_LOG=""
@@ -99,9 +102,33 @@ case "${_BACKUP_AGE}" in
         _BACKUP_AGE=14
         ;;
 esac
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # perform state check on mksysb log files
-ls -1 ${_BACKUP_PATH} | while read _BACKUP_HOST
+ls -1 ${_BACKUP_PATH} 2>>${HC_STDERR_LOG} | while read -r _BACKUP_HOST
 do
     _BACKUP_LOG="${_BACKUP_PATH}/${_BACKUP_HOST}/curr/${_MKSYSB_LOG}"
     if [[ -r "${_BACKUP_LOG}" ]]
@@ -134,13 +161,16 @@ do
         continue
     fi
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
     _STC=0
 done
 
 # perform age check on mksysb log files
-ls -1 ${_BACKUP_PATH} | while read _BACKUP_HOST
+ls -1 ${_BACKUP_PATH} 2>>${HC_STDERR_LOG} | while read -r _BACKUP_HOST
 do
     _BACKUP_LOG="${_BACKUP_PATH}/${_BACKUP_HOST}/curr/${_MKSYSB_LOG}"
     if [[ -r "${_BACKUP_LOG}" ]]
@@ -163,8 +193,11 @@ do
         continue
     fi
 
-    # handle unit result
-    log_hc "$0" ${_STC} "${_MSG}"
+    # report result
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
     _STC=0
 done
 
@@ -175,15 +208,17 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3 with:
-            backup_path=<location_of_mksysb_images>
-            mksysb_log=<name_of_standard_standard_mksysb_log>
-            backup_age=<days_till_last_backup>
-PURPOSE : Checks the state of saved mksysb client backups (should typically be
-          run only on the NIM master or server that is acting as mksysb repo,
-          do NOT run on a typical client LPAR)
+NAME        : $1
+VERSION     : $2
+CONFIG      : $3 with parameters:
+                log_healthy=<yes|no>
+                backup_path=<location_of_mksysb_images>
+                mksysb_log=<name_of_standard_standard_mksysb_log>
+                backup_age=<days_till_last_backup>
+PURPOSE     : Checks the state of saved mksysb client backups (should typically be
+              run only on the NIM master or server that is acting as mksysb repo,
+              do NOT run on a typical client LPAR)
+LOG HEALTHY : Supported
 
 EOT
 

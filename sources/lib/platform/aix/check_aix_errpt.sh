@@ -27,6 +27,7 @@
 # @(#) 2013-06-24: big fix errpt last check time [Patrick Van der Veken]
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@
 function check_aix_errpt
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX"                      # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -46,6 +47,7 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _LOG_HEALTHY=0
 typeset _LAST_TIME_CHECK=""
 typeset _LAST_TIME_FILE=""
 typeset _LABEL=""
@@ -60,6 +62,20 @@ do
             ;;
     esac
 done
+
+# log_healthy
+(( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
+if (( _LOG_HEALTHY > 0 ))
+then
+    if (( ARG_LOG > 0 ))
+    then
+        log "logging/showing passed health checks"
+    else
+        log "showing passed health checks (but not logging)"
+    fi
+else
+    log "not logging/showing passed health checks"
+fi
 
 # check for last known check date
 _LAST_TIME_FILE="${STATE_DIR}/$0.lasttime"
@@ -79,8 +95,8 @@ then
     errpt -A >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
 else
     errpt -s "${_LAST_TIME_CHECK}" |\
-        grep -v "${_LAST_TIME_CHECK}" | grep -v "_IDENTIFIER" |\
-        awk '{ print $1}' | uniq | while read _LABEL
+        grep -v "${_LAST_TIME_CHECK}" 2>/dev/null | grep -v "_IDENTIFIER" 2>/dev/null |\
+        awk '{ print $1}' 2>/dev/null | uniq 2>/dev/null | while read _LABEL
         do
             errpt -a -j ${_LABEL} -s "${_LAST_TIME_CHECK}" \
                 >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
@@ -99,7 +115,7 @@ fi
 
 # update last known check date/time (potential race condition here,
 # but we can live it :-))
-_NEW_CHECK_TIME="$(errpt 2>/dev/null | head -n 2 | tail -n 1 | awk '{print $2}')"
+_NEW_CHECK_TIME="$(errpt 2>/dev/null | head -n 2 2>/dev/null | tail -n 1 2>/dev/null | awk '{print $2}' 2>/dev/null)"
 # blank result indicates either no errpt entries or exist the time call failed
 if [[ -n "${_NEW_CHECK_TIME}" ]]
 then
@@ -110,7 +126,10 @@ else
 fi
 
 # handle results
-log_hc "$0" ${_STC} "${_MSG}"
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 return 0
 }
@@ -119,10 +138,10 @@ return 0
 function _show_usage
 {
 cat <<- EOT
-NAME    : $1
-VERSION : $2
-CONFIG  : $3
-PURPOSE : Checks AIX errpt for new error(s)
+NAME        : $1
+VERSION     : $2
+PURPOSE     : Checks AIX errpt for new error(s)
+LOG HEALTHY : Supported
 
 EOT
 
