@@ -9,7 +9,7 @@
 # specify whether to also log passed health checks
 # (warning: this may rapidly grow the HC log)
 # [default: no]
-log_healthy="yes"
+log_healthy="no"
 
 # specify the URL of the Elasticsearch instance (host:port)
 # [default: http://localhost:9200]
