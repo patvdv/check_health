@@ -32,6 +32,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: changed format of stanzas in configuration file &
 # @(#)             added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-10: fix for burp v2
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -43,7 +44,7 @@ function check_linux_burp_backup
 typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-10"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -220,8 +221,6 @@ do
         # ex.:
         #   Backup: 0000078 2016-11-27 03:39:03 (deletable)
         #   Backup: 0000079 2016-12-04 03:59:04
-
-
         _BACKUP_STATS="$(${_BURP_BIN} -a l -C ${_BURP_CLIENT} 2>>${HC_STDERR_LOG} | grep '^Backup' | tail -n 1 | cut -f2- -d':')"
         if [[ -n "${_BACKUP_STATS}" ]]
         then
@@ -239,7 +238,7 @@ do
         # get backup warnings
         case "${_BURP_VERSION}" in
             burp-2*)
-                # burp v2 does not support yet the 'burp -a S -C <client> -z backup_stats' action
+                # burp v2 does not yet support the 'burp -a S -C <client> -z backup_stats' action
                 # so we need to find the backup_stats file ourselves
                 # first check client override
                 _BURP_BACKUP_DIR=""; _BURP_CLIENTCONF_DIR=""
@@ -326,7 +325,17 @@ do
         if (( _STC > 0 ))
         then
             print "=== ${_BURP_CLIENT}: ${_BACKUP_RUN} ===" >>${HC_STDOUT_LOG}
-            ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+            case "${_BURP_VERSION}" in
+                burp-2*)
+                    if [[ -r ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz ]]
+                    then
+                        zcat ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                    fi
+                    ;;
+                burp-1*)
+                    ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                    ;;
+            esac
         fi
     else
         warn "bad entry in the configuration file ${_CONFIG_FILE} on data line ${_COUNT}"
