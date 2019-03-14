@@ -1,7 +1,7 @@
 <p align="center"><img src="logo/horizontal.png" alt="QList" height="130px"></p>
 
 # Health checker for UNIX/Linux
- 
+
 Health checker for UNIX/Linux is a small framework of monitoring scripts. It is meant to be used for low latency & low frequency checks, it is easy to extend where necessary (plugins) and it can be integrated with other toolsets.
 
 ## Requirements
@@ -21,11 +21,11 @@ Use the build templates & scripts in the `build/` directory to roll your own pac
 ### HP-UX
 
 Install the core bundle:
-    
+
     swinstall -x mount_all_filesystems=false -s /tmp/hc-hpux-<version>.sd \*
 
 Install the HP-UX plugin bundle:
- 
+
     swinstall -x mount_all_filesystems=false -s /tmp/hc-hpux-platform-<version>.sd \*
 
 ### Linux
@@ -36,7 +36,7 @@ Install the core bundle:
     zypper install hc-linux-<version>.noarch.rpm
 
 Install the Linux plugin bundle:
- 
+
     yum localinstall hc-linux-platform-<version>.noarch.rpm
     zypper install hc-linux-platform-<version>.noarch.rpm
 
@@ -50,11 +50,22 @@ Install the AIX plugin bundle:
 
     installp -Xap -d hc-aix-platform-<version> all
 
-### Miscelleanous
+### Exadata
+
+Install the core bundle:
+
+    yum localinstall hc-linux-<version>.noarch.rpm
+
+Install the Linux plugin bundle:
+
+    yum localinstall hc-exadata-platform-<version>.noarch.rpm
+
+### Miscellaneous
 
 Additionally, there may be bundles for display or notification plugins, e.g.:
 * hc-display-csv
 * hc-display-init
+* hc-display-json
 * hc-display-terse
 * hc-notify-eif
 * hc-notify-sms
@@ -100,7 +111,7 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 /opt/hc/bin/check_health.sh --report --today
 /opt/hc/bin/check_health.sh --report --id=20160704154001 --detail
 ```
-    
+
 * **Alerting** on failed health checks:
 ```
 /opt/hc/bin/check_health.sh --hc=check_hpux_root_crontab --run --notify=mail --mail-to="alert@acme.com"
