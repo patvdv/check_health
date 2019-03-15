@@ -127,8 +127,12 @@ case "${_ES_STATUS}" in
         _MSG="state of ES instance at ${_ES_URL} is OK [${_ES_STATUS}]"
         _STC=0
         ;;
-    *)
+    yellow|red)
         _MSG="state of ES instance at ${_ES_URL} is NOK [${_ES_STATUS}]"
+        _STC=1
+        ;;
+    *)
+        _MSG="state of ES instance at ${_ES_URL} is NOK [unknown]"
         _STC=1
         ;;
 esac
