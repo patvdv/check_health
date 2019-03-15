@@ -19,7 +19,7 @@
 # @(#) MAIN: check_linux_process_limits
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), init_hc(), log_hc(), data_is_numeric()
+# REQUIRES: data_comma2space(), data_is_numeric(), init_hc(), log_hc(), warn())
 #
 # @(#) HISTORY:
 # @(#) 2018-07-10: original version [Patrick Van der Veken]
@@ -27,6 +27,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-27: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-13: fixes & optimizations (pdksh) [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_linux_process_limits
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-01-27"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-13"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -115,7 +116,7 @@ fi
 
 # check PROCESS stanzas
 grep -i '^process' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=';' read _ _PROCESS _PROCESS_LIMIT _PROCESS_SOFT_THRESHOLD _PROCESS_HARD_THRESHOLD
+    while IFS=';' read -r _ _PROCESS _PROCESS_LIMIT _PROCESS_SOFT_THRESHOLD _PROCESS_HARD_THRESHOLD
 do
     # check for empties
     if [[ -z "${_PROCESS}" || -z "${_PROCESS_LIMIT}" ]]
@@ -123,23 +124,19 @@ do
         warn "missing parameter in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
         return 1
     fi
-    if [[ -n "${_PROCESS_SOFT_THRESHOLD}" ]]
+    data_is_numeric "${_PROCESS_SOFT_THRESHOLD}"
+    # shellcheck disable=SC2181
+    if (( $? > 0 ))
     then
-        data_is_numeric "${_PROCESS_SOFT_THRESHOLD}"
-        if (( $? > 0 ))
-        then
-            warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
-        fi
+        warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+        return 1
     fi
-    if [[ -n "${_PROCESS_HARD_THRESHOLD}" ]]
+    data_is_numeric "${_PROCESS_HARD_THRESHOLD}"
+    # shellcheck disable=SC2181
+    if (( $? > 0 ))
     then
-        data_is_numeric "${_PROCESS_HARD_THRESHOLD}"
-        if (( $? > 0 ))
-        then
-            warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            return 1
-        fi
+        warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+        return 1
     fi
 
     # which limit to check?
@@ -153,7 +150,7 @@ do
                 warn "${_PROCESS_LIMIT}: could not find any matching processes for process ${_PROCESS}"
                 continue
             fi
-            print "${_PROCESS_PS}" | while read _PROCESS_PS_PID _PROCESS_PS_USER
+            print "${_PROCESS_PS}" | while read -r _PROCESS_PS_PID _PROCESS_PS_USER
             do
                 (( ARG_DEBUG > 0 )) && debug "${_PROCESS_LIMIT}: checking process ${_PROCESS_PS_PID}"
                 # get current values and check thresholds
@@ -179,7 +176,7 @@ done
 # check USER stanzas
 _LINE_COUNT=0
 grep -i '^user' ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=';' read _ _USER _USER_LIMIT _USER_SOFT_THRESHOLD _USER_HARD_THRESHOLD
+    while IFS=';' read -r _ _USER _USER_LIMIT _USER_SOFT_THRESHOLD _USER_HARD_THRESHOLD
 do
     # check for empties
     if [[ -z "${_USER}" || -z "${_USER_LIMIT}" ]]
@@ -187,18 +184,22 @@ do
         warn "missing parameter in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
         return 1
     fi
+    # check optional value
     if [[ -n "${_USER_SOFT_THRESHOLD}" ]]
     then
         data_is_numeric "${_USER_SOFT_THRESHOLD}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
             return 1
         fi
     fi
+    # check optional value
     if [[ -n "${_USER_HARD_THRESHOLD}" ]]
     then
         data_is_numeric "${_USER_HARD_THRESHOLD}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             warn "parameter is not numeric in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
@@ -217,7 +218,7 @@ do
                 warn "${_USER_LIMIT}: could not find any matching processes for user ${_USER}"
                 continue
             fi
-            print "${_USER_PS}" | while read _USER_PS_PID _USER_PS_COMM
+            print "${_USER_PS}" | while read -r _USER_PS_PID _USER_PS_COMM
             do
                 (( ARG_DEBUG > 0 )) && debug "${_USER_LIMIT}: checking process ${_USER_PS_PID}"
                 # get current values and check thresholds
@@ -307,7 +308,7 @@ then
             _LIMIT_ENTRY=$(grep -i "${_LIMIT_NAME}" /proc/${_LIMIT_PID}/limits 2>/dev/null)
             if [[ -z "${_LIMIT_ENTRY}" ]]
             then
-                warn "${_LIMIT_TYPE}: unable to gather limits information (${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS})"
+                warn "${_LIMIT_TYPE}: unable to gather limits information for 'Max open files' (${_LIMIT_PID}/${_LIMIT_USER}/${_LIMIT_PROCESS})"
                 return 1
             fi
             case "${_LIMIT_TYPE}" in
@@ -325,18 +326,28 @@ then
         "Max processes")
             case "${_LIMIT_TYPE}" in
                 soft)
-                    _LIMIT_COMMAND="ulimit -a"
+                    _LIMIT_COMMAND="ulimit -u 2>/dev/null"
+                    # workaround for cr@ppy pdksh/mirksh
+                    if (( IS_PDKSH > 0 ))
+                    then
+                        _LIMIT_COMMAND="ulimit -a | grep 'processes' 2>/dev/null | awk '{print \$2}' 2>/dev/null"
+                    fi
                     ;;
                 hard)
-                    _LIMIT_COMMAND="ulimit -Ha"
+                    _LIMIT_COMMAND="ulimit -Hu 2>/dev/null"
+                    # workaround for cr@ppy pdksh/mirksh
+                    if (( IS_PDKSH > 0 ))
+                    then
+                        _LIMIT_COMMAND="ulimit -Ha | grep 'processes' 2>/dev/null | awk '{print \$2}' 2>/dev/null"
+                    fi
                     ;;
             esac
-            _LIMIT_VALUE=$(su - ${_LIMIT_USER} -c "${_LIMIT_COMMAND}" 2>/dev/null |\
-                grep -i "max user processes" 2>/dev/null | sed -s "s/max user processes//g" 2>/dev/null |\
-                awk '{ print $2}' 2>/dev/null)
-            if [[ -z "${_LIMIT_VALUE}" ]]
+            _LIMIT_VALUE=$(su - "${_LIMIT_USER}" -c "${_LIMIT_COMMAND}")
+            data_is_numeric "${_LIMIT_VALUE}"
+            # shellcheck disable=SC2181
+            if (( $? > 0 ))
             then
-                warn "${_LIMIT_TYPE}: unable to gather limits information (${_LIMIT_USER})"
+                warn "${_LIMIT_TYPE}: unable to gather limits information for 'Max processes' (${_LIMIT_USER})"
                 return 1
             fi
             _MSG_BIT="${_LIMIT_USER}"
@@ -375,6 +386,7 @@ function _get_open_files
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
+# shellcheck disable=SC2012
 ls -f /proc/${1}/fd/ 2>/dev/null | wc -l 2>/dev/null
 
 return 0
@@ -385,7 +397,7 @@ function _get_processes
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
 
-ps -U ${1} --no-headers 2>/dev/null | wc -l 2>/dev/null
+ps -U "${1}" --no-headers 2>/dev/null | wc -l 2>/dev/null
 
 return 0
 }
