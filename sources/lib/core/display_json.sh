@@ -30,7 +30,7 @@
 function display_json
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -51,12 +51,13 @@ typeset _ID_BIT=""
 # parse $HC_MSG_VAR
 if [[ -n "${HC_MSG_VAR}" ]]
 then
-    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
+    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read -r _DISPLAY_MSG_STC _DISPLAY_MSG_TIME _DISPLAY_MSG_TEXT _DISPLAY_MSG_CUR_VAL _DISPLAY_MSG_EXP_VAL
     do
         # magically unquote if needed
         if [[ -n "${_DISPLAY_MSG_TEXT}" ]]
         then
             data_contains_string "${_DISPLAY_MSG_TEXT}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 _DISPLAY_MSG_TEXT=$(data_magic_unquote "${_DISPLAY_MSG_TEXT}")
@@ -65,6 +66,7 @@ then
         if [[ -n "${_DISPLAY_MSG_CUR_VAL}" ]]
         then
             data_contains_string "${_DISPLAY_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 _DISPLAY_MSG_CUR_VAL=$(data_magic_unquote "${_DISPLAY_MSG_CUR_VAL}")
@@ -73,6 +75,7 @@ then
         if [[ -n "${_DISPLAY_MSG_EXP_VAL}" ]]
         then
             data_contains_string "${_DISPLAY_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 _DISPLAY_MSG_EXP_VAL=$(data_magic_unquote "${_DISPLAY_MSG_EXP_VAL}")

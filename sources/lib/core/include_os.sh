@@ -42,6 +42,7 @@ check_platform 'Linux' || {
 # try LSB first (good for Ubuntu & derivatives)
 if [[ -f /etc/lsb-release ]]
 then
+    # shellcheck disable=SC1091
     . /etc/lsb-release
     LINUX_DISTRO="${DISTRIB_ID}"
     LINUX_RELEASE="${DISTRIB_RELEASE}"
@@ -132,6 +133,7 @@ if [[ -x ${_CRM_BIN} && -n "${_CRM_BIN}" ]]
 then
     # check for active
     crm status >/dev/null 2>/dev/null
+    # shellcheck disable=SC2181
     (( $? == 0 )) && _HAS_CRM=1
 else
     (( ARG_DEBUG > 0 )) && debug "corosync (crm) is not active here"
@@ -167,6 +169,7 @@ if [[ -x ${_DOCKER_BIN} && -n "${_DOCKER_BIN}" ]]
 then
     # check for active
     docker ps >/dev/null 2>/dev/null
+    # shellcheck disable=SC2181
     (( $? == 0 )) && _HAS_DOCKER=1
 else
     (( ARG_DEBUG > 0 )) && debug "docker is not active here"

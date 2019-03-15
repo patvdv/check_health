@@ -75,7 +75,7 @@ do
         return 2
     }
     LOG_COUNT=$(wc -l ${ARCHIVE_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
-    log "# entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
+    log "# of entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
     # remove archived messages from the $HC_LOG (but create a backup first!)
     cp -p ${HC_LOG} ${SAVE_HC_LOG} 2>/dev/null
@@ -315,6 +315,7 @@ do
             (( ARG_DEBUG > 0 )) && debug "notify_eif plugin is available"
             ;;
         *report_std.sh)
+            # shellcheck disable=SC2034
             HAS_REPORT_STD=1
             (( ARG_DEBUG > 0 )) && debug "report_std plugin is available"
             ;;
@@ -522,7 +523,7 @@ if (( DO_NOTIFY_SMS > 0 )) && [[ -z "${ARG_SMS_PROVIDER}" ]]
 then
     die "you cannot specify '--notify=sms' without '--sms-provider'"
 fi
-# --report/--detail/--id/--reverse/--last/--today/--with-history
+# --report/--detail/--id/--reverse/--last/--today/--with-history/--older/--newer
 if (( DO_REPORT_STD > 0 ))
 then
     if (( ARG_DETAIL > 0 )) && [[ -z "${ARG_FAIL_ID}" ]]
@@ -545,6 +546,14 @@ then
     then
         die "you cannot specify '--last' with '--id'"
     fi
+    if (( ARG_LAST > 0 )) && [[ -n "${ARG_OLDER}" ]]
+    then
+        die "you cannot specify '--last' with '--older'"
+    fi
+    if (( ARG_LAST > 0 )) && [[ -n "${ARG_NEWER}" ]]
+    then
+        die "you cannot specify '--last' with '--newer'"
+    fi
     if (( ARG_TODAY > 0 )) && (( ARG_DETAIL > 0 ))
     then
         die "you cannot specify '--today' with '--detail'"
@@ -556,6 +565,26 @@ then
     if (( ARG_TODAY > 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
     then
         die "you cannot specify '--today' with '--id'"
+    fi
+    if (( ARG_TODAY > 0 )) && [[ -n "${ARG_OLDER}" ]]
+    then
+        die "you cannot specify '--today' with '--older"
+    fi
+    if (( ARG_TODAY > 0 )) && [[ -n "${ARG_NEWER}" ]]
+    then
+        die "you cannot specify '--today' with '--newer'"
+    fi
+    if [[ -n "${ARG_OLDER}" ]] && [[ -n "${ARG_NEWER}" ]]
+    then
+        die "you cannot use '--older' with '--newer'"
+    fi
+    if [[ -n "${ARG_FAIL_ID}" ]] && [[ -n "${ARG_OLDER}" ]]
+    then
+        die "you cannot use '--id' with '--older'"
+    fi
+    if [[ -n "${ARG_FAIL_ID}" ]] && [[ -n "${ARG_NEWER}" ]]
+    then
+        die "you cannot use '--id' with '--newer'"
     fi
 fi
 if (( DO_REPORT_STD == 0 )) && (( ARG_LAST > 0 ))
@@ -573,6 +602,14 @@ fi
 if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_FAIL_ID}" ]]
 then
     die "you cannot specify '--id' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_OLDER}" ]]
+then
+    die "you cannot specify '--older' without '--report'"
+fi
+if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_NEWER}" ]]
+then
+    die "you cannot specify '--newer' without '--report'"
 fi
 
 return 0
@@ -612,6 +649,7 @@ typeset EXISTS_RC=0
 for FDIR in $(print "${FPATH}" | tr ':' ' ' 2>/dev/null)
 do
     data_contains_string "${FDIR}" "core"
+    # shellcheck disable=SC2181
     if (( $? == 0 ))
     then
         ls "${FDIR}/${EXISTS_HC}" >/dev/null 2>&1 && EXISTS_RC=1
@@ -676,7 +714,7 @@ fi
 trap "[[ -f ${TMP_FILE} ]] && rm -f ${TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # check and rewrite log file(s)
-find ${LOG_STASH} -type f -print 2>/dev/null | while read FIX_FILE
+find ${LOG_STASH} -type f -print 2>/dev/null | while read -r FIX_FILE
 do
     log "fixing log file ${FIX_FILE} ..."
 
@@ -784,9 +822,11 @@ do
 
         # swap log file (but create a backup first!)
         cp -p ${FIX_FILE} ${SAVE_TMP_FILE} 2>/dev/null
+        # shellcheck disable=SC2181
         if (( $? == 0 ))
         then
             mv ${TMP_FILE} ${FIX_FILE} 2>/dev/null
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 warn "failed to move/update log file, rolling back"
@@ -850,8 +890,13 @@ then
     (( ARG_DEBUG > 0 )) && debug "HC all STC: ${ALL_MSG_STC}"
     data_is_numeric "${ALL_MSG_STC}" || die "HC all STC computes to a non-numeric value"
 else
-    # nothing to do
-    return 0
+    # nothing to do, respect current EXIT_CODE
+    if (( EXIT_CODE > 0 ))
+    then
+        return ${EXIT_CODE}
+    else
+        return 0
+    fi
 fi
 
 # display routines
@@ -987,12 +1032,13 @@ then
         # default STDOUT
         if (( ARG_VERBOSE > 0 ))
         then
-            print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
+            print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read -r ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
             do
                 # magically unquote if needed
                 if [[ -n "${ONE_MSG_TEXT}" ]]
                 then
                     data_contains_string "${ONE_MSG_TEXT}" "${MAGIC_QUOTE}"
+                    # shellcheck disable=SC2181
                     if (( $? > 0 ))
                     then
                         ONE_MSG_TEXT=$(data_magic_unquote "${ONE_MSG_TEXT}")
@@ -1001,6 +1047,7 @@ then
                 if [[ -n "${ONE_MSG_CUR_VAL}" ]]
                 then
                     data_contains_string "${ONE_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+                    # shellcheck disable=SC2181
                     if (( $? > 0 ))
                     then
                         ONE_MSG_CUR_VAL=$(data_magic_unquote "${ONE_MSG_CUR_VAL}")
@@ -1009,6 +1056,7 @@ then
                 if [[ -n "${ONE_MSG_EXP_VAL}" ]]
                 then
                     data_contains_string "${ONE_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+                    # shellcheck disable=SC2181
                     if (( $? > 0 ))
                     then
                         ONE_MSG_EXP_VAL=$(data_magic_unquote "${ONE_MSG_EXP_VAL}")
@@ -1017,8 +1065,10 @@ then
                 printf "%s" "INFO: ${HC_NAME} [STC=${ONE_MSG_STC}]: ${ONE_MSG_TEXT}"
                 if (( ONE_MSG_STC > 0 ))
                 then
+                    # shellcheck disable=SC1117
                     printf " %s\n" "[FAIL_ID=${HC_FAIL_ID}]"
                 else
+                    # shellcheck disable=SC1117
                     printf "\n"
                 fi
             done
@@ -1030,12 +1080,13 @@ fi
 if (( ARG_LOG > 0 ))
 then
     # log routine (combined STC=0 or <>0)
-    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
+    print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read -r ONE_MSG_STC ONE_MSG_TIME ONE_MSG_TEXT ONE_MSG_CUR_VAL ONE_MSG_EXP_VAL
     do
         # magically unquote if needed
         if [[ -n "${ONE_MSG_TEXT}" ]]
         then
             data_contains_string "${ONE_MSG_TEXT}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 ONE_MSG_TEXT=$(data_magic_unquote "${ONE_MSG_TEXT}")
@@ -1044,6 +1095,7 @@ then
         if [[ -n "${ONE_MSG_CUR_VAL}" ]]
         then
             data_contains_string "${ONE_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 ONE_MSG_CUR_VAL=$(data_magic_unquote "${ONE_MSG_CUR_VAL}")
@@ -1052,6 +1104,7 @@ then
         if [[ -n "${ONE_MSG_EXP_VAL}" ]]
         then
             data_contains_string "${ONE_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 ONE_MSG_EXP_VAL=$(data_magic_unquote "${ONE_MSG_EXP_VAL}")
@@ -1064,9 +1117,11 @@ then
                 "${ONE_MSG_TEXT}" >>${HC_LOG}
         if (( ONE_MSG_STC > 0 ))
         then
+            # shellcheck disable=SC1117
             printf "%s${LOG_SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
             HC_STC_RC=$(( HC_STC_RC + 1 ))
         else
+            # shellcheck disable=SC1117
             printf "\n" >>${HC_LOG}
         fi
     done
@@ -1136,8 +1191,11 @@ fi
 # --flip-rc: pass RC of HC plugin back
 if (( ARG_FLIP_RC == 0 ))
 then
+    # standard RC, error free
     return 0
 else
+    # exit with max 255
+    (( HC_STC_RC > 255 )) && HC_STC_RC=255
     return ${HC_STC_RC}
 fi
 }
@@ -1375,14 +1433,16 @@ typeset FVERSION=""
 typeset FCONFIG=""
 typeset FSTATE="enabled"     # default
 typeset FFILE=""
+typeset FSCRIPT=""
 typeset HAS_FCONFIG=0
 typeset HC_VERSION=""
 
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
+    # shellcheck disable=SC1117
     printf "%-30s\t%-8s\t%s\t\t%s\n" "Core plugin" "State" "Version" "Config?"
-    # shellcheck disable=SC2183
+    # shellcheck disable=SC2183,SC1117
     printf "%80s\n" | tr ' ' -
 fi
 print "${FPATH}" | tr ':' '\n' | grep "core$" | sort 2>/dev/null | while read -r FDIR
@@ -1391,14 +1451,18 @@ do
     # shellcheck disable=SC2010
     ls -1 ${FDIR}/*.sh 2>/dev/null | grep -v "include_" | sort 2>/dev/null | while read -r FFILE
     do
+        # cache script contents in memory
+        FSCRIPT=$(<${FFILE})
+
         # reset state
         FSTATE="enabled"
         # find function name but skip helper functions in the plug-in file (function _name)
-        FNAME=$(grep -E -e "^function[[:space:]]+[^_]" "${FFILE}" 2>&1)
+        FNAME=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]]+[^_]" 2>/dev/null)
         # look for version string (cut off comments but don't use [:space:] in tr)
-        FVERSION=$(grep '^typeset _VERSION=' "${FFILE}" 2>&1 | tr -d '\"' | tr -d ' \t' | cut -f1 -d'#' | cut -f2 -d'=')
+        FVERSION=$(print -R "${FSCRIPT}" | grep '^typeset _VERSION=' 2>/dev/null |\
+            awk 'match($0,/[0-9]+-[0-9]+-[0-9]+/){print substr($0, RSTART, RLENGTH)}' 2>/dev/null)
         # look for configuration file string
-        HAS_FCONFIG=$(grep -c '^typeset _CONFIG_FILE=' "${FFILE}" 2>&1)
+        HAS_FCONFIG=$(print -R "${FSCRIPT}" | grep -c '^typeset _CONFIG_FILE=' 2>/dev/null)
         if (( HAS_FCONFIG > 0 ))
         then
             FCONFIG="Yes"
@@ -1411,12 +1475,14 @@ do
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
+            # shellcheck disable=SC1117
             printf "%-30s\t%-8s\t%s\t%s\n" \
                 "${FNAME#function *}" \
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
                 "${FCONFIG}"
         else
+            # shellcheck disable=SC1117
             printf "%s\n" "${FNAME#function *}"
         fi
     done
@@ -1430,7 +1496,7 @@ then
     print "${FPATH}" | tr ':' '\n' | grep "core$" | while read -r FDIR
     do
         # do not use 'find -type l' here!
-        # shellcheck disable=SC2010
+        # shellcheck disable=SC2010,SC1117
         ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
@@ -1469,6 +1535,7 @@ typeset FSTATE=""
 typeset FFILE=""
 typeset FHEALTHY=""
 typeset FSCHEDULED=0
+typeset FSCRIPT=""
 typeset HAS_FCONFIG=0
 typeset HAS_FHEALTHY=""
 typeset DISABLE_FFILE=""
@@ -1485,20 +1552,26 @@ fi
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
+    # shellcheck disable=SC1117
     printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
-    # shellcheck disable=SC2183
+    # shellcheck disable=SC2183,SC1117
     printf "%100s\n" | tr ' ' -
 fi
-print "${FPATH}" | tr ':' '\n' | grep -v "core$" | sort 2>/dev/null | while read -r FDIR
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core$" 2>/dev/null | sort 2>/dev/null |\
+    while read -r FDIR
 do
     ls -1 ${FDIR}/${FNEEDLE} 2>/dev/null | sort 2>/dev/null | while read -r FFILE
     do
+        # cache script contents in memory
+        FSCRIPT=$(<${FFILE})
+
         # find function name but skip helper functions in the plug-in file (function _name)
-        FNAME=$(grep -E -e "^function[[:space:]]+[^_]" "${FFILE}" 2>&1)
+        FNAME=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]]+[^_]" 2>/dev/null)
         # look for version string (cut off comments but don't use [:space:] in tr)
-        FVERSION=$(grep '^typeset _VERSION=' "${FFILE}" 2>&1 | tr -d '\"' | tr -d ' \t' | cut -f1 -d'#' | cut -f2 -d'=')
+        FVERSION=$(print -R "${FSCRIPT}" | grep '^typeset _VERSION=' 2>/dev/null |\
+            awk 'match($0,/[0-9]+-[0-9]+-[0-9]+/){print substr($0, RSTART, RLENGTH)}' 2>/dev/null)
         # look for configuration file string
-        HAS_FCONFIG=$(grep -c '^typeset _CONFIG_FILE=' "${FFILE}" 2>&1)
+        HAS_FCONFIG=$(print -R "${FSCRIPT}" | grep -c '^typeset _CONFIG_FILE=' 2>/dev/null)
         if (( HAS_FCONFIG > 0 ))
         then
             FCONFIG="Yes"
@@ -1539,7 +1612,7 @@ do
                 esac
             fi
         # check for log_healthy support through --hc-args (plugin)
-        elif (( $(grep -c -E -e "_LOG_HEALTHY" "${FFILE}" 2>/dev/null) > 0 ))
+        elif (( $(print -R "${FSCRIPT}" | grep -c -E -e "_LOG_HEALTHY" 2>/dev/null) > 0 ))
         then
             FCONFIG="No"
             FHEALTHY="S"
@@ -1559,6 +1632,7 @@ do
         [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
         # check scheduling
         is_scheduled "${FNAME#function *}"
+        # shellcheck disable=SC2181
         if (( $? == 0 ))
         then
             FSCHEDULED="No"
@@ -1569,6 +1643,7 @@ do
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
+            # shellcheck disable=SC1117
             printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\n" \
                 "${FNAME#function *}" \
                 "${FSTATE}" \
@@ -1577,6 +1652,7 @@ do
                 "${FSCHEDULED}" \
                 "${FHEALTHY}"
         else
+            # shellcheck disable=SC1117
             printf "%s\n" "${FNAME#function *}"
         fi
     done
@@ -1590,7 +1666,7 @@ then
     print "${FPATH}" | tr ':' '\n' | grep -v "core" | while read -r FDIR
     do
         # do not use 'find -type l' here!
-        # shellcheck disable=SC2010
+        # shellcheck disable=SC2010,SC1117
         ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
@@ -1672,6 +1748,7 @@ typeset HC_MSG_EXP_VAL=""
 if [[ -n "${3}" ]]
 then
     data_contains_string "${3}" "${MSG_SEP}"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         HC_MSG_TEXT=$(data_magic_quote "${3}")
@@ -1682,6 +1759,7 @@ fi
 if [[ -n "${4}" ]]
 then
     data_contains_string "${4}" "${MSG_SEP}"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         HC_MSG_CUR_VAL=$(data_magic_quote "${4}")
@@ -1692,6 +1770,7 @@ fi
 if [[ -n "${5}" ]]
 then
     data_contains_string "${5}" "${MSG_SEP}"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         HC_MSG_EXP_VAL=$(data_magic_quote "${5}")
@@ -1749,9 +1828,9 @@ awk -F"${LOG_SEP}" '{
                         # empty hc variable means count of empty lines in log file
                         if (hc != "") {
                             printf ("\t%s:\n", hc)
-                            printf ("\t\t# entries: %s\n", total_count[hc])
-                            printf ("\t\t# STC==0 : %s\n", ok_count[hc])
-                            printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                            printf ("\t\t# entries: %d\n", total_count[hc])
+                            printf ("\t\t# STC==0 : %d\n", ok_count[hc])
+                            printf ("\t\t# STC<>0 : %d\n", nok_count[hc])
                             printf ("\t\tfirst    : %s\n", first_entry[hc])
                             printf ("\t\tlast     : %s\n", last_entry[hc])
                         }
@@ -1763,7 +1842,7 @@ awk -F"${LOG_SEP}" '{
 print; print
 print -R "--- ARCHIVED events --"
 print
-find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | while read _ARCHIVE_FILE
+find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | while read -r _ARCHIVE_FILE
 do
     print "${_ARCHIVE_FILE}:"
     awk -F"${LOG_SEP}" '{
@@ -1791,9 +1870,9 @@ do
                             # empty hc variable means count of empty lines in log file
                             if (hc != "") {
                                 printf ("\t%s:\n", hc)
-                                printf ("\t\t# entries: %s\n", total_count[hc])
-                                printf ("\t\t# STC==0 : %s\n", ok_count[hc])
-                                printf ("\t\t# STC<>0 : %s\n", nok_count[hc])
+                                printf ("\t\t# entries: %d\n", total_count[hc])
+                                printf ("\t\t# STC==0 : %d\n", ok_count[hc])
+                                printf ("\t\t# STC<>0 : %d\n", nok_count[hc])
                                 printf ("\t\tfirst    : %s\n", first_entry[hc])
                                 printf ("\t\tlast     : %s\n", last_entry[hc])
                             }

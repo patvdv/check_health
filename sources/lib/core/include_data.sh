@@ -814,6 +814,7 @@ typeset _CONVERT_DATE=""
 
 # try the GNU version of 'date -d'
 _CONVERT_DATE=$(date -d @"${_UNIX_EPOCH}" 2>/dev/null)
+# shellcheck disable=SC2181
 if (( $? > 0 ))
 then
     # try the perl way

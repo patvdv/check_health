@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-02-18"
+typeset -r SCRIPT_VERSION="2019-03-16"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -52,6 +52,7 @@ typeset -r TMP_DIR="/var/tmp"
 # specify the UNIX user that needs to be used for executing the script
 typeset -r EXEC_USER="root"
 # ------------------------- CONFIGURATION ends here ---------------------------
+typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
 # read-only settings (but should not be changed)
 typeset -r SCRIPT_NAME=$(basename "$0" 2>/dev/null)
 typeset -r SCRIPT_DIR=$(dirname "$0" 2>/dev/null)
@@ -76,7 +77,6 @@ typeset -r STATE_DIR="${LOG_DIR}/state"
 typeset -r STATE_PERM_DIR="${STATE_DIR}/persistent"
 typeset -r STATE_TEMP_DIR="${STATE_DIR}/temporary"
 # miscellaneous
-typeset PATH=${PATH}:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
 typeset CMD_LINE=""
 typeset CMD_PARAMETER=""
 typeset CHILD_ERROR=0
@@ -110,6 +110,7 @@ typeset DISABLE_RC=0
 typeset ENABLE_RC=0
 # shellcheck disable=SC2034
 typeset FIX_FC=0
+typeset IS_PDKSH=0
 typeset RUN_RC=0
 typeset RUN_CONFIG_FILE=""
 typeset RUN_TIME_OUT=0
@@ -135,7 +136,9 @@ typeset ARG_LOCK=1              # lock for concurrent script executions is on by
 typeset ARG_LOG=1               # logging is on by default
 typeset ARG_LOG_HEALTHY=0       # logging of healthy health checks is off by default
 typeset ARG_MONITOR=1           # killing long running HC processes is on by default
+typeset ARG_NEWER=""
 typeset ARG_NOTIFY=""           # notification of problems is off by default
+typeset ARG_OLDER=""
 typeset ARG_REVERSE=0           # show report in reverse date order is off by default
 typeset ARG_REPORT=""           # report of HC events is off by default
 typeset ARG_TIME_OUT=0          # custom timeout is off by default
@@ -304,7 +307,7 @@ then
         ARG_VERBOSE=0 warn "unable to acquire lock ${LOCK_DIR}"
         if [[ -f ${LOCK_DIR}/.pid ]]
         then
-            typeset LOCK_PID="$(cat ${LOCK_DIR}/.pid)"
+            typeset LOCK_PID="$(<${LOCK_DIR}/.pid)"
             print -u2 "ERROR: active health checker running on PID: ${LOCK_PID}"
             ARG_VERBOSE=0 warn "active health checker running on PID: ${LOCK_PID}. Exiting!"
         fi
@@ -487,7 +490,7 @@ typeset WHOAMI=""
 
 # avoid sub-shell for mksh/pdksh
 # shellcheck disable=SC2046
-WHOAMI=$(IFS='()'; set -- $(id); print $2)
+WHOAMI=$(IFS='()'; set -- $(id); print "${2}")
 if [[ "${WHOAMI}" != "${EXEC_USER}" ]]
 then
     print -u2 "ERROR: must be run as user '${EXEC_USER}'"
@@ -508,6 +511,8 @@ function check_shell
 case "${KSH_VERSION}" in
     *MIRBSD*|*PD*|*LEGACY*)
         (( ARG_DEBUG > 0 )) && debug "running ksh: ${KSH_VERSION}"
+        # shellcheck disable=SC2034
+        IS_PDKSH=1
         ;;
     *)
         if [[ -z "${ERRNO}" ]]
@@ -543,7 +548,7 @@ Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
-                    [--report=<method> ( ([--last] | [--today]) | ([--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
+                    [--report=<method> ( ([--last] | [--today]) | ([(--older|--newer)=<date>] [--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
 
 EOT
 
@@ -573,7 +578,7 @@ Parameters:
 --hc-args       : extra arguments to be passed to an individual HC. Arguments must be comma-separated and enclosed
                   in double quotes (example: --hc_args="arg1,arg2=value,arg3").
 --id            : value of a FAIL ID (must be specified as uninterrupted sequence of numbers)
---last          : show the last events for each HC and their combined STC value
+--last          : show the last (failed) events for each HC and their combined STC value
 --list          : show the available health checks. Use <needle> to search with wildcards. Following details are shown:
                   - health check (plugin) name
                   - state of the HC plugin (disabled/enabled)
@@ -584,10 +589,12 @@ Parameters:
 --log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
                   (can be overridden by --no-log to disable all logging)
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
+--newer         : show the (failed) events for each HC that are newer than the given date
 --no-lock       : disable locking to allow concurrent script executions
 --no-log        : do not log any messages to the script log file or health check results.
 --no-monitor    : do not stop the execution of a HC after \$HC_TIME_OUT seconds
 --notify        : notify upon HC failure(s). Multiple options may be specified if comma-separated (see --list-core for availble formats)
+--older         : show the (failed) events for each HC that are older than the given date
 --report        : report on failed HC events (STDOUT is the default reporting method)
 --reverse       : show the report in reverse date order (newest events first)
 --run           : execute HC(s).
@@ -596,7 +603,7 @@ Parameters:
 --sms-provider  : name of a supported SMS provider (see \$SMS_PROVIDERS) [requires SMS core plugin]
 --sms-to        : name of person or group to which a sms alert will be send to [requires SMS core plugin]
 --timeout       : maximum runtime of a HC plugin in seconds (overrides \$HC_TIME_OUT)
---today         : show today's events (HC and their combined STC value)
+--today         : show today's (failed) events (HC and their combined STC value)
 --version       : show the timestamp of the script.
 --with-history  : also include events that have been archived already (reporting)
 
@@ -659,6 +666,7 @@ do
         if [[ ! -h "${FSYML}" ]]
         then
             ln -s "${FFILE##*/}" "${FSYML}" >/dev/null
+            # shellcheck disable=SC2181
             (( $? == 0 )) && \
                 print -u2 "INFO: created symbolic link ${FFILE} -> ${FSYML}"
         fi
@@ -676,6 +684,7 @@ do
         if [[ -h "${FDIR}/${FSYML}" ]] && [[ ! -f "${FDIR}/${FSYML}" ]]
         then
             rm -f "${FDIR}/${FSYML}" >/dev/null
+            # shellcheck disable=SC2181
             (( $? == 0 )) && \
                 print -u2 "INFO: remove dead symbolic link ${FSYML}"
         fi
@@ -925,6 +934,13 @@ do
             # shellcheck disable=SC2034
             ARG_MAIL_TO="${CMD_PARAMETER#--mail-to=}"
             ;;
+        -newer=*)
+            ARG_NEWER="${CMD_PARAMETER#-newer=}"
+            ;;
+        --newer=*)
+            # shellcheck disable=SC2034
+            ARG_NEWER="${CMD_PARAMETER#--newer=}"
+            ;;
         -notify=*)
             ARG_NOTIFY="${CMD_PARAMETER#-notify=}"
             ;;
@@ -940,6 +956,13 @@ do
             ;;
         -no-monitor|--no-monitor)
             ARG_MONITOR=0
+            ;;
+        -older=*)
+            ARG_OLDER="${CMD_PARAMETER#-older=}"
+            ;;
+        --older=*)
+            # shellcheck disable=SC2034
+            ARG_OLDER="${CMD_PARAMETER#--older=}"
             ;;
         -report|--report)   # compatability support <2017-12-15
             if (( ARG_ACTION > 0 ))
@@ -1108,6 +1131,7 @@ case ${ARG_ACTION} in
             # check for HC (function)
             exists_hc "${HC_CHECK}" && die "cannot find HC: ${HC_CHECK}"
             stat_hc "${HC_CHECK}"
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 log "HC ${HC_CHECK} is currently disabled"
@@ -1115,6 +1139,7 @@ case ${ARG_ACTION} in
                 log "HC ${HC_CHECK} is currently enabled"
             fi
             is_scheduled "${HC_CHECK}"
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 log "HC ${HC_CHECK} is currently not scheduled (cron)"
@@ -1130,6 +1155,7 @@ case ${ARG_ACTION} in
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
             log "disabling HC: ${HC_DISABLE}"
             touch "${STATE_PERM_DIR}/${HC_DISABLE}.disabled" >/dev/null 2>&1
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 log "successfully disabled HC: ${HC_DISABLE}"
@@ -1149,6 +1175,7 @@ case ${ARG_ACTION} in
                 die "state directory does not exist, all HC(s) are enabled"
             stat_hc "${HC_ENABLE}" || die "HC is already enabled"
             rm -f "${STATE_PERM_DIR}/${HC_ENABLE}.disabled" >/dev/null 2>&1
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 log "successfully enabled HC: ${HC_ENABLE}"
@@ -1163,7 +1190,7 @@ case ${ARG_ACTION} in
         HC_NOW="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"
         if [[ -z "${HC_FAIL_ID}" ]]
         then
-            HC_FAIL_ID="$(print ${HC_NOW} | tr -d '\-:[:space:]')"
+            HC_FAIL_ID="$(print "${HC_NOW}" | tr -d '\-:[:space:]')"
         fi
         # --check-host handling
         (( ARG_CHECK_HOST == 1 )) && init_check_host
@@ -1174,12 +1201,14 @@ case ${ARG_ACTION} in
             # shellcheck disable=SC2034
             HC_MSG_VAR=""
             : >${HC_MSG_FILE} 2>/dev/null
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 die "unable to reset the \${HC_MSG_FILE} file"
             fi
             # check for HC (function)
             exists_hc "${HC_RUN}"
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 # callback for display_init with extra code 'MISSING'
@@ -1193,6 +1222,7 @@ case ${ARG_ACTION} in
                 continue
             fi
             stat_hc "${HC_RUN}"
+            # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
                 # call for display_init with extra code 'DISABLED'
@@ -1209,11 +1239,13 @@ case ${ARG_ACTION} in
             HC_STDOUT_LOG="${TMP_DIR}/${HC_RUN}.stdout.log.$$"
             HC_STDERR_LOG="${TMP_DIR}/${HC_RUN}.stderr.log.$$"
             : >${HC_STDOUT_LOG} 2>/dev/null
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 die "unable to reset the \${HC_STDOUT_LOG} file"
             fi
             : >${HC_STDERR_LOG} 2>/dev/null
+            # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 die "unable to reset the \${HC_STDERR_LOG} file"
@@ -1317,6 +1349,7 @@ case ${ARG_ACTION} in
         ;;
     5)  # show info on HC (single)
         exists_hc "${ARG_HC}"
+        # shellcheck disable=SC2181
         if (( $? == 0 ))
         then
             die "cannot find HC: ${ARG_HC}"

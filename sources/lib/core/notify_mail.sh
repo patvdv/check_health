@@ -30,7 +30,7 @@
 function notify_mail
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -138,6 +138,7 @@ do
     if [[ -n "${_MAIL_MSG_TEXT}" ]]
     then
         data_contains_string "${_MAIL_MSG_TEXT}" "${MAGIC_QUOTE}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             _MAIL_MSG_TEXT=$(data_magic_unquote "${_MAIL_MSG_TEXT}")
@@ -146,6 +147,7 @@ do
     if [[ -n "${_MAIL_MSG_CUR_VAL}" ]]
     then
         data_contains_string "${_MAIL_MSG_CUR_VAL}" "${MAGIC_QUOTE}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             _MAIL_MSG_CUR_VAL=$(data_magic_unquote "${_MAIL_MSG_CUR_VAL}")
@@ -154,6 +156,7 @@ do
     if [[ -n "${_MAIL_MSG_EXP_VAL}" ]]
     then
         data_contains_string "${_MAIL_MSG_EXP_VAL}" "${MAGIC_QUOTE}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             _MAIL_MSG_EXP_VAL=$(data_magic_unquote "${_MAIL_MSG_EXP_VAL}")
@@ -161,6 +164,7 @@ do
     fi
     if (( _MAIL_MSG_STC > 0 ))
     then
+        # shellcheck disable=SC1117
         _HC_BODY=$(printf "%s\n%s\n" "${_HC_BODY}" "${_MAIL_MSG_TEXT}")
     fi
 done

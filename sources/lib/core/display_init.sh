@@ -31,7 +31,7 @@
 function display_init
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -93,7 +93,7 @@ then
 else
     if [[ -n "${HC_MSG_VAR}" ]]
     then
-        print "${HC_MSG_VAR}" | while read _HC_MSG_ENTRY
+        print "${HC_MSG_VAR}" | while read -r _HC_MSG_ENTRY
         do
             # determine _DISPLAY_MSG_STC (sum of all STCs)
             _DISPLAY_MSG_STC=$(print "${_HC_MSG_ENTRY}" | awk -F"${MSG_SEP}" 'BEGIN { stc = 0 } { for (i=1;i<=NF;i++) { stc = stc + $1 } } END { print stc }' 2>/dev/null)
@@ -135,7 +135,7 @@ else
 fi
 
 # print status line (but also check for terminal support)
-
+# shellcheck disable=SC1117
 printf "%-30s %50s\t[ %8s ]%s\n" \
             "${_DISPLAY_HC}" \
             "(${_DISPLAY_CFG})" \
