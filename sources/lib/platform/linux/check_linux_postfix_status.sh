@@ -29,6 +29,7 @@
 # @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ function check_linux_postfix_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
 typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -117,7 +118,7 @@ esac
 # 2) try the postfix way
 if (( _RC > 0 ))
 then
-    _POSTFIX_BIN="$(which postfix 2>>${HC_STDERR_LOG})"
+    _POSTFIX_BIN="$(command -v postfix 2>>${HC_STDERR_LOG})"
     if [[ -x ${_POSTFIX_BIN} && -n "${_POSTFIX_BIN}" ]]
     then
         if (( $(${_POSTFIX_BIN} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))

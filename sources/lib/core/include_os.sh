@@ -24,6 +24,20 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: version_include_core()
+# DOES: dummy function for version placeholder
+# EXPECTS: n/a
+# RETURNS: 0
+function version_include_os
+{
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+
+print "INFO: $0: ${_VERSION#version_*}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: linux_get_distro()
 # DOES: get Linux distribution name & version, sets $LINUX_DISTRO & $LINUX_RELEASE
 # EXPECTS: n/a
@@ -128,7 +142,7 @@ check_platform 'Linux' || {
     return 1
 }
 
-_CRM_BIN="$(which crm 2>/dev/null)"
+_CRM_BIN="$(command -v crm 2>/dev/null)"
 if [[ -x ${_CRM_BIN} && -n "${_CRM_BIN}" ]]
 then
     # check for active
@@ -164,7 +178,7 @@ check_platform 'Linux' || {
     return 1
 }
 
-_DOCKER_BIN="$(which docker 2>/dev/null)"
+_DOCKER_BIN="$(command -v docker 2>/dev/null)"
 if [[ -x ${_DOCKER_BIN} && -n "${_DOCKER_BIN}" ]]
 then
     # check for active
@@ -200,7 +214,7 @@ check_platform 'Linux' || {
     return 1
 }
 
-_NMCLI_BIN="$(which nmcli 2>/dev/null)"
+_NMCLI_BIN="$(command -v nmcli 2>/dev/null)"
 if [[ -x ${_NMCLI_BIN} && -n "${_NMCLI_BIN}" ]]
 then
     # check for active

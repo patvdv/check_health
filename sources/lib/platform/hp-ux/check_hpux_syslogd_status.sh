@@ -25,6 +25,7 @@
 # @(#) 2018-02-08: initial version [Patrick Van der Veken]
 # @(#) 2018-02-13: fix to avoid log check if syslogd is not active [Patrick Van der Veken]
 # @(#) 2019-03-09: text updates [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_syslogd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _SYSLOGD_PID_FILE="/var/run/syslog.pid"
 typeset _SYSLOGD_LOG_FILE="/var/adm/syslog.log"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -120,7 +121,7 @@ then
 fi
 
 # ---- log state ----
-_LOGGER_BIN="$(which logger 2>>${HC_STDERR_LOG})"
+_LOGGER_BIN="$(command -v logger 2>>${HC_STDERR_LOG})"
 if [[ -x ${_LOGGER_BIN} && -n "${_LOGGER_BIN}" ]]
 then
     # write test entry

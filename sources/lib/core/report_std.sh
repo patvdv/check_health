@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-18"                               # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 

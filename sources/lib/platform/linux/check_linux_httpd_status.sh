@@ -29,6 +29,7 @@
 # @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ function check_linux_httpd_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _HTTPD_INIT_SCRIPT="/etc/init.d/httpd"
 typeset _HTTPD_SYSTEMD_SERVICE="httpd.service"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -139,7 +140,7 @@ then
 fi
 
 # ---- config state ----
-_HTTPD_BIN="$(which httpd 2>>${HC_STDERR_LOG})"
+_HTTPD_BIN="$(command -v httpd 2>>${HC_STDERR_LOG})"
 if [[ -x ${_HTTPD_BIN} && -n "${_HTTPD_BIN}" ]]
 then
     # validate main configuration

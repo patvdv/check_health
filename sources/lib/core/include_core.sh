@@ -24,6 +24,20 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: version_include_core()
+# DOES: dummy function for version placeholder
+# EXPECTS: n/a
+# RETURNS: 0
+function version_include_core
+{
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+
+print "INFO: $0: ${_VERSION#version_*}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: archive_hc()
 # DOES: archive log entries for a given HC
 # EXPECTS: HC name [string]
@@ -1425,7 +1439,6 @@ return ${CRON_COUNT}
 function list_core
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
-typeset FACTION="${1}"
 typeset FCONFIG=""
 typeset FDIR=""
 typeset FNAME=""
@@ -1435,17 +1448,14 @@ typeset FSTATE="enabled"     # default
 typeset FFILE=""
 typeset FSCRIPT=""
 typeset HAS_FCONFIG=0
-typeset HC_VERSION=""
 
 # print header
-if [[ "${FACTION}" != "list" ]]
-then
-    # shellcheck disable=SC1117
-    printf "%-30s\t%-8s\t%s\t\t%s\n" "Core plugin" "State" "Version" "Config?"
-    # shellcheck disable=SC2183,SC1117
-    printf "%80s\n" | tr ' ' -
-fi
-print "${FPATH}" | tr ':' '\n' | grep "core$" | sort 2>/dev/null | while read -r FDIR
+# shellcheck disable=SC1117
+printf "%-30s\t%-8s\t%s\t\t%s\n" "Core plugin" "State" "Version" "Config?"
+# shellcheck disable=SC2183,SC1117
+printf "%80s\n" | tr ' ' -
+
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" | sort 2>/dev/null | while read -r FDIR
 do
     # exclude core helper librar(y|ies)
     # shellcheck disable=SC2010
@@ -1489,28 +1499,25 @@ do
 done
 
 # dead link detection
-if [[ "${FACTION}" != "list" ]]
-then
-    print
-    print -n "Dead links: "
-    print "${FPATH}" | tr ':' '\n' | grep "core$" | while read -r FDIR
+print
+print -n "Dead links: "
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" 2>/dev/null | while read -r FDIR
+do
+    # do not use 'find -type l' here!
+    # shellcheck disable=SC2010,SC1117
+    ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
     do
-        # do not use 'find -type l' here!
-        # shellcheck disable=SC2010,SC1117
-        ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
-        do
-            if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
-            then
-                printf "%s " ${FFILE##*/}
-            fi
-        done
+        if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
+        then
+            printf "%s " ${FFILE##*/}
+        fi
     done
-    print
+done
+print
 
-    # show FPATH
-    print
-    print "current FPATH: ${FPATH}"
-fi
+# show FPATH
+print
+print "current FPATH: ${FPATH}"
 
 return 0
 }
@@ -1539,7 +1546,6 @@ typeset FSCRIPT=""
 typeset HAS_FCONFIG=0
 typeset HAS_FHEALTHY=""
 typeset DISABLE_FFILE=""
-typeset HC_VERSION=""
 
 # build search needle
 if [[ -z "${ARG_LIST}" ]]
@@ -1663,11 +1669,11 @@ if [[ "${FACTION}" != "list" ]]
 then
     print
     print -n "Dead links: "
-    print "${FPATH}" | tr ':' '\n' | grep -v "core" | while read -r FDIR
+    print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core" 2>/dev/null | while read -r FDIR
     do
         # do not use 'find -type l' here!
         # shellcheck disable=SC2010,SC1117
-        ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FFILE
+        ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
             then
@@ -1690,6 +1696,88 @@ then
     print "Sched? : plugin is scheduled through cron (Yes/No)"
     print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Supported/Not supported)"
 fi
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: list_include()
+# DOES: find HC include files (libraries)
+# EXPECTS: n/a
+# RETURNS: 0
+# REQUIRES: n/a
+function list_include
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset FDIR=""
+typeset FNAME=""
+typeset FVERSION=""
+typeset FFILE=""
+typeset FSTATE="enabled"     # default
+typeset FSCRIPT=""
+typeset FFUNCTIONS=""
+typeset FFUNCTION=""
+
+# print header
+# shellcheck disable=SC1117
+printf "%-20s\t%-8s\t%12s\t\t%s\n" "Include/libary" "State" "Version" "Functions"
+# shellcheck disable=SC2183,SC1117
+printf "%100s\n" | tr ' ' -
+
+print "${FPATH}" | tr ':' '\n' 2>/dev/null  | grep "core$" 2>/dev/null | sort 2>/dev/null | while read -r FDIR
+do
+    # exclude core helper librar(y|ies)
+    # shellcheck disable=SC2010
+    ls -1 ${FDIR}/*.sh 2>/dev/null | grep "include_" 2>/dev/null | sort 2>/dev/null | while read -r FFILE
+    do
+        # cache script contents in memory
+        FSCRIPT=$(<${FFILE})
+
+        # find function name
+        FNAME=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]].*version_" 2>/dev/null)
+        # look for version string (cut off comments but don't use [:space:] in tr)
+        FVERSION=$(print -R "${FSCRIPT}" | grep '^typeset _VERSION=' 2>/dev/null |\
+            awk 'match($0,/[0-9]+-[0-9]+-[0-9]+/){print substr($0, RSTART, RLENGTH)}' 2>/dev/null)
+
+        # get list of functions
+        FFUNCTIONS=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]]+" 2>/dev/null | awk '{ print $2}' 2>/dev/null)
+
+        # check state (only for unlinked)
+        [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
+
+        # show results
+        # shellcheck disable=SC1117
+        printf "%-20s\t%-8s\t%12s\n" \
+            "${FNAME#function version_*}" \
+            "${FSTATE}" \
+            "${FVERSION#typeset _VERSION=*}"
+        print "${FFUNCTIONS}" | while read -r FFUNCTION
+        do
+            printf "%64s%s\n" "" "${FFUNCTION}"
+        done
+    done
+done
+
+# dead link detection
+print
+print -n "Dead links: "
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" 2>/dev/null | while read -r FDIR
+do
+    # do not use 'find -type l' here!
+    # shellcheck disable=SC2010,SC1117
+    ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
+    do
+        if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
+        then
+            printf "%s " ${FFILE##*/}
+        fi
+    done
+done
+print
+
+# show FPATH
+print
+print "current FPATH: ${FPATH}"
 
 return 0
 }

@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-03-09: initial version [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_linux_es_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -103,7 +104,7 @@ else
 fi
 
 # check curl
-_CURL_BIN="$(which curl 2>>${HC_STDERR_LOG})"
+_CURL_BIN="$(command -v curl 2>>${HC_STDERR_LOG})"
 if [[ ! -x ${_CURL_BIN} || -z "${_CURL_BIN}" ]]
 then
     warn "curl is not installed here"

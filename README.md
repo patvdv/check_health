@@ -109,7 +109,9 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 /opt/hc/bin/check_health.sh --report
 /opt/hc/bin/check_health.sh --report --last
 /opt/hc/bin/check_health.sh --report --today
+/opt/hc/bin/check_health.sh --report --newer=20180101
 /opt/hc/bin/check_health.sh --report --id=20160704154001 --detail
+
 ```
 
 * **Alerting** on failed health checks:

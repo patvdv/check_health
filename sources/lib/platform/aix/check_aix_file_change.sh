@@ -28,6 +28,7 @@
 # @(#) 2018-11-18: do not trap on signal 0 [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_aix_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -140,9 +141,9 @@ else
 fi
 
 # check for checksum tools
-_OPENSSL_BIN="$(which openssl 2>>${HC_STDERR_LOG})"
+_OPENSSL_BIN="$(command -v openssl 2>>${HC_STDERR_LOG})"
 [[ -x ${_OPENSSL_BIN} && -n "${_OPENSSL_BIN}" ]] && _HAS_OPENSSL=1
-_CKSUM_BIN="$(which cksum 2>>${HC_STDERR_LOG})"
+_CKSUM_BIN="$(command -v cksum 2>>${HC_STDERR_LOG})"
 [[ -x ${_CKSUM_BIN} && -n "${_CKSUM_BIN}" ]] && _HAS_CKSUM=1
 # prefer openssl (for sha256)
 if (( _HAS_OPENSSL == 1 ))

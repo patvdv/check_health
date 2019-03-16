@@ -25,6 +25,7 @@
 # @(#) 2016-12-01: initial version [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -71,7 +72,7 @@ else
     log "not logging/showing passed health checks"
 fi
 
-_POSTFIX_BIN="$(which postfix 2>>${HC_STDERR_LOG})"
+_POSTFIX_BIN="$(command -v postfix 2>>${HC_STDERR_LOG})"
 if [[ -x ${_POSTFIX_BIN} && -n "${_POSTFIX_BIN}" ]]
 then
     ${_POSTFIX_BIN} status >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}

@@ -33,6 +33,7 @@
 # @(#) 2019-03-09: changed format of stanzas in configuration file &
 # @(#)             added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-10: fix for burp v2
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -44,7 +45,7 @@ function check_linux_burp_backup
 typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-10"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -129,7 +130,7 @@ then
 fi
 
 # find burp
-_BURP_BIN="$(which burp 2>/dev/null)"
+_BURP_BIN="$(command -v burp 2>/dev/null)"
 if [[ ! -x ${_BURP_BIN} || -z "${_BURP_BIN}" ]]
 then
     warn "burp is not installed here"

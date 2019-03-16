@@ -24,6 +24,20 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: version_include_core()
+# DOES: dummy function for version placeholder
+# EXPECTS: n/a
+# RETURNS: 0
+function version_include_data
+{
+typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+
+print "INFO: $0: ${_VERSION#version_*}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_get_lvalue_from_config()
 # DOES: get an lvalue from the configuration file
 # EXPECTS: parameter to look for [string]

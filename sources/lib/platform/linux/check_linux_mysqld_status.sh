@@ -25,6 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2019-02-10: initial version [Patrick Van der Veken]
 # @(#) 2019-03-09: text files [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ typeset _MYSQLD_INIT_SCRIPT="/etc/init.d/mysqld"
 typeset _MYSQLD_SYSTEMD_SERVICE="mysqld.service"
 typeset _MARIADB_INIT_SCRIPT="/etc/init.d/mariadb"
 typeset _MARIADB_SYSTEMD_SERVICE="mariadb.service"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -181,7 +182,7 @@ else
 fi
 
 # check mysql
-_MYSQL_BIN="$(which mysql 2>>${HC_STDERR_LOG})"
+_MYSQL_BIN="$(command -v mysql 2>>${HC_STDERR_LOG})"
 if [[ ! -x ${_MYSQL_BIN} || -z "${_MYSQL_BIN}" ]]
 then
     warn "MySQL/mariaDB is not installed here"
@@ -265,7 +266,7 @@ fi
 
 # ---- table states (ISAM)----
 # check mysqlcheck
-_MYSQLCHECK_BIN="$(which mysqlcheck 2>>${HC_STDERR_LOG})"
+_MYSQLCHECK_BIN="$(command -v mysqlcheck 2>>${HC_STDERR_LOG})"
 if [[ ! -x ${_MYSQLCHECK_BIN} || -z "${_MYSQLCHECK_BIN}" ]]
 then
     warn "could not find {mysqlcheck}, skipping table checks"
@@ -278,7 +279,7 @@ then
     if [[ -z "${_CFG_CHECK_DATABASES}" ]]
     then
         # check mysqlshow
-        _MYSQLSHOW_BIN="$(which mysqlshow 2>>${HC_STDERR_LOG})"
+        _MYSQLSHOW_BIN="$(command -v mysqlshow 2>>${HC_STDERR_LOG})"
         if [[ ! -x ${_MYSQLSHOW_BIN} || -z "${_MYSQLSHOW_BIN}" ]]
         then
             warn "could not find {mysqlshow}, skipping table checks"
@@ -347,7 +348,7 @@ fi
 
 # ---- statistics ----
 # check mysqladmin
-_MYSQLADMIN_BIN="$(which mysqladmin 2>>${HC_STDERR_LOG})"
+_MYSQLADMIN_BIN="$(command -v mysqladmin 2>>${HC_STDERR_LOG})"
 if [[ ! -x ${_MYSQLADMIN_BIN} || -z "${_MYSQLADMIN_BIN}" ]]
 then
     warn "could not find {mysqladmin}, skipping statistics gathering"

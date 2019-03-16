@@ -80,13 +80,13 @@ _HC_STDERR_LOG_SHORT="${HC_STDERR_LOG##*/}"
 case "${OS_NAME}" in
     "Linux")
         # prefer mutt :-)
-        _MUTT_BIN="$(which mutt 2>/dev/null)"
+        _MUTT_BIN="$(command -v mutt 2>/dev/null)"
         if [[ -x ${_MUTT_BIN} ]] && [[ -n "${_MUTT_BIN}" ]]
         then
             _MAIL_METHOD="mutt"
         else
             # prefer mailx next
-            _MAILX_BIN="$(which mailx 2>/dev/null)"
+            _MAILX_BIN="$(command -v mailx 2>/dev/null)"
             if [[ -x ${_MAILX_BIN} ]] && [[ -n "${_MAILX_BIN}" ]]
             then
                 _MAIL_METHOD="mailx"
@@ -103,13 +103,13 @@ esac
 if [[ "${_MAIL_METHOD}" = "sendmail" ]]
 then
     # find 'sendmail'
-    _SENDMAIL_BIN="$(which sendmail 2>/dev/null)"
+    _SENDMAIL_BIN="$(command -v sendmail 2>/dev/null)"
     if [[ ! -x ${_SENDMAIL_BIN} ]] || [[ -z "${_SENDMAIL_BIN}" ]]
     then
         die "unable to send e-mail - sendmail is not installed here"
     fi
     # find 'uuencode'
-    _UUENCODE_BIN="$(which uuencode 2>/dev/null)"
+    _UUENCODE_BIN="$(command -v uuencode 2>/dev/null)"
     if [[ ! -x ${_UUENCODE_BIN} ]] || [[ -z "${_UUENCODE_BIN}" ]]
     then
         die "unable to send e-mail - uuencode is not installed here"

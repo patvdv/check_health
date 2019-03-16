@@ -544,11 +544,11 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-core] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
+    [--list=<needle>] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
-                    [--report=<method> ( ([--last] | [--today]) | ([(--older|--newer)=<date>] [--reverse] [--id=<fail_id> [--detail]] [--with-history]) ) ]
+                    [--report=<method> [--with-history] ( ([--last] | [--today]) | [(--older|--newer)=<date>] | [--reverse] [--id=<fail_id> [--detail]] )]
 
 EOT
 
@@ -586,6 +586,7 @@ Parameters:
                   - whether the HC plugin requires a configuration file in ${CONFIG_DIR}
                   - whether the HC plugin is scheduled by cron
 --list-core     : show the available core plugins (mail,SMS,...)
+--list-include  : show the available includes/libraries
 --log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
                   (can be overridden by --no-log to disable all logging)
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
@@ -922,6 +923,16 @@ do
             check_shell
             check_user
             list_core
+            exit 0
+            ;;
+        -list-include|--list-include)
+            read_config
+            check_config
+            build_fpath
+            check_core
+            check_shell
+            check_user
+            list_include
             exit 0
             ;;
         -log-healthy|--log-healthy)

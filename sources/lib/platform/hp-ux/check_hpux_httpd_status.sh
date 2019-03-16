@@ -26,6 +26,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_hpux_httpd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _HTTPD_PID_FILE="/var/run/httpd/httpd.pid"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -117,7 +118,7 @@ then
 fi
 
 # ---- config state ----
-_HTTPD_BIN="$(which httpd 2>>${HC_STDERR_LOG})"
+_HTTPD_BIN="$(command -v httpd 2>>${HC_STDERR_LOG})"
 if [[ -x ${_HTTPD_BIN} && -n "${_HTTPD_BIN}" ]]
 then
     # validate main configuration

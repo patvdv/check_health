@@ -25,6 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-02-19: fix for <unknown> replication value [Patrick Van der Veken]
+# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-02-19"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -148,7 +149,7 @@ else
 fi
 
 # check ssh
-_SSH_BIN="$(which ssh 2>>${HC_STDERR_LOG})"
+_SSH_BIN="$(command -v ssh 2>>${HC_STDERR_LOG})"
 if [[ ! -x ${_SSH_BIN} || -z "${_SSH_BIN}" ]]
 then
     warn "SSH is not installed here"

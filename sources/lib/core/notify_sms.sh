@@ -100,7 +100,7 @@ case "${ARG_SMS_PROVIDER}" in
     *kapow*|*KAPOW*|*Kapow*)
         # KAPOW (https://www.kapow.co.uk/)
         # find 'curl'
-        _CURL_BIN="$(which curl 2>/dev/null)"
+        _CURL_BIN="$(command -v curl 2>/dev/null)"
         if [[ -x ${_CURL_BIN} ]] && [[ -n "${_CURL_BIN}" ]]
         then
             _SMS_TEXT=$(print "${_FROM_MSG}: HC ${_SMS_HC} failed, FAIL_ID=${_SMS_FAIL_ID}" | data_encode_url)
