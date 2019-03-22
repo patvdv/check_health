@@ -1347,6 +1347,13 @@ case ${ARG_ACTION} in
                     if (( CHILD_ERROR == 0 ))
                     then
                         log "executed HC: ${HC_RUN} [RC=${RUN_RC}]"
+                        # call for display_init with extra code 'OK' because some plugin end
+                        # successfully *without* any entries in $HC_MSG_FILE (so handle_hc will
+                        # never get to display_init())
+                        if (( DO_DISPLAY_INIT == 1 )) &&  [[ ! -s "${HC_MSG_FILE}" ]]
+                        then
+                            display_init "${HC_RUN}" "" "OK"
+                        fi
                     else
                         # call for display_init with extra code 'ERROR'
                         if (( DO_DISPLAY_INIT == 1 ))
