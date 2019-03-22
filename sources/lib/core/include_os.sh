@@ -111,13 +111,14 @@ check_platform 'Linux' || {
 
 # default is sysv
 LINUX_INIT="sysv"
-if [[ -r /usr/lib/systemd && -x /usr/bin/systemctl ]]
+if [[ -r /usr/lib/systemd && -n "$(command -v systemctl 2>/dev/null)" ]]
 then
     LINUX_INIT="systemd"
 elif [[ -r /usr/share/upstart ]]
 then
     # shellcheck disable=SC2034
     LINUX_INIT="upstart"
+
 fi
 
 return 0
@@ -218,7 +219,7 @@ _NMCLI_BIN="$(command -v nmcli 2>/dev/null)"
 if [[ -x ${_NMCLI_BIN} && -n "${_NMCLI_BIN}" ]]
 then
     # check for active
-    _HAS_NM=$(nmcli networking 2>/dev/null | grep -c -i "enabled")
+    _HAS_NM=$(nmcli networking 2>/dev/null | grep -c -i "enabled" 2>/dev/null)
 else
     (( ARG_DEBUG > 0 )) && debug "NetworkManager is not active here"
     return 1

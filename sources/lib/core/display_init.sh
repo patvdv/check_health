@@ -31,7 +31,7 @@
 function display_init
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-03-22"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -76,6 +76,9 @@ fi
 if [[ -n "${_DISPLAY_MSG_CODE}" ]]
 then
     case "${_DISPLAY_MSG_CODE}" in
+        OK|ok)
+            _DISPLAY_COLOR="${_GREEN}"
+            ;;
         ERROR|error)
             _DISPLAY_COLOR="${_MAGENTA}"
             ;;

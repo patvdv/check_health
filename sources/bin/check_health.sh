@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-03-16"
+typeset -r SCRIPT_VERSION="2019-03-22"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -658,7 +658,7 @@ typeset FFILE=""
 typeset FSYML=""
 
 # find missing symlinks (do not skip core plug-ins here)
-print "${FPATH}" | tr ':' '\n' | while read -r FDIR
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | while read -r FDIR
 do
     find ${FDIR} -type f -print 2>/dev/null | while read -r FFILE
     do
@@ -675,19 +675,18 @@ do
 done
 
 # find & remove broken symbolic links (do not skip core plug-ins here)
-print "${FPATH}" | tr ':' '\n' | while read -r FDIR
+print "${FPATH}" | tr ':' '\n' 2>/dev/null | while read -r FDIR
 do
     # do not use 'find -type l' here!
     # shellcheck disable=SC2010
-    ls ${FDIR} 2>/dev/null | grep -v "\." | while read -r FSYML
+    ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FSYML
     do
         # check if file is a dead symlink
         if [[ -h "${FDIR}/${FSYML}" ]] && [[ ! -f "${FDIR}/${FSYML}" ]]
         then
             rm -f "${FDIR}/${FSYML}" >/dev/null
             # shellcheck disable=SC2181
-            (( $? == 0 )) && \
-                print -u2 "INFO: remove dead symbolic link ${FSYML}"
+            (( $? == 0 )) && print -u2 "INFO: removed dead symbolic link ${FSYML}"
         fi
     done
 done
@@ -1137,7 +1136,8 @@ HC_LOG="${LOG_DIR}/hc.log"
 # act on HC check(s)
 case ${ARG_ACTION} in
     1)  # check (status) HC(s)
-        print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_CHECK
+        print "${ARG_HC}" | tr ',' '\n' 2>/dev/null | grep -v '^$' 2>/dev/null |\
+            while read -r HC_CHECK
         do
             # check for HC (function)
             exists_hc "${HC_CHECK}" && die "cannot find HC: ${HC_CHECK}"
@@ -1160,7 +1160,8 @@ case ${ARG_ACTION} in
         done
         ;;
     2)  # disable HC(s)
-        print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_DISABLE
+        print "${ARG_HC}" | tr ',' '\n' 2>/dev/null | grep -v '^$' 2>/dev/null |\
+            while read -r HC_DISABLE
         do
             # check for HC (function)
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
@@ -1177,7 +1178,8 @@ case ${ARG_ACTION} in
         done
         ;;
     3)  # enable HC(s)
-        print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_ENABLE
+        print "${ARG_HC}" | tr ',' '\n' 2>/dev/null | grep -v '^$' 2>/dev/null |\
+            while read -r HC_ENABLE
         do
             # check for HC (function)
             exists_hc "${HC_ENABLE}" && die "cannot find HC: ${HC_ENABLE}"
@@ -1206,7 +1208,8 @@ case ${ARG_ACTION} in
         # --check-host handling
         (( ARG_CHECK_HOST == 1 )) && init_check_host
         # execute plug-in(s)
-        print "${ARG_HC}" | tr ',' '\n' | grep -v '^$' | while read -r HC_RUN
+        print "${ARG_HC}" | tr ',' '\n' 2>/dev/null | grep -v '^$' 2>/dev/null |\
+            while read -r HC_RUN
         do
             # re-initialize messages stash (log of failed checks)
             # shellcheck disable=SC2034
@@ -1287,6 +1290,13 @@ case ${ARG_ACTION} in
                 if (( RUN_RC == 0 ))
                 then
                     log "executed HC: ${HC_RUN} [RC=${RUN_RC}]"
+                    # call for display_init with extra code 'OK' because some plugin end
+                    # successfully *without* any entries in $HC_MSG_FILE (so handle_hc will
+                    # never get to display_init())
+                    if (( DO_DISPLAY_INIT == 1 )) &&  [[ ! -s "${HC_MSG_FILE}" ]]
+                    then
+                        display_init "${HC_RUN}" "" "OK"
+                    fi
                 else
                     # call for display_init with extra code 'ERROR'
                     if (( DO_DISPLAY_INIT == 1 ))
