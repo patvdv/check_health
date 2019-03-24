@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/github/license/:patvdv/:check_health.svg]()
+
 <p align="center"><img src="logo/horizontal.png" alt="QList" height="130px"></p>
 
 # Health checker for UNIX/Linux
