@@ -38,11 +38,13 @@ Install the HP-UX plugin bundle:
 Install the core bundle:
 
     yum localinstall hc-linux-<version>.noarch.rpm
+    dpkg --install hc-linux-<version>.noarch.rpm
     zypper install hc-linux-<version>.noarch.rpm
 
 Install the Linux plugin bundle:
 
     yum localinstall hc-linux-platform-<version>.noarch.rpm
+    dpkg --install hc-linux-platform-<version>.noarch.rpm
     zypper install hc-linux-platform-<version>.noarch.rpm
 
 ### AIX
