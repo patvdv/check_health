@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/github/license/patvdv/check_health.svg)]()  [![Release](https://img.shields.io/github/release/patvdv/check_health.svg)]()
+[![License](https://img.shields.io/github/license/patvdv/check_health.svg)]()  [![![Github All Releases](https://img.shields.io/github/release/patvdv/check_health.svg)]()
 
 <p align="center"><img src="logo/horizontal.png" alt="QList" height="130px"></p>
 
