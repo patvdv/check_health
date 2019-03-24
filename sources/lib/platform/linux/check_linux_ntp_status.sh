@@ -34,6 +34,7 @@
 # @(#)             run user for chronyd+ntpd, added forced IPv4 support for ntpq,
 # @(#)             fixed problem with offset calculation [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
+# @(#) 2019-03-24: set dynamic path to client tools [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -49,10 +50,8 @@ typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
 typeset _CHRONYD_USER="chrony"
 typeset _NTPD_USER="ntp"
-typeset _VERSION="2019-01-24"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
-typeset _CHRONYC_BIN="/bin/chronyc"
-typeset _NTPQ_BIN="/usr/sbin/ntpq"
 typeset _NTPQ_OPTS="-pn"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -75,6 +74,8 @@ typeset _NTP_PEER=""
 typeset _CHECK_OFFSET=0
 typeset _USE_CHRONYD=0
 typeset _USE_NTPD=0
+typeset _CHRONYC_BIN=""
+typeset _NTPQ_BIN=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -170,12 +171,21 @@ else
 fi
 
 #------------------------------------------------------------------------------
+# check for client tools
+_CHRONYC_BIN="$(command -v chronyc 2>>${HC_STDERR_LOG})"
+
+
+_NTPQ_BIN="$(command -v ntpq 2>>${HC_STDERR_LOG})"
+
+
+#------------------------------------------------------------------------------
 # chronyd (prefer) or ntpd (fallback)
 # but do not check if _USE_CHRONYD or _USE_NTPD is already set
 if (( _USE_CHRONYD == 0 && _USE_NTPD == 0 ))
 then
     linux_get_init
-    if [[ -x ${_CHRONYC_BIN} ]]
+    _CHRONYC_BIN="$(command -v chronyc 2>>${HC_STDERR_LOG})"
+    if [[ -n "${_CHRONYC_BIN}" && -x ${_CHRONYC_BIN} ]]
     then
         # check that chrony is actually enabled
         (( ARG_DEBUG > 0 )) && debug "found ${_CHRONYC_BIN}, checking if the service is enabled"
@@ -205,7 +215,8 @@ then
         esac
         (( ARG_DEBUG > 0 )) && debug "chronyd service state: ${_USE_CHRONYD}"
     fi
-    if (( _USE_CHRONYD == 0 )) && [[ -x ${_NTPQ_BIN} ]]
+    _NTPQ_BIN="$(command -v ntpq 2>>${HC_STDERR_LOG})"
+    if (( _USE_CHRONYD == 0 )) && [[ -n "${_NTPQ_BIN}" && -x ${_NTPQ_BIN} ]]
     then
         # shellcheck disable=SC2034
         _USE_NTPD=1
