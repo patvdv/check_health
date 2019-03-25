@@ -26,8 +26,9 @@
 # @(#) 2019-01-27: regex fix [Patrick Van der Veken]
 # @(#) 2019-01-30: refactored to support custom definitions with all
 #                  filesystems check [Patrick Van der Veken]
-# @(#) 2019-02-04: fix in cleanup
-# @(#) 2019-02-18: fixes + help update
+# @(#) 2019-02-04: fix in cleanup [Patrick Van der Veken]
+# @(#) 2019-02-18: fixes + help update [Patrick Van der Veken]
+# @(#) 2019-03-25: exclude /dev/loop* + rationalization [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@ function check_linux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-02-18"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-25"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -59,14 +60,10 @@ typeset _CFG_SPACE_THRESHOLD=""
 typeset _FS=""
 typeset _DO_INODES=0
 typeset _DO_SPACE=0
+typeset _INODES_LIST=""
+typeset _SPACE_LIST=""
 typeset _INODES_USAGE=1
 typeset _SPACE_USAGE=1
-typeset _INODES_FILE="${TMP_DIR}/.$0.inodes.$$"
-typeset _SPACE_FILE="${TMP_DIR}/.$0.space.$$"
-
-# set local trap for cleanup
-# shellcheck disable=SC2064
-trap "rm -f ${_SPACE_FILE} ${_INODES_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -159,7 +156,7 @@ fi
 # collect data (POSIX format)
 if (( _DO_INODES > 0 ))
 then
-    df -Pil >>${_INODES_FILE} 2>>${HC_STDERR_LOG}
+    _INODES_LIST=$(df -Pil 2>>${HC_STDERR_LOG})
     if (( $? > 0 ))
     then
         # df exits >0 if there are issues with some filesystems, consider non-fatal
@@ -168,7 +165,7 @@ then
 fi
 if (( _DO_SPACE > 0 ))
 then
-    df -Pl >>${_SPACE_FILE} 2>>${HC_STDERR_LOG}
+    _SPACE_LIST=$(df -Pl 2>>${HC_STDERR_LOG})
     if (( $? > 0 ))
     then
         # df exits >0 if there are issues with some filesystems, consider non-fatal
@@ -180,12 +177,12 @@ fi
 if (( _DO_INODES > 0 ))
 then
     (( ARG_DEBUG > 0 )) && debug "checking inodes..."
-    grep '^\/' ${_INODES_FILE} 2>/dev/null | awk '{print $6}' 2>/dev/null |\
-        while read _FS
+    print -r "${_INODES_LIST}" | grep '^\/' 2>/dev/null | grep -v -E -e '^/dev/loop' 2>/dev/null | awk '{print $6}' 2>/dev/null |\
+        while read -r _FS
     do
         (( ARG_DEBUG > 0 )) && debug "parsing inodes data for filesystem: ${_FS}"
         # add space to grep; must be non-greedy!
-        _INODES_USAGE=$(grep -E -e " ${_FS}$" ${_INODES_FILE} 2>/dev/null | awk '{gsub(/%/,"",$5);print $5}' 2>/dev/null)
+        _INODES_USAGE=$(print -r "${_INODES_LIST}" | grep -E -e " ${_FS}$" 2>/dev/null | awk '{gsub(/%/,"",$5);print $5}' 2>/dev/null)
         data_is_numeric "${_INODES_USAGE}"
         if (( $? > 0 ))
         then
@@ -237,19 +234,19 @@ then
     done
     # add df output to stdout log_hc
     print "==== df -Pil ====" >>${HC_STDOUT_LOG}
-    cat ${_INODES_FILE} >>${HC_STDOUT_LOG}
+    print -r "${_INODES_LIST}" >>${HC_STDOUT_LOG}
 fi
 
 # 2) validate space (df -Pl)
 if (( _DO_SPACE > 0 ))
 then
     (( ARG_DEBUG > 0 )) && debug "checking space..."
-    grep '^\/' ${_SPACE_FILE} 2>/dev/null | awk '{print $6}' 2>/dev/null |\
-        while read _FS
+    print -r "${_SPACE_LIST}" | grep '^\/' 2>/dev/null | grep -v -E -e '^/dev/loop' 2>/dev/null | awk '{print $6}' 2>/dev/null |\
+        while read -r _FS
     do
         (( ARG_DEBUG > 0 )) && debug "parsing space data for filesystem: ${_FS}"
         # add space to grep; must be non-greedy!
-        _SPACE_USAGE=$(grep -E -e " ${_FS}$" ${_SPACE_FILE} 2>/dev/null | awk '{gsub(/%/,"",$5);print $5}' 2>/dev/null)
+        _SPACE_USAGE=$(print -r "${_SPACE_LIST}" | grep -E -e " ${_FS}$" 2>/dev/null | awk '{gsub(/%/,"",$5);print $5}' 2>/dev/null)
         data_is_numeric "${_SPACE_USAGE}"
         if (( $? > 0 ))
         then
@@ -301,11 +298,8 @@ then
     done
     # add df output to stdout log_hc
     print "==== df -Pl ====" >>${HC_STDOUT_LOG}
-    cat ${_SPACE_FILE} >>${HC_STDOUT_LOG}
+    print -r "${_SPACE_LIST}" >>${HC_STDOUT_LOG}
 fi
-
-# do cleanup
-rm -f  ${_INODES_FILE} ${_SPACE_FILE} >/dev/null 2>&1
 
 return 0
 }

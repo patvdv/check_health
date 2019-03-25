@@ -30,6 +30,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-03-25: fix for older Debian & Ubuntu [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +41,7 @@ function check_linux_postfix_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
 typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2019-03-25"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -84,7 +85,18 @@ fi
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_POSTFIX_SYSTEMD_SERVICE}")
+        # Debian8/Ubuntu16 do not correctly report a unit file for postfix,
+        # do not check for it and instead just query systemd service
+        linux_get_distro
+        if [[ "${LINUX_DISTRO}" = "Debian" ]] && (( ${LINUX_RELEASE%%.*} < 9 ))
+        then
+            _CHECK_SYSTEMD_SERVICE=1
+        elif [[ "${LINUX_DISTRO}" = "Ubuntu" ]] && (( ${LINUX_RELEASE%%.*} < 17 ))
+        then
+            _CHECK_SYSTEMD_SERVICE=1
+        else
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_POSTFIX_SYSTEMD_SERVICE}")
+        fi
         if (( _CHECK_SYSTEMD_SERVICE > 0 ))
         then
             systemctl --quiet is-active ${_POSTFIX_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
