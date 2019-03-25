@@ -1,0 +1,4 @@
+/etc/opt/hc/check_exadata_zfs_logs.conf
+/etc/opt/hc/check_exadata_zfs_services.conf
+/etc/opt/hc/check_exadata_zfs_share_replication.conf
+/etc/opt/hc/check_exadata_zfs_share_usage.conf

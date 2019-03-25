@@ -1,0 +1,11 @@
+Package: hc-linux
+Version: %BUILD_DATE%
+Architecture: all
+Maintainer: Patrick Van der Veken <patrick@kudos.be>
+Essential: no
+Installed-Size: 300
+Depends: ksh
+Section: tools
+Priority: extra
+Description: The KUDOS Health Checker (HC) for UNIX. The Health Checker is collection of scripts (plugins) designed to perform regular - but not intensive - health checks on UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as
+well customer specific checks. Checks may include topics such file system mounts, process checks, file consistency etc.

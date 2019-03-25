@@ -1,0 +1,14 @@
+#!/bin/bash
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of check_health.sh
+HC_BIN="/opt/hc/bin/check_health.sh"
+PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
+# ------------------------- CONFIGURATION ends here ---------------------------
+echo "INFO: starting post-install script ..."
+# refresh symbolic FPATH links
+if [[ -x ${HC_BIN} ]]
+then
+    ${HC_BIN} --fix-symlinks
+    (( $? == 0 )) || echo "WARN: updating symlinks failed"
+fi
+echo "INFO: finished post-install script"

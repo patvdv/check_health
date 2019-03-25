@@ -1,0 +1,32 @@
+#!/bin/bash
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of the HC configuration files
+HC_ETC_DIR="/etc/opt/hc"
+# location of check_health.sh
+HC_BIN="/opt/hc/bin/check_health.sh"
+PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
+# ------------------------- CONFIGURATION ends here ---------------------------
+# update or uninstall?
+if (( $1 == 0 ))
+then
+    echo "INFO: starting post-uninstall script ..."
+    # copy plugin configuration file (.dist only)
+    if [[ -d ${HC_ETC_DIR}/core/providers ]]
+    then
+        rm -f ${HC_ETC_DIR}/core/providers/notify_sms.conf.dist 2>/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not remove plugin config file in ${HC_ETC_DIR}/core/providers"
+            exit 1
+        }
+    fi
+else
+    echo "INFO: starting post-uninstall script (RPM upgrade)"
+fi
+# refresh symbolic FPATH links
+if [[ -x ${HC_BIN} ]]
+then
+    ${HC_BIN} --fix-symlinks
+    (( $? == 0 )) || echo "WARN: updating symlinks failed"
+fi
+echo "INFO: finished post-uninstall script"

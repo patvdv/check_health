@@ -1,0 +1,42 @@
+#!/bin/bash
+# ------------------------- CONFIGURATION starts here -------------------------
+# location of the HC scripts
+HC_DIR="/opt/hc"
+# location of the HC configuration files
+HC_ETC_DIR="/etc/opt/hc"
+# location of the HC log/state files
+HC_VAR_DIR="/var/opt/hc"
+# ------------------------- CONFIGURATION ends here ---------------------------
+# update or uninstall?
+if (( $1 == 0 ))
+then
+    echo "INFO: starting post-uninstall script ..."
+    if [[ -d ${HC_DIR} ]]
+    then
+        rm -rf ${HC_DIR} 2>/dev/null
+        (( $? == 0 )) || echo "WARN: failed to remove ${HC_DIR}"
+    fi
+    if [[ -d ${HC_ETC_DIR} ]]
+    then
+        rm -rf ${HC_ETC_DIR}/*.dist >/dev/null
+        (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}"
+    fi
+    if [[ -d ${HC_ETC_DIR}/core ]]
+    then
+        rm -rf ${HC_ETC_DIR}/core/*.dist >/dev/null
+        (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core"
+    fi
+    if [[ -d ${HC_ETC_DIR}/core/providers ]]
+    then
+        rm -rf ${HC_ETC_DIR}/core/providers/*.dist >/dev/null
+        (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core/providers"
+    fi
+    if [[ -d ${HC_VAR_DIR} ]]
+    then
+        rm -rf ${HC_VAR_DIR}/state/temporary 2>/dev/null
+        (( $? == 0 )) || echo "WARN: failed to remove ${HC_VAR_DIR}/state/temporary"
+    fi
+    echo "INFO: finished post-uninstall script"
+else
+    echo "INFO: skipping post-uninstall script (RPM upgrade)"
+fi
