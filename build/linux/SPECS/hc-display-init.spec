@@ -13,8 +13,8 @@ URL:            http://www.kudos.be
 Requires:       ksh,hc-linux
 BuildArch:      noarch
 BuildRoot:      %{_topdir}/%{name}-%{version}-root
-      
-%description 
+
+%description
 The Health Checker is collection of scripts (plugins) designed to perform regular - but not intensive - health checks on UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as well customer specific checks. Checks may include topics such file system mounts, process checks, file consistency etc.
 This package contains core plugins (display).
 
@@ -26,7 +26,7 @@ This package contains core plugins (display).
 rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/display_init.sh $RPM_BUILD_ROOT/opt/hc/lib/core/display_init.sh
+cp ../SOURCES/opt/hc/lib/core/display_init.sh $RPM_BUILD_ROOT/opt/hc/lib/core/display_init.sh
 
 %post
 # ------------------------- CONFIGURATION starts here -------------------------
@@ -65,5 +65,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/core/display_init.sh
 
 %changelog
+* Tue Mar 26 2019 <patrick@kudos.be> - 0.1.0
+- New git tree organization
 * Mon May 08 2017 <patrick@kudos.be> - 0.0.1
 - Initial build

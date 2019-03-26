@@ -25,27 +25,27 @@ The Health Checker is collection of scripts (plugins) designed to perform regula
 rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/bin
-cp ../SOURCES/bin/check_health.sh $RPM_BUILD_ROOT/opt/hc/bin
+cp ../SOURCES/opt/hc/bin/check_health.sh $RPM_BUILD_ROOT/opt/hc/bin
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/include_core.sh $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/include_data.sh $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/include_os.sh $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/notify_mail.sh $RPM_BUILD_ROOT/opt/hc/lib/core
-cp ../SOURCES/lib/core/report_std.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/opt/hc/lib/core/include_core.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/opt/hc/lib/core/include_data.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/opt/hc/lib/core/include_os.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/opt/hc/lib/core/notify_mail.sh $RPM_BUILD_ROOT/opt/hc/lib/core
+cp ../SOURCES/opt/hc/lib/core/report_std.sh $RPM_BUILD_ROOT/opt/hc/lib/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
-cp ../SOURCES/etc/check_host.conf.dist $RPM_BUILD_ROOT/etc/opt/hc
+cp ../SOURCES/etc/opt/hc/check_host.conf.dist $RPM_BUILD_ROOT/etc/opt/hc
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
-cp ../SOURCES/etc/core/check_health.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/core
+cp ../SOURCES/etc/opt/hc/core/check_health.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/providers
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_info.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_header.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_body.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_footer.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_info.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_header.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_body.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_footer.tpl $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 install -d -m 755 $RPM_BUILD_ROOT/var/opt/hc
 install -d -m 755 $RPM_BUILD_ROOT/etc/logrotate.d
-cp ../SOURCES/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
+cp ../SOURCES/etc/logrotate.d/check_health $RPM_BUILD_ROOT/etc/logrotate.d/check_health
 
 %post
 # ------------------------- CONFIGURATION starts here -------------------------
@@ -160,6 +160,8 @@ fi
 %attr(644, root, root) /etc/logrotate.d/check_health
 
 %changelog
+* Tue Mar 26 2019 <patrick@kudos.be> - 0.2.0
+- New git tree organization
 * Sat Nov 10 2018 <patrick@kudos.be> - 0.1.0
 - Added logrotate file
 * Mon Dec 18 2017 <patrick@kudos.be> - 0.0.9

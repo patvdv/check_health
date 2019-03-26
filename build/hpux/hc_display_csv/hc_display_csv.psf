@@ -58,7 +58,7 @@ This is the core CSV display plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../sources/lib/core=/opt/hc/lib/core
+        directory       ../../opt/hc/lib/core=/opt/hc/lib/core
         file            -m 755 display_csv.sh
     end
 end

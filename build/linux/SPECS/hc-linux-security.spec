@@ -13,8 +13,8 @@ URL:            http://www.kudos.be
 Requires:       ksh,hc-linux
 BuildArch:      noarch
 BuildRoot:      %{_topdir}/%{name}-%{version}-root
-      
-%description 
+
+%description
 The Health Checker is collection of scripts (plugins) designed to perform regular - but not intensive - health checks on UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as well customer specific checks. Checks may include topics such file system mounts, process checks, file consistency etc.
 This package contains security specific plugins.
 
@@ -27,7 +27,7 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/security
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/security
-cp ../SOURCES/lib/security/check_all_ssh_controls.sh $RPM_BUILD_ROOT/opt/hc/lib/security/check_all_ssh_controls.sh
+cp ../SOURCES/opt/hc/lib/security/check_all_ssh_controls.sh $RPM_BUILD_ROOT/opt/hc/lib/security/check_all_ssh_controls.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 
@@ -68,5 +68,7 @@ echo "INFO: finished post-install script"
 %attr(755, root, root) /opt/hc/lib/security/check_all_ssh_controls.sh
 
 %changelog
+* Tue Mar 26 2019 <patrick@kudos.be> - 0.1.0
+- New git tree organization
 * Fri Jan 01 2016 <patrick@kudos.be> - 0.0.1
 - Initial build

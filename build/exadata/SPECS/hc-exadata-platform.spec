@@ -27,16 +27,16 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata
-cp ../SOURCES/lib/platform/exadata/check_exadata_zfs_logs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
-cp ../SOURCES/lib/platform/exadata/check_exadata_zfs_services.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
-cp ../SOURCES/lib/platform/exadata/check_exadata_zfs_share_replication.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
-cp ../SOURCES/lib/platform/exadata/check_exadata_zfs_share_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
 
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
-cp ../SOURCES/etc/check_exadata_zfs_logs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_logs.conf.dist
-cp ../SOURCES/etc/check_exadata_zfs_services.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_services.conf.dist
-cp ../SOURCES/etc/check_exadata_zfs_share_replication.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_share_replication.conf.dist
-cp ../SOURCES/etc/check_exadata_zfs_share_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_share_usage.conf.dist
+cp ../SOURCES/etc/opt/hc/check_exadata_zfs_logs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_logs.conf.dist
+cp ../SOURCES/etc/opt/hc/check_exadata_zfs_services.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_services.conf.dist
+cp ../SOURCES/etc/opt/hc/check_exadata_zfs_share_replication.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_share_replication.conf.dist
+cp ../SOURCES/etc/opt/hc/check_exadata_zfs_share_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_share_usage.conf.dist
 
 
 %post
@@ -86,5 +86,7 @@ echo "INFO: finished post-uninstall script"
 
 
 %changelog
+* Tue Mar 26 2019 <patrick@kudos.be> - 0.1.0
+- New git tree organization
 * Mon Feb 18 2019 <patrick@kudos.be> - 0.0.1
 - Initial build

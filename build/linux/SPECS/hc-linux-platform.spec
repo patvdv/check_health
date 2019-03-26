@@ -27,59 +27,59 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform/linux
-cp ../SOURCES/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
-cp ../SOURCES/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_file_age.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_age.sh
-cp ../SOURCES/lib/platform/linux/check_linux_file_change.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_change.sh
-cp ../SOURCES/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
-cp ../SOURCES/lib/platform/linux/check_linux_fs_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_usage.sh
-cp ../SOURCES/lib/platform/linux/check_linux_httpd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_httpd_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_mysqld_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_named_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_named_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_ntp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_ntp_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_postfix_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_postfix_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_samba_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_samba_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_shorewall_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_shorewall_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sshd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sshd_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_winbind_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_winbind_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_hpasmcli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpasmcli.sh
-cp ../SOURCES/lib/platform/linux/check_linux_hpacucli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpacucli.sh
-cp ../SOURCES/lib/platform/linux/check_linux_hplog.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hplog.sh
-cp ../SOURCES/lib/platform/linux/check_linux_hpssacli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
-cp ../SOURCES/lib/platform/linux/check_linux_process_limits.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_process_limits.sh
-cp ../SOURCES/lib/platform/linux/check_linux_root_crontab.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sg_cluster_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sg_cluster_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sg_package_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sg_package_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_sg_qs_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
-cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
-cp ../SOURCES/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_age.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_age.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_change.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_change.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fs_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_usage.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_httpd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_httpd_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_named_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_named_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_ntp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_ntp_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_postfix_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_postfix_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_samba_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_samba_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_shorewall_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_shorewall_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sshd_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sshd_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_winbind_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_winbind_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hpasmcli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpasmcli.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hpacucli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpacucli.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hplog.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hplog.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hpssacli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_process_limits.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_process_limits.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_root_crontab.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
-cp ../SOURCES/etc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
-cp ../SOURCES/etc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
-cp ../SOURCES/etc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
-cp ../SOURCES/etc/check_linux_file_change.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_change.conf.dist
-cp ../SOURCES/etc/check_linux_fs_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fs_usage.conf.dist
-cp ../SOURCES/etc/check_linux_hpasmcli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpasmcli.conf.dist
-cp ../SOURCES/etc/check_linux_hpacucli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpacucli.conf.dist
-cp ../SOURCES/etc/check_linux_hplog.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hplog.conf.dist
-cp ../SOURCES/etc/check_linux_hpssacli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpssacli.conf.dist
-cp ../SOURCES/etc/check_linux_mysqld_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_mysqld_status.conf.dist
-cp ../SOURCES/etc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
-cp ../SOURCES/etc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
-cp ../SOURCES/etc/check_linux_root_crontab.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_root_crontab.conf.dist
-cp ../SOURCES/etc/check_linux_sg_cluster_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_config.conf.dist
-cp ../SOURCES/etc/check_linux_sg_cluster_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
-cp ../SOURCES/etc/check_linux_sg_package_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_config.conf.dist
-cp ../SOURCES/etc/check_linux_sg_package_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_status.conf.dist
-cp ../SOURCES/etc/check_linux_vz_ct_counters.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
-cp ../SOURCES/etc/check_linux_vz_ct_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_file_change.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_change.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_fs_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fs_usage.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_hpasmcli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpasmcli.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_hpacucli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpacucli.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_hplog.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hplog.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_hpssacli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpssacli.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_mysqld_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_mysqld_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_root_crontab.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_root_crontab.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_sg_cluster_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_config.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_sg_cluster_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_sg_package_config.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_config.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_sg_package_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_sg_package_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_vz_ct_counters.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_vz_ct_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_status.conf.dist
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_body.tpl-check_linux_fs_mounts_options $RPM_BUILD_ROOT/etc/opt/hc/core/templates
-cp ../SOURCES/etc/core/templates/mail_body.tpl-check_linux_root_crontab $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_body.tpl-check_linux_fs_mounts_options $RPM_BUILD_ROOT/etc/opt/hc/core/templates
+cp ../SOURCES/etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab $RPM_BUILD_ROOT/etc/opt/hc/core/templates
 
 %post
 # ------------------------- CONFIGURATION starts here -------------------------
@@ -171,6 +171,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Tue Mar 26 2019 <patrick@kudos.be> - 0.2.0
+- New git tree organization
 * Sat Mar 09 2019 <patrick@kudos.be> - 0.1.5
 - Added check_linux_es_status
 * Sun Feb 10 2019 <patrick@kudos.be> - 0.1.4
