@@ -7,4 +7,4 @@ Installed-Size: 50
 Depends: hc-linux
 Section: tools
 Priority: extra
-Description: The KUDOS Health Checker (HC) for UNIX  (INIT display core plugin). The Health Checker is collection of scripts (plugins) designed to perform regular - but not intensive - health checks on UNIX/Linux systems. It provides plugins for AIX, HP-UX and Linux as well customer specific checks. Checks may include topics such file system mounts, process checks, file consistency etc. This package contains core plugins (display).
+Description: The KUDOS Health Checker (HC) for UNIX  (INIT display core plugin).
