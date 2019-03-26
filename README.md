@@ -1,6 +1,7 @@
 ![License](https://img.shields.io/github/license/patvdv/check_health.svg)
 ![Code](https://img.shields.io/badge/Code-Shell-green.svg)
 [![Release](https://img.shields.io/github/release/patvdv/check_health.svg)](https://github.com/patvdv/check_health/releases)
+[![Release](https://img.shields.io/github/downloads/patvdv/check_health/total.svg)](https://github.com/patvdv/check_health/releases)
 
 <br />
 <p align="center"><img src="logo/horizontal.png" alt="QList" height="130px"></p>
