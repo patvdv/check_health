@@ -1,0 +1,89 @@
+# -- post-install --
+post_install() {
+    # ------------------------- CONFIGURATION starts here -------------------------
+    # location of the HC scripts
+    HC_DIR="/opt/hc"
+    # location of the HC configuration files
+    HC_ETC_DIR="/etc/opt/hc"
+    # location of the HC log/state files
+    HC_VAR_DIR="/var/opt/hc"
+    # location of check_health.sh
+    HC_BIN="/opt/hc/bin/check_health.sh"
+    PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
+    # ------------------------- CONFIGURATION ends here ---------------------------
+    echo "INFO: starting post-install script ..."
+    # copy configuration files
+    if [[ ! -f ${HC_ETC_DIR}/core/check_health.conf ]]
+    then
+        # copy main configuration file
+        cp -p ${HC_ETC_DIR}/core/check_health.conf.dist ${HC_ETC_DIR}/core/check_health.conf >/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not copy main config file in ${HC_ETC_DIR}/core"
+            exit 1
+        }
+    fi
+    if [[ ! -f ${HC_ETC_DIR}/check_host.conf ]]
+    then
+        # copy host check configuration file
+        cp -p ${HC_ETC_DIR}/check_host.conf.dist ${HC_ETC_DIR}/check_host.conf >/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not copy host check config file in ${HC_ETC_DIR}"
+            exit 1
+        }
+    fi
+    # refresh symbolic FPATH links for core includes & plugins
+    if [[ -x ${HC_BIN} ]]
+    then
+        ${HC_BIN} --fix-symlinks || echo "WARN: updating symlinks failed"
+    else
+        echo "ERROR: could not locate or excute the HC main script (${HC_BIN})"
+    fi
+    echo "INFO: finished post-install script"
+}
+
+# -- post-install --
+post_install() {
+    # ------------------------- CONFIGURATION starts here -------------------------
+    # location of the HC scripts
+    HC_DIR="/opt/hc"
+    # location of the HC configuration files
+    HC_ETC_DIR="/etc/opt/hc"
+    # location of the HC log/state files
+    HC_VAR_DIR="/var/opt/hc"
+    # ------------------------- CONFIGURATION ends here ---------------------------
+    # update or uninstall?
+    if (( $1 == 0 ))
+    then
+        echo "INFO: starting post-uninstall script ..."
+        if [[ -d ${HC_DIR} ]]
+        then
+            rm -rf ${HC_DIR} 2>/dev/null
+            (( $? == 0 )) || echo "WARN: failed to remove ${HC_DIR}"
+        fi
+        if [[ -d ${HC_ETC_DIR} ]]
+        then
+            rm -rf ${HC_ETC_DIR}/*.dist >/dev/null
+            (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}"
+        fi
+        if [[ -d ${HC_ETC_DIR}/core ]]
+        then
+            rm -rf ${HC_ETC_DIR}/core/*.dist >/dev/null
+            (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core"
+        fi
+        if [[ -d ${HC_ETC_DIR}/core/providers ]]
+        then
+            rm -rf ${HC_ETC_DIR}/core/providers/*.dist >/dev/null
+            (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core/providers"
+        fi
+        if [[ -d ${HC_VAR_DIR} ]]
+        then
+            rm -rf ${HC_VAR_DIR}/state/temporary 2>/dev/null
+            (( $? == 0 )) || echo "WARN: failed to remove ${HC_VAR_DIR}/state/temporary"
+        fi
+        echo "INFO: finished post-uninstall script"
+    else
+        echo "INFO: skipping post-uninstall script (RPM upgrade)"
+    fi
+}
