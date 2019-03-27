@@ -1,0 +1,20 @@
+_pkgname="check_health"
+pkgname="hc-display-zenoss"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (ZENOSS display core plugin)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/core
+    install -d -m 755 opt/hc/lib/core/display_zenoss.sh ${pkgdir}/opt/hc/lib/core/display_zenoss.sh
+}

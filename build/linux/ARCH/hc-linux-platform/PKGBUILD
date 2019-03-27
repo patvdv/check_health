@@ -1,0 +1,73 @@
+_pkgname="check_health"
+pkgname="hc-linux-platform"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (platform plugins)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform/linux
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_backup.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_es_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_es_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_age.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_age.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_change.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_change.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_fs_mounts.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_fs_usage.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fs_usage.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_httpd_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_httpd_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_mysqld_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_mysqld_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_named_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_named_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_ntp_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_ntp_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_postfix_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_postfix_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_samba_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_samba_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_shorewall_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_shorewall_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sshd_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sshd_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_winbind_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_winbind_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_hpasmcli.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hpasmcli.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_hpacucli.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hpacucli.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_hplog.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hplog.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_hpssacli.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_process_limits.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_process_limits.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_root_crontab.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_package_config.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_package_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_linux_burp_backup.conf.dist ${pkgdir}/etc/opt/hc/check_linux_burp_backup.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_es_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_es_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_file_age.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_age.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_file_change.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_change.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_fs_usage.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fs_usage.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_hpasmcli.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hpasmcli.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_hpacucli.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hpacucli.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_hplog.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hplog.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_hpssacli.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hpssacli.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_mysqld_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_mysqld_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_ntp_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_ntp_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_process_limits.conf.dist ${pkgdir}/etc/opt/hc/check_linux_process_limits.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_root_crontab.conf.dist ${pkgdir}/etc/opt/hc/check_linux_root_crontab.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_sg_cluster_config.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_cluster_config.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_sg_cluster_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_sg_package_config.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_package_config.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_sg_package_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_package_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_vz_ct_counters.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_vz_ct_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_status.conf.dist
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_body.tpl-check_linux_fs_mounts_options ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab ${pkgdir}/etc/opt/hc/core/templates
+}

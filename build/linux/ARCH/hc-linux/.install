@@ -43,7 +43,7 @@ post_install() {
     echo "INFO: finished post-install script"
 }
 
-# -- post-install --
+# -- post-remove --
 post_remove() {
     # ------------------------- CONFIGURATION starts here -------------------------
     # location of the HC scripts

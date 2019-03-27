@@ -1,0 +1,24 @@
+_pkgname="check_health"
+pkgname="hc-notify-eif"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (EIF notify core plugin)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/core
+    install -d -m 755 opt/hc/lib/core/notify_eif.sh ${pkgdir}/opt/hc/lib/core/notify_eif.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
+    install -d -m 644 etc/opt/hc/core/providers/notify_eif.conf.dist ${pkgdir}/etc/opt/hc/core/providers/notify_eif.conf.dist
+}

@@ -1,0 +1,30 @@
+_pkgname="check_health"
+pkgname="hc-exadata-platform"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (Exadata platform plugins)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform/exadata
+    install -d -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
+    install -d -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
+    install -d -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
+    install -d -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -d -m 644 etc/opt/hc/check_exadata_zfs_logs.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_logs.conf.dist
+    install -d -m 644 etc/opt/hc/check_exadata_zfs_services.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_services.conf.dist
+    install -d -m 644 etc/opt/hc/check_exadata_zfs_share_replication.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_share_replication.conf.dist
+    install -d -m 644 etc/opt/hc/check_exadata_zfs_share_usage.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_share_usage.conf.dist
+
+}

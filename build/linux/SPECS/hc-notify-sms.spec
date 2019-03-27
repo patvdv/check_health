@@ -28,7 +28,7 @@ install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/core
 cp ../SOURCES/opt/hc/lib/core/notify_sms.sh $RPM_BUILD_ROOT/opt/hc/lib/core/notify_sms.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
-install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/providers
+install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core/providers
 cp ../SOURCES/etc/opt/hc/core/providers/notify_sms.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/core/providers/notify_sms.conf.dist
 

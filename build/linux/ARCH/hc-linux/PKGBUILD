@@ -12,28 +12,28 @@ install=".install"
 sha256sums=('SKIP')
 
 package() {
-        cd "${srcdir}/${_pkgname}"
-        install -d -m 755 ${pkgdir}/opt/hc
-        install -d -m 755 ${pkgdir}/opt/hc/bin
-        install -Dm 755 opt/hc/bin/check_health.sh ${pkgdir}/opt/hc/bin
-        install -d -m 755 ${pkgdir}/opt/hc/lib
-        install -d -m 755 ${pkgdir}/opt/hc/lib/core
-        install -Dm 755 opt/hc/lib/core/include_core.sh ${pkgdir}/opt/hc/lib/core
-        install -Dm 755 opt/hc/lib/core/include_data.sh ${pkgdir}/opt/hc/lib/core
-        install -Dm 755 opt/hc/lib/core/include_os.sh ${pkgdir}/opt/hc/lib/core
-        install -Dm 755 opt/hc/lib/core/notify_mail.sh ${pkgdir}/opt/hc/lib/core
-        install -Dm 755 opt/hc/lib/core/report_std.sh ${pkgdir}/opt/hc/lib/core
-        install -d -m 755 ${pkgdir}/etc/opt/hc
-        install -Dm 644 etc/opt/hc/check_host.conf.dist ${pkgdir}/etc/opt/hc
-        install -d -m 755 ${pkgdir}/etc/opt/hc/core
-        install -Dm 644 etc/opt/hc/core/check_health.conf.dist ${pkgdir}/etc/opt/hc/core
-        install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
-        install -d -m 755 ${pkgdir}/etc/opt/hc/core/templates
-        install -Dm 644 etc/opt/hc/core/templates/mail_info.tpl ${pkgdir}/etc/opt/hc/core/templates
-        install -Dm 644 etc/opt/hc/core/templates/mail_header.tpl ${pkgdir}/etc/opt/hc/core/templates
-        install -Dm 644 etc/opt/hc/core/templates/mail_body.tpl ${pkgdir}/etc/opt/hc/core/templates
-        install -Dm 644 etc/opt/hc/core/templates/mail_footer.tpl ${pkgdir}/etc/opt/hc/core/templates
-        install -d -m 755 ${pkgdir}/var/opt/hc
-        install -d -m 755 ${pkgdir}/etc/logrotate.d
-        install -Dm 644 etc/logrotate.d/check_health ${pkgdir}/etc/logrotate.d/check_health
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc
+    install -d -m 755 ${pkgdir}/opt/hc/bin
+    install -D -m 755 opt/hc/bin/check_health.sh ${pkgdir}/opt/hc/bin
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/include_core.sh ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/include_data.sh ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/include_os.sh ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/notify_mail.sh ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/report_std.sh ${pkgdir}/opt/hc/lib/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_host.conf.dist ${pkgdir}/etc/opt/hc
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core
+    install -D -m 644 etc/opt/hc/core/check_health.conf.dist ${pkgdir}/etc/opt/hc/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_info.tpl ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_header.tpl ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_body.tpl ${pkgdir}/etc/opt/hc/core/templates
+    install -D -m 644 etc/opt/hc/core/templates/mail_footer.tpl ${pkgdir}/etc/opt/hc/core/templates
+    install -d -m 755 ${pkgdir}/var/opt/hc
+    install -d -m 755 ${pkgdir}/etc/logrotate.d
+    install -D -m 644 etc/logrotate.d/check_health ${pkgdir}/etc/logrotate.d/check_health
 }

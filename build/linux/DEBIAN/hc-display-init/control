@@ -7,4 +7,4 @@ Installed-Size: 50
 Depends: hc-linux
 Section: tools
 Priority: extra
-Description: The KUDOS Health Checker (HC) for UNIX  (INIT display core plugin).
+Description: The KUDOS Health Checker (HC) for UNIX (init display core plugin).
