@@ -44,7 +44,7 @@ post_install() {
 }
 
 # -- post-install --
-post_install() {
+post_remove() {
     # ------------------------- CONFIGURATION starts here -------------------------
     # location of the HC scripts
     HC_DIR="/opt/hc"
