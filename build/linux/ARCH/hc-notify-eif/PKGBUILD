@@ -1,3 +1,5 @@
+# Maintainer: Patrick Van der Veken <patrick@kudos.be>
+
 _pkgname="check_health"
 pkgname="hc-notify-eif"
 pkgver="%BUILD_DATE%"
