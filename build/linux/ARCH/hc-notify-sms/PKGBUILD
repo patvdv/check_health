@@ -16,9 +16,9 @@ package() {
     cd "${srcdir}/${_pkgname}"
     install -d -m 755 ${pkgdir}/opt/hc/lib
     install -d -m 755 ${pkgdir}/opt/hc/lib/core
-    install -d -m 755 opt/hc/lib/core/notify_sms.sh ${pkgdir}/opt/hc/lib/core/notify_sms.sh
+    install -D -m 755 opt/hc/lib/core/notify_sms.sh ${pkgdir}/opt/hc/lib/core/notify_sms.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
     install -d -m 755 ${pkgdir}/etc/opt/hc/core
     install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
-    install -d -m 644 etc/opt/hc/core/providers/notify_sms.conf.dist ${pkgdir}/etc/opt/hc/core/providers/notify_sms.conf.dist
+    install -D -m 644 etc/opt/hc/core/providers/notify_sms.conf.dist ${pkgdir}/etc/opt/hc/core/providers/notify_sms.conf.dist
 }

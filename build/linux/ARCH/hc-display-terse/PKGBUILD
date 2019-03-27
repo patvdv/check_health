@@ -16,5 +16,5 @@ package() {
     cd "${srcdir}/${_pkgname}"
     install -d -m 755 ${pkgdir}/opt/hc/lib
     install -d -m 755 ${pkgdir}/opt/hc/lib/core
-    install -d -m 755 opt/hc/lib/core/display_terse.sh ${pkgdir}/opt/hc/lib/core/display_terse.sh
+    install -D -m 755 opt/hc/lib/core/display_terse.sh ${pkgdir}/opt/hc/lib/core/display_terse.sh
 }
