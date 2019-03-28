@@ -58,7 +58,7 @@ This is the core INIT display plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../opt/hc/lib/core=/opt/hc/lib/core
+        directory       ../../../opt/hc/lib/core=/opt/hc/lib/core
         file            -m 755 display_init.sh
     end
 end

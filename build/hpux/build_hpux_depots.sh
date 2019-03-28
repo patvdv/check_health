@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh 
+#!/usr/bin/env ksh
 #******************************************************************************
 # @(#) build script for HC SD packages (uses 'swpackage')
 #******************************************************************************
@@ -17,10 +17,11 @@
 #******************************************************************************
 # Requires following build (dir) structures:
 #
-#   build/<build_files>
+#   build/<platform>/<build_files>
 #   build/build_hpux_depots.sh
-#   sources/bin/<hc_scripts>
-#   sources/lib/*/<hc_plugins>
+#   opt/hc/bin/<hc_scripts>
+#   opt/hc/lib/*/<hc_plugins>
+#   etc/opt/hc/<hc_configs>
 #   depots/
 #
 # Build order:
@@ -36,80 +37,76 @@ BUILD_PRETTY_DATE="$(date +'%Y.%m.%d')"
 BUILD_DIR="$(dirname $0)"
 
 # clean up previous packages
-rm -f ${BUILD_DIR}/depots/* >/dev/null
+if [[ -d ../../depots ]]
+then
+    rm -f ../../depots/* 2>/dev/null
+else
+    mkdir -p ../../depots 2>/dev/null
+fi
 
 # see if we have BUILD_DATE placeholder in PSF files
-find ${BUILD_DIR} -name "*.psf" | while read FILE 
+find ${BUILD_DIR} -name "*.psf" | while read FILE
 do
-	if (( $(grep -c '%BUILD_DATE%' ${FILE}) == 0 ))
-	then
-		print -u2 "ERROR: no %BUILD_DATE% placeholder in ${FILE}!"
-		exit 1
-	fi
+    if (( $(grep -c '%BUILD_DATE%' ${FILE}) == 0 ))
+    then
+        print -u2 "ERROR: no %BUILD_DATE% placeholder in ${FILE}!"
+        exit 1
+    fi
 done
 
-# replace BUILD_DATE placeholder in PSF files 
-find ${BUILD_DIR} -name "*.psf" | while read FILE 
+# replace BUILD_DATE placeholder in PSF files
+find ${BUILD_DIR} -name "*.psf" | while read FILE
 do
-	perl -pi -e "s/%BUILD_DATE%/${BUILD_PRETTY_DATE}/g" ${FILE}
+    perl -pi -e "s/%BUILD_DATE%/${BUILD_PRETTY_DATE}/g" ${FILE}
 done
 
 # build hc_hpux package
-cd ${BUILD_DIR}/hc_hpux/
-swpackage -s hc_hpux.psf -x media_type=tape -d ../../depots/hc_hpux-${BUILD_DATE}.sd
-swpackage -s hc_hpux.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_hpux/ || exit 1
+swpackage -s hc_hpux.psf -x media_type=tape -d ../../../depots/hc_hpux-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_hpux_platform package
-cd ${BUILD_DIR}/hc_hpux_platform
-swpackage -s hc_hpux_platform.psf -x media_type=tape -d ../../depots/hc_hpux_platform-${BUILD_DATE}.sd
-swpackage -s hc_hpux_platform.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_hpux_platform || exit 1
+swpackage -s hc_hpux_platform.psf -x media_type=tape -d ../../../depots/hc_hpux_platform-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_display_csv package
-cd ${BUILD_DIR}/hc_display_csv
-swpackage -s hc_display_csv.psf -x media_type=tape -d ../../depots/hc_display_csv-${BUILD_DATE}.sd
-swpackage -s hc_display_csv.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_display_csv || exit 1
+swpackage -s hc_display_csv.psf -x media_type=tape -d ../../../depots/hc_display_csv-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_display_init package
-cd ${BUILD_DIR}/hc_display_init
-swpackage -s hc_display_init.psf -x media_type=tape -d ../../depots/hc_display_init-${BUILD_DATE}.sd
-swpackage -s hc_display_init.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_display_init || exit 1
+swpackage -s hc_display_init.psf -x media_type=tape -d ../../../depots/hc_display_init-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_display_json package
-cd ${BUILD_DIR}/hc_display_json
-swpackage -s hc_display_json.psf -x media_type=tape -d ../../depots/hc_display_json-${BUILD_DATE}.sd
-swpackage -s hc_display_json.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_display_json || exit 1
+swpackage -s hc_display_json.psf -x media_type=tape -d ../../../depots/hc_display_json-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_display_terse package
-cd ${BUILD_DIR}/hc_display_terse
-swpackage -s hc_display_terse.psf -x media_type=tape -d ../../depots/hc_display_terse-${BUILD_DATE}.sd
-swpackage -s hc_display_terse.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_display_terse || exit 1
+swpackage -s hc_display_terse.psf -x media_type=tape -d ../../../depots/hc_display_terse-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_display_zenoss package
-cd ${BUILD_DIR}/hc_display_zenoss
-swpackage -s hc_display_zenoss.psf -x media_type=tape -d ../../depots/hc_display_zenoss-${BUILD_DATE}.sd
-swpackage -s hc_display_zenoss.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_display_zenoss || exit 1
+swpackage -s hc_display_zenoss.psf -x media_type=tape -d ../../../depots/hc_display_zenoss-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_notify_sms package
-cd ${BUILD_DIR}/hc_notify_sms
-swpackage -s hc_notify_sms.psf -x media_type=tape -d ../../depots/hc_notify_sms-${BUILD_DATE}.sd
-swpackage -s hc_notify_sms.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_notify_sms || exit 1
+swpackage -s hc_notify_sms.psf -x media_type=tape -d ../../../depots/hc_notify_sms-${BUILD_DATE}.sd
+cd - || exit 1
 
 # build hc_notify_eif package
-cd ${BUILD_DIR}/hc_notify_eif
-swpackage -s hc_notify_eif.psf -x media_type=tape -d ../../depots/hc_notify_eif-${BUILD_DATE}.sd
-swpackage -s hc_notify_eif.psf @ /var/opt/depot/kudos
-cd -
+cd ${BUILD_DIR}/hc_notify_eif || exit 1
+swpackage -s hc_notify_eif.psf -x media_type=tape -d ../../../depots/hc_notify_eif-${BUILD_DATE}.sd
+cd - || exit 1
 
 print "List of built packages:"
-ls -l ${BUILD_DIR}/../depots/*
+ls -l ../../depots/*
 
 # when installed on an ignite server: possible addition of depot registration here
 

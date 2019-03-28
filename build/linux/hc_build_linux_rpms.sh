@@ -16,14 +16,15 @@
 
 #******************************************************************************
 # Requires following build (dir) structures:
-# 
+#
 #   hc_build_linux_rpms.sh
 #   BUILD/
 #   BUILDROOT/
 #   RPMS/
-#   SOURCES/
-#   SOURCES/bin/<hc_scripts>
-#   SOURCES/lib/*/<hc_plugins>
+#   opt/
+#   opt/hc/bin/<hc_scripts>
+#   opt/hc/lib/*/<hc_plugins>
+#   etc/opt/hc/<hc_configs>
 #   SPECS/<spec_files>
 #   SRPMS/
 #
@@ -40,8 +41,8 @@ BUILD_DIR="$(dirname $0)"
 rm -f ${BUILD_DIR}/RPMS/*/* >/dev/null
 
 # build main packages
-rpmbuild -bb ${BUILD_DIR}/SPECS/hc-linux.spec 
-rpmbuild -bb ${BUILD_DIR}/SPECS/hc-linux-platform.spec 
+rpmbuild -bb ${BUILD_DIR}/SPECS/hc-linux.spec
+rpmbuild -bb ${BUILD_DIR}/SPECS/hc-linux-platform.spec
 
 # build core plugins
 rpmbuild -bb ${BUILD_DIR}/SPECS/hc-notify-eif.spec
@@ -60,5 +61,3 @@ exit 0
 #******************************************************************************
 # END of script
 #******************************************************************************
-
-

@@ -58,7 +58,7 @@ This is the OS/platform plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../opt/hc/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
+        directory       ../../../opt/hc/lib/platform/hp-ux=/opt/hc/lib/platform/hp-ux
         file            -m 755 check_hpux_autopath.sh
         file            -m 755 check_hpux_cdsf_cluster.sh
         file            -m 755 check_hpux_cron_status.sh
@@ -106,7 +106,7 @@ This is the OS/platform plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../etc/opt/hc/=/etc/opt/hc
+        directory       ../../../etc/opt/hc/=/etc/opt/hc
         file            -m 644 check_hpux_drd_status.conf.dist
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist
@@ -141,7 +141,7 @@ This is the OS/platform plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../etc/opt/hc/core/templates=/etc/opt/hc/core/templates
+        directory       ../../../etc/opt/hc/core/templates=/etc/opt/hc/core/templates
         file            -m 644 mail_body.tpl-check_hpux_fs_mounts_options
         file            -m 644 mail_body.tpl-check_hpux_ioscan
         file            -m 644 mail_body.tpl-check_hpux_ovpa_status

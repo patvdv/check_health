@@ -58,7 +58,7 @@ This is the core EIF plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../opt/hc/lib/core=/opt/hc/lib/core
+        directory       ../../../opt/hc/lib/core=/opt/hc/lib/core
         file            -m 755 notify_eif.sh
     end
 
@@ -74,7 +74,7 @@ This is the core EIF plugin package"
 
         file_permissions -u 0222 -o root -g sys
 
-        directory       ../../etc/opt/hc/core/providers=/etc/opt/hc/core/providers
+        directory       ../../../etc/opt/hc/core/providers=/etc/opt/hc/core/providers
         file            -m 644 notify_eif.conf.dist
     end
 end
