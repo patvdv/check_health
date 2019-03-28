@@ -17,8 +17,8 @@
 #******************************************************************************
 # Requires following build (dir) structures:
 #
-#   build/<platform>/<build_files>
-#   build/build_hpux_depots.sh
+#   build/hpux/<build_files>
+#   build/hpux/build_hpux_depots.sh
 #   opt/hc/bin/<hc_scripts>
 #   opt/hc/lib/*/<hc_plugins>
 #   etc/opt/hc/<hc_configs>
