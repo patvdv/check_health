@@ -22,8 +22,6 @@
 #   build_aix_bff.sh
 #   hc_aix/*              (containing mkinstallp template & sources)
 #   hc_aix_platform/*     (containing mkinstallp template & sources)
-#   hc_aix_dll/*          (containing mkinstallp template & sources)
-#   hc_aix_security/*     (containing mkinstallp template & sources)
 #   ...
 #   lpp_source/KUDOS      (defined in build_bff.sh script)
 #
@@ -40,8 +38,8 @@ BUILD_DATE="$(date +'%Y%m%d')"
 BUILD_PRETTY_DATE="$(date +'%Y.%m.%d')"
 BUILD_DIR="$(dirname $0)"
 
-# replace BUILD_DATE placeholder in template files 
-find ${BUILD_DIR} -name "*.template" | while read FILE 
+# replace BUILD_DATE placeholder in template files
+find ${BUILD_DIR} -name "*.template" | while read FILE
 do
 	perl -pi -e "s/%BUILD_DATE%/${BUILD_PRETTY_DATE}/g" ${FILE}
 done
