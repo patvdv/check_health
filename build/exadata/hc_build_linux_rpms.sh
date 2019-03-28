@@ -22,8 +22,9 @@
 #   BUILDROOT/
 #   RPMS/
 #   SOURCES/
-#   SOURCES/bin/<hc_scripts>
-#   SOURCES/lib/*/<hc_plugins>
+#   SOURCES/opt/hc/bin/<hc_scripts>
+#   SOURCES/opt/hc/lib/*/<hc_plugins>
+#   SOURCES/etc/opt/hc/<hc_configs>
 #   SPECS/<spec_files>
 #   SRPMS/
 #

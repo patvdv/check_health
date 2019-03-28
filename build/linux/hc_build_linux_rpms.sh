@@ -21,10 +21,10 @@
 #   BUILD/
 #   BUILDROOT/
 #   RPMS/
-#   opt/
-#   opt/hc/bin/<hc_scripts>
-#   opt/hc/lib/*/<hc_plugins>
-#   etc/opt/hc/<hc_configs>
+#   SOURCES/opt/
+#   SOURCES/opt/hc/bin/<hc_scripts>
+#   SOURCES/opt/hc/lib/*/<hc_plugins>
+#   SOURCES/etc/opt/hc/<hc_configs>
 #   SPECS/<spec_files>
 #   SRPMS/
 #
