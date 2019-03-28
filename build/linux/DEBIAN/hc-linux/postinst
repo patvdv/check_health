@@ -11,6 +11,10 @@ HC_BIN="/opt/hc/bin/check_health.sh"
 PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
 # ------------------------- CONFIGURATION ends here ---------------------------
 echo "INFO: starting post-install script ..."
+# debian: reset ownerships & permissions
+chown -R root:root /opt/hc /etc/opt/hc 2>/dev/null
+chown root:root /etc/logrotate.d/check_health 2>/dev/null
+chmod 644 /etc/logrotate.d/check_health 2>/dev/null
 # copy configuration files
 if [[ ! -f ${HC_ETC_DIR}/core/check_health.conf ]]
 then

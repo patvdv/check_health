@@ -5,6 +5,8 @@ HC_BIN="/opt/hc/bin/check_health.sh"
 PATH="$PATH:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin"
 # ------------------------- CONFIGURATION ends here ---------------------------
 echo "INFO: starting post-install script ..."
+# debian: reset ownerships
+chown -R root:root /opt/hc /etc/opt/hc 2>/dev/null
 # refresh symbolic FPATH links
 if [[ -x ${HC_BIN} ]]
 then
