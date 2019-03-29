@@ -62,47 +62,47 @@ done
 
 # build hc_hpux package
 cd ${BUILD_DIR}/hc_hpux/ || exit 1
-swpackage -s hc_hpux.psf -x media_type=tape -d ../../../depots/hc_hpux-${BUILD_DATE}.sd
+swpackage -s hc_hpux.psf -x media_type=tape -d ../../../depots/hc-hpux-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_hpux_platform package
 cd ${BUILD_DIR}/hc_hpux_platform || exit 1
-swpackage -s hc_hpux_platform.psf -x media_type=tape -d ../../../depots/hc_hpux_platform-${BUILD_DATE}.sd
+swpackage -s hc_hpux_platform.psf -x media_type=tape -d ../../../depots/hc-hpux-platform-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_display_csv package
 cd ${BUILD_DIR}/hc_display_csv || exit 1
-swpackage -s hc_display_csv.psf -x media_type=tape -d ../../../depots/hc_display_csv-${BUILD_DATE}.sd
+swpackage -s hc_display_csv.psf -x media_type=tape -d ../../../depots/hc-display-csv-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_display_init package
 cd ${BUILD_DIR}/hc_display_init || exit 1
-swpackage -s hc_display_init.psf -x media_type=tape -d ../../../depots/hc_display_init-${BUILD_DATE}.sd
+swpackage -s hc_display_init.psf -x media_type=tape -d ../../../depots/hc-display-init-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_display_json package
 cd ${BUILD_DIR}/hc_display_json || exit 1
-swpackage -s hc_display_json.psf -x media_type=tape -d ../../../depots/hc_display_json-${BUILD_DATE}.sd
+swpackage -s hc_display_json.psf -x media_type=tape -d ../../../depots/hc-display-json-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_display_terse package
 cd ${BUILD_DIR}/hc_display_terse || exit 1
-swpackage -s hc_display_terse.psf -x media_type=tape -d ../../../depots/hc_display_terse-${BUILD_DATE}.sd
+swpackage -s hc_display_terse.psf -x media_type=tape -d ../../../depots/hc-display-terse-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_display_zenoss package
 cd ${BUILD_DIR}/hc_display_zenoss || exit 1
-swpackage -s hc_display_zenoss.psf -x media_type=tape -d ../../../depots/hc_display_zenoss-${BUILD_DATE}.sd
+swpackage -s hc_display_zenoss.psf -x media_type=tape -d ../../../depots/hc-display-zenoss-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_notify_sms package
 cd ${BUILD_DIR}/hc_notify_sms || exit 1
-swpackage -s hc_notify_sms.psf -x media_type=tape -d ../../../depots/hc_notify_sms-${BUILD_DATE}.sd
+swpackage -s hc_notify_sms.psf -x media_type=tape -d ../../../depots/hc-notify-sms-${BUILD_DATE}.sd
 cd - || exit 1
 
 # build hc_notify_eif package
 cd ${BUILD_DIR}/hc_notify_eif || exit 1
-swpackage -s hc_notify_eif.psf -x media_type=tape -d ../../../depots/hc_notify_eif-${BUILD_DATE}.sd
+swpackage -s hc_notify_eif.psf -x media_type=tape -d ../../../depots/hc-notify-eif-${BUILD_DATE}.sd
 cd - || exit 1
 
 print "List of built packages:"
