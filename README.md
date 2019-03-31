@@ -1,8 +1,6 @@
 ![License](https://img.shields.io/github/license/patvdv/check_health.svg)
 ![Code](https://img.shields.io/badge/Code-Shell-green.svg)
 [![Release](https://img.shields.io/github/release/patvdv/check_health.svg)](https://github.com/patvdv/check_health/releases)
-[![Release](https://img.shields.io/github/downloads/patvdv/check_health/total.svg)](https://github.com/patvdv/check_health/releases)
-
 <br />
 <p align="center"><img src="logo/horizontal.png" alt="QList" height="130px"></p>
 
@@ -41,12 +39,14 @@ Install the core bundle:
     yum localinstall hc-linux-<version>.noarch.rpm
     dpkg --install hc-linux-<version>.noarch.rpm
     zypper install hc-linux-<version>.noarch.rpm
+    pacman -U hc-linux-<version>-any.pkg.tar.xz
 
 Install the Linux plugin bundle:
 
     yum localinstall hc-linux-platform-<version>.noarch.rpm
     dpkg --install hc-linux-platform-<version>.noarch.rpm
     zypper install hc-linux-platform-<version>.noarch.rpm
+    pacman -U hc-linux-platform-<version>-any.pkg.tar.xz
 
 ### AIX
 
