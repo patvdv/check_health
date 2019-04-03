@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-04-03"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -625,6 +625,11 @@ if (( DO_REPORT_STD == 0 )) && [[ -n "${ARG_NEWER}" ]]
 then
     die "you cannot specify '--newer' without '--report'"
 fi
+# --flip-rc/--with-rc
+if (( ARG_FLIP_RC == 0 )) && [[ -n "${ARG_WITH_RC}" ]]
+then
+    die "you cannot specify '--with-rc' without '--flip-rc'"
+fi
 
 return 0
 }
@@ -1133,7 +1138,24 @@ then
         then
             # shellcheck disable=SC1117
             printf "%s${LOG_SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
-            HC_STC_RC=$(( HC_STC_RC + 1 ))
+            # RC handling (max/sum/count)
+            if (( ARG_FLIP_RC > 0 ))
+            then
+                case "${ARG_WITH_RC}" in
+                    max|MAX|Max)
+                        (( ONE_MSG_STC > HC_STC_RC )) && HC_STC_RC=${ONE_MSG_STC}
+                        ;;
+                    sum|SUM|Sum)
+                        HC_STC_RC=$(( HC_STC_RC + ONE_MSG_STC ))
+                        ;;
+                    *)
+                        # count option (default)
+                        HC_STC_RC=$(( HC_STC_RC + 1 ))
+                        ;;
+                esac
+            else
+                HC_STC_RC=$(( HC_STC_RC + 1 ))
+            fi
         else
             # shellcheck disable=SC1117
             printf "\n" >>${HC_LOG}

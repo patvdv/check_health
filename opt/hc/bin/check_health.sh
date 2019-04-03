@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-03-22"
+typeset -r SCRIPT_VERSION="2019-04-03"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -145,6 +145,7 @@ typeset ARG_TIME_OUT=0          # custom timeout is off by default
 typeset ARG_TERSE=0             # show terse help is off by default
 typeset ARG_TODAY=0             # report today's events
 typeset ARG_VERBOSE=1           # STDOUT is on by default
+typeset ARG_WITH_RC=""
 set +o bgnice
 
 
@@ -546,7 +547,7 @@ Execute/report simple health checks (HC) on UNIX hosts.
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
-            [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [--flip-rc]
+            [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [[--flip-rc] [--with-rc=<count|max|sum>]]]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> [--with-history] ( ([--last] | [--today]) | [(--older|--newer)=<date>] | [--reverse] [--id=<fail_id> [--detail]] )]
 
@@ -607,6 +608,7 @@ Parameters:
 --today         : show today's (failed) events (HC and their combined STC value)
 --version       : show the timestamp of the script.
 --with-history  : also include events that have been archived already (reporting)
+--with-rc       : define RC handling (plugin) when --flip-rc is used
 
 EOT
 fi
@@ -865,10 +867,6 @@ do
         --hc-args=*)
             ARG_HC_ARGS="${CMD_PARAMETER#--hc-args=}"
             ;;
-        -with-history|--with-history)
-            # shellcheck disable=SC2034
-            ARG_HISTORY=1
-            ;;
         -id=*)
             # shellcheck disable=SC2034
             ARG_FAIL_ID="${CMD_PARAMETER#-id=}"
@@ -1070,6 +1068,18 @@ do
         -v|-version|--version)
             print "INFO: $0: ${SCRIPT_VERSION}"
             exit 0
+            ;;
+        -with-history|--with-history)
+            # shellcheck disable=SC2034
+            ARG_HISTORY=1
+            ;;
+        -with-rc=*)
+            # shellcheck disable=SC2034
+            ARG_WITH_RC="${CMD_PARAMETER#-with-rc=}"
+            ;;
+        --with-rc=*)
+            # shellcheck disable=SC2034
+            ARG_WITH_RC="${CMD_PARAMETER#--with-rc=}"
             ;;
         \?|-h|-help|--help)
             display_usage
