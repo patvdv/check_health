@@ -30,6 +30,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: changed format of stanzas in configuration file &
 # @(#)             added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-04-08: IFS fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ function check_hpux_sg_package_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-04-08"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _SG_DAEMON="/usr/lbin/cmcld"
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -130,7 +131,7 @@ fi
 # do package status checks
 # (replace ':' by '|' for cmcviewcl output)
 grep -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null |\
-    while read -r _ _SG_ENTRY
+    while IFS=":" read -r _ _SG_ENTRY
 do
     # field split
     _SG_PACKAGE="$(print ${_SG_ENTRY} | cut -f1 -d':')"
