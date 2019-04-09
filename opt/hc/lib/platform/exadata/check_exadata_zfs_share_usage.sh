@@ -25,7 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
-# @(#) 2019-04-09: fix bad math in HC message [Patrick Van der Veken]
+# @(#) 2019-04-09: fix bad math in 2FS script & HC message [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -52,7 +52,7 @@ typeset _ZFS_SCRIPT="
                 for (j = 0; j < shares.length; j++) {
                     try { run('select ' + shares[j]);
                         printf('%s:%s:%d\n', projects[i], shares[j],
-                            get('space_data')/get('space_available')*100);
+                            get('space_data')/get('quota')*100);
                             run('cd ..');
                         } catch (err) { }
                     }
