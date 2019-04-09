@@ -25,6 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-04-09: fix bad math in HC message [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -262,7 +263,7 @@ do
         _MSG="${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} exceeds its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
         _STC=1
     else
-        _MSG="${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} does not exceed its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
+        _MSG="${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} does not exceed its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
         _STC=0
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
