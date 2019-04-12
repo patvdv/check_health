@@ -30,13 +30,13 @@ max_space_usage=90
 # specify the ZFS hostname(s), project+share name(s) and their maximum usage (in %)
 # When not defining a threshold for a given share, the general threshold will
 # be used (see above). When defining a threshold of 0 (zero), then the check
-# will for this give share will be skipped (this allows for exclusion of shares)
+# will for this given share will be skipped (this allows for exclusion of shares)
 # In order to check share(s) for a given ZFS appliance at least one configuration
 # entry must be present: either a wildcard or custom entry.
 # Format:
 #  zfs:<host_name>:<project_name|*>:<share_name|*>:[<usage_threshold_%>]
 # Examples:
-# check share1 on myzfs1 with a custom threshold of 75%
+# check share1 of projectX on myzfs1 with a custom threshold of 75%
 # zfs:myzfs1:projectX:share1:75
 # check all shares of myzfs2 with a custom threshold of 85%
 # zfs:myzfs2:*:*:85
@@ -44,7 +44,7 @@ max_space_usage=90
 # zfs:myzfs3:*:*:
 # disable all shares of myzfs4 from checking
 # zfs:myzfs4:*:*:0
-# disable check of share7 on myzfs5
+# disable check of share7 of projectY on myzfs5
 # zfs:myzfs5:projectY:share7:0
 
 

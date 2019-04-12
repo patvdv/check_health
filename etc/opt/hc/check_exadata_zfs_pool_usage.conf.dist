@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_exadata_zfs_share_replication.conf
+# @(#) check_exadata_zfs_pool_usage.conf
 #******************************************************************************
-# This is a configuration file for the check_exadata_zfs_share_replication HC plugin.
+# This is a configuration file for the check_exadata_zfs_pool_usage HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
@@ -23,31 +23,29 @@ ssh_key_file=""
 # [default: null]
 ssh_opts=""
 
-# specify the maximum replication in seconds (general threshold)
-# [default: 300]
-max_replication_lag=300
+# specify the maximum % of space usage a share may reach (general threshold)
+# [default: 90]
+max_space_usage=90
 
-# specify the ZFS hostname(s), replication name(s) and their maximum lag (in seconds)
+# specify the ZFS hostname(s), pool name(s) and their maximum usage (in %)
 # When not defining a threshold for a given share, the general threshold will
 # be used (see above). When defining a threshold of 0 (zero), then the check
-# will for this given share will be skipped (this allows for exclusion of shares)
-# In order to check share(s) for a given ZFS appliance at least one configuration
+# will for this given pool will be skipped (this allows for exclusion of pools)
+# In order to check pool(s) for a given ZFS appliance at least one configuration
 # entry must be present: either a wildcard or custom entry.
 # Format:
-#  zfs:<host_name>:<replication_name|*>:<true|false|*>:<success|failed|*>:[<max_replication_lag>]
+#  zfs:<host_name>:<pool_name|*>:[<usage_threshold_%>]
 # Examples:
-# check rep_share1 on myzfs1 with a custom threshold of 300 seconds
-# zfs:myzfs1:rep_share1:*:*:600
-# check all shares of myzfs2 with a custom threshold of 1200 seconds
-# zfs:myzfs2:*:*:*:1200
+# check pool1 on myzfs1 with a custom threshold of 75%
+# zfs:myzfs1:pool1:75
+# check all pools of myzfs2 with a custom threshold of 85%
+# zfs:myzfs2:*:85
 # check all shares of myzfs3 with the general threshold
-# zfs:myzfs3:*:*:*:
+# zfs:myzfs3:*:
 # disable all shares of myzfs4 from checking
-# zfs:myzfs4:*:*:*:0
-# disable check of rep_share7 on myzfs5
-# zfs:myzfs5:rep_share7:*:*:0
-# check that rep_share4 on myzfs6 is inactive
-# zfs:myzfs6:rep_share4:false:*:
+# zfs:myzfs4:*:0
+# disable check of pool7 on myzfs5
+# zfs:myzfs5:pool7:0
 
 
 #******************************************************************************

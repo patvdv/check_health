@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_exadata_zfs_share_replication.sh
+# @(#) check_exadata_zfs_pool_usage.sh
 #******************************************************************************
 # @(#) Copyright (C) 2019 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
@@ -16,43 +16,40 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_exadata_zfs_share_replication
+# @(#) MAIN: check_exadata_zfs_pool_usage
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_contains_string(), data_get_lvalue_from_config(),
-#           dump_logs(), init_hc(), linux_exec_ssh(), log_hc(), warn()
+# REQUIRES: data_comma2space(), dump_logs(), init_hc(), linux_exec_ssh(),
+#           log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2019-02-18: initial version [Patrick Van der Veken]
-# @(#) 2019-02-19: fix for <unknown> replication value [Patrick Van der Veken]
-# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
-# @(#) 2019-04-12: small fixes [Patrick Van der Veken]
+# @(#) 2019-04-12: initial version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_exadata_zfs_share_replication
+function check_exadata_zfs_pool_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VERSION="2019-04-12"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
-# replication query script -- DO NOT CHANGE --
-# prj1/share1:true:idle:success:111
-# prj2/share2:true:idle:success:51
+# usage query script -- DO NOT CHANGE --
+# prj1:share1:16
+# prj2:share1:85
 typeset _ZFS_SCRIPT="
     script
-        run('shares replication actions');
-        actions = list();
-        for (i = 0; i < actions.length; i++) {
-            try { run('select ' + actions[i]);
-                printf('%s:%s:%s:%s\n', get('replication_of'),
-                    get('enabled'),
-                    get('last_result'),
-                    get('replica_lag'));
+        run('status storage');
+        pools = list();
+
+        for (i = 0; i < pools.length; i++) {
+            try { run('select ' + pools[i]);
+                printf('%s:%d\n', pools[i], get('used')/get('avail')*100);
                 run('cd ..');
-            } catch (err) { }
+            } catch (err) {
+                throw ('unexpected error occurred');
+            }
         }"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -65,17 +62,16 @@ typeset _MSG=""
 typeset _STC=0
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
-typeset _CFG_MAX_REPLICA_LAG=""
-typeset _CFG_REPLICATION_LAG=""
+typeset _CFG_MAX_SPACE_USAGE=""
 typeset _CFG_SSH_KEY_FILE=""
 typeset _CFG_SSH_OPTS=""
 typeset _CFG_SSH_USER=""
+typeset _CFG_SPACE_THRESHOLD=""
 typeset _CFG_ZFS_HOSTS=""
 typeset _CFG_ZFS_HOST=""
 typeset _CFG_ZFS_LINE=""
-typeset _REPLICATION_ENABLED=""
-typeset _REPLICATION_LAG=""
-typeset _REPLICATION_RESULT=""
+typeset _POOL_NAME=""
+typeset _SPACE_USAGE=""
 typeset _SSH_BIN=""
 typeset _SSH_OUTPUT=""
 typeset _ZFS_DATA=""
@@ -128,11 +124,11 @@ then
         return 1
     fi
 fi
-_CFG_MAX_REPLICA_LAG=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'max_replica_lag')
-if [[ -z "${_CFG_MAX_REPLICA_LAG}" ]]
+_CFG_MAX_SPACE_USAGE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'max_space_usage')
+if [[ -z "${_CFG_MAX_SPACE_USAGE}" ]]
 then
     # default
-    _CFG_MAX_REPLICA_LAG=90
+    _CFG_MAX_SPACE_USAGE=90
 fi
 
 # log_healthy
@@ -157,7 +153,7 @@ then
     return 1
 fi
 
-# gather ZFS hostnames
+# gather ZFS hostnames (for this we need at least one data line, possibly with wildcards)
 _CFG_ZFS_HOSTS=$(grep -i -E -e '^zfs:' ${_CONFIG_FILE} 2>/dev/null | cut -f2 -d':' 2>/dev/null | sort -u 2>/dev/null)
 if [[ -z "${_CFG_ZFS_HOSTS}" ]]
 then
@@ -165,14 +161,14 @@ then
     return 1
 fi
 
-# gather ZFS replication data
+# gather ZFS usage data
 print "${_CFG_ZFS_HOSTS}" | while read -r _CFG_ZFS_HOST
 do
     (( ARG_DEBUG > 0 )) && debug "executing remote ZFS script on ${_CFG_ZFS_HOST}"
     _SSH_OUTPUT=$(linux_exec_ssh "${_CFG_SSH_OPTS}" "${_CFG_SSH_USER}" "${_CFG_ZFS_HOST}" "${_ZFS_SCRIPT}" 2>>${HC_STDERR_LOG})
     if (( $? > 0 )) || [[ -z "${_SSH_OUTPUT}" ]]
     then
-        warn "unable to discover replication data on ${_CFG_ZFS_HOST}"
+        warn "unable to discover usage data on ${_CFG_ZFS_HOST}"
         (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
         continue
     else
@@ -190,10 +186,10 @@ do
     fi
 done
 
-# process replication status data
+# process usage status data
 if [[ -z "${_ZFS_DATA}" ]]
 then
-    _MSG="did not discover any ZFS replication data"
+    _MSG="did not discover any ZFS share data"
     _STC=2
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
@@ -201,112 +197,67 @@ then
     fi
     return 1
 fi
-print "${_ZFS_DATA}" | while IFS=':' read -r _ZFS_HOST _REPLICATION_NAME _REPLICATION_ENABLED _REPLICATION_RESULT _REPLICATION_LAG
+print "${_ZFS_DATA}" | while IFS=':' read -r _ZFS_HOST _POOL_NAME _SPACE_USAGE
 do
-    (( ARG_DEBUG > 0 )) && debug "parsing replication data for share: ${_ZFS_HOST}:${_REPLICATION_NAME}"
-    _CFG_REPLICATION_ENABLED=""
-    _CFG_REPLICATION_RESULT=""
-    _CFG_REPLICATION_LAG=""
+    (( ARG_DEBUG > 0 )) && debug "parsing space data for share: ${_ZFS_HOST}:${_POOL_NAME}"
+    _CFG_SPACE_THRESHOLD=""
 
-    # which values to use (general or custom?), keep in mind wildcards (custom will overrule wildcard entry)
+    # which threshold to use (general or custom?), keep in mind wildcards (custom will overrule wildcard entry)
     _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:[*]:" ${_CONFIG_FILE} 2>/dev/null)
     if [[ -n "${_CFG_ZFS_LINE}" ]]
     then
         (( ARG_DEBUG > 0 )) && debug "found wildcard definition for ${_ZFS_HOST} in configuration file ${_CONFIG_FILE}"
-        _CFG_REPLICATION_ENABLED=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
-        _CFG_REPLICATION_RESULT=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
-        _CFG_REPLICATION_LAG=$(print "${_CFG_ZFS_LINE}" | cut -f6 -d':' 2>/dev/null)
+        _CFG_SPACE_THRESHOLD=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
         # null value means general threshold
-        if [[ -z "${_CFG_REPLICATION_LAG}" ]]
+        if [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
         then
-            (( ARG_DEBUG > 0 )) && debug "found empty lag threshold for ${_ZFS_HOST}, using general threshold"
-            _CFG_REPLICATION_LAG=${_CFG_MAX_REPLICATION_LAG}
+            (( ARG_DEBUG > 0 )) && debug "found empty space threshold for ${_ZFS_HOST}, using general threshold"
+            _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
         fi
     fi
-    _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:${_REPLICATION_NAME}:" ${_CONFIG_FILE} 2>/dev/null)
+    _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:${_POOL_NAME}:" ${_CONFIG_FILE} 2>/dev/null)
     if [[ -n "${_CFG_ZFS_LINE}" ]]
     then
-        (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_ZFS_HOST}:${_REPLICATION_NAME} in configuration file ${_CONFIG_FILE}"
-        _CFG_REPLICATION_ENABLED=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
-        _CFG_REPLICATION_RESULT=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
-        _CFG_REPLICATION_LAG=$(print "${_CFG_ZFS_LINE}" | cut -f6 -d':' 2>/dev/null)
+        (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_ZFS_HOST}:${_POOL_NAME} in configuration file ${_CONFIG_FILE}"
+        _CFG_SPACE_THRESHOLD=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
         # null value means general threshold
-        if [[ -z "${_CFG_REPLICATION_LAG}" ]]
+        if [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
         then
-            (( ARG_DEBUG > 0 )) && debug "found empty lag threshold for ${_ZFS_HOST}, using general threshold"
-            _CFG_REPLICATION_LAG=${_CFG_MAX_REPLICATION_LAG}
+            (( ARG_DEBUG > 0 )) && debug "found empty space threshold for ${_ZFS_HOST}:${_POOL_NAME}, using general threshold"
+            _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
         fi
     fi
-    if [[ -n "${_CFG_REPLICATION_LAG}" ]]
+    if [[ -n "${_CFG_SPACE_THRESHOLD}" ]]
     then
-        data_is_numeric "${_CFG_REPLICATION_LAG}"
+        data_is_numeric "${_CFG_SPACE_THRESHOLD}"
         if (( $? > 0 ))
         then
-            warn "value for <max_replication_lag> is not numeric in configuration file ${_CONFIG_FILE}"
+            warn "value for <max_space_threshold> is not numeric in configuration file ${_CONFIG_FILE}"
             continue
         fi
         # zero value means disabled check
-        if (( _CFG_REPLICATION_LAG == 0 ))
+        if (( _CFG_SPACE_THRESHOLD == 0 ))
         then
-            (( ARG_DEBUG > 0 )) && debug "found zero lag threshold, disabling check"
+            (( ARG_DEBUG > 0 )) && debug "found zero space threshold, disabling check"
             continue
         fi
     else
-        (( ARG_DEBUG > 0 )) && debug "no custom space threshold for ${_ZFS_HOST}:${_REPLICATION_NAME}, using general threshold"
-        _CFG_REPLICATION_LAG=${_CFG_MAX_REPLICATION_LAG}
+        (( ARG_DEBUG > 0 )) && debug "no custom space threshold for ${_ZFS_HOST}:${_POOL_NAME}, using general threshold"
+        _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
     fi
-    # fixed defaults if missing
-    [[ -z "${_CFG_REPLICATION_ENABLED}" || "${_CFG_REPLICATION_ENABLED}" = '*' ]] && _CFG_REPLICATION_ENABLED="true"
-    [[ -z "${_CFG_REPLICATION_RESULT}" || "${_CFG_REPLICATION_RESULT}" = '*' ]] && _CFG_REPLICATION_RESULT="success"
 
-    # perform checks
-    # check replication enabled state (active or not?)
-    if [[ $(data_lc "${_REPLICATION_ENABLED}") != $(data_lc "${_CFG_REPLICATION_ENABLED}") ]]
+    # perform check
+    if (( _SPACE_USAGE > _CFG_SPACE_THRESHOLD ))
     then
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is incorrect [${_REPLICATION_ENABLED}!=${_CFG_REPLICATION_ENABLED}]"
+        _MSG="${_ZFS_HOST}:${_POOL_NAME} exceeds its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
         _STC=1
     else
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is correct [${_REPLICATION_ENABLED}=${_CFG_REPLICATION_ENABLED}]"
+        _MSG="${_ZFS_HOST}:${_POOL_NAME} does not exceed its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
         _STC=0
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_ENABLED}" "${_CFG_REPLICATION_ENABLED}"
-    fi
-    # check replication last result (success or not?)
-    if [[ $(data_lc "${_REPLICATION_RESULT}") !=  $(data_lc "${_CFG_REPLICATION_RESULT}") ]]
-    then
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is incorrect [${_REPLICATION_RESULT}!=${_CFG_REPLICATION_RESULT}]"
-        _STC=1
-    else
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is correct [${_REPLICATION_RESULT}=${_CFG_REPLICATION_RESULT}]"
-        _STC=0
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_RESULT}" "${_CFG_REPLICATION_RESULT}"
-    fi
-    # check replication lag
-    # caveat: replication lag is <unknown> at initial replication
-    data_contains_string "${_REPLICATION_LAG}" "unknown"
-    if (( $? > 0 ))
-    then
-        _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is unknown"
-        _REPLICATION_LAG=-1
-        _STC=1
-    else
-        if (( _REPLICATION_LAG > _CFG_REPLICATION_LAG ))
-        then
-            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is too big [${_REPLICATION_LAG}>${_CFG_REPLICATION_LAG}]"
-            _STC=1
-        else
-            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_LAG}<=${_CFG_REPLICATION_LAG}]"
-            _STC=0
-        fi
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_LAG}" "${_CFG_REPLICATION_LAG}"
+        log_hc "$0" ${_STC} "${_MSG}" "${_SPACE_USAGE}" "${_CFG_SPACE_THRESHOLD}"
     fi
 done
 
@@ -323,11 +274,11 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
-               max_replication_lag=<general_max_replication>
+               max_space_usage=<general_max_space_treshold>
               and formatted stanzas of:
-               zfs:<host_name>:<replication_name>:<replication_enabled>:<replication_result>:<max_replication_lag>
-PURPOSE     : Checks the replication state, sync status and maximum lag of the configured ZFS hosts/shares
-              CLI: zfs > shares > replications > packages > select (action) > show
+               zfs:<host_name>:<pool_name>:<max_space_threshold>
+PURPOSE     : Checks the space usage for the configured ZFS hosts/pools
+              CLI: zfs > status > storage > (select pool) > show
 LOG HEALTHY : Supported
 
 EOT

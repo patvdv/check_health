@@ -25,7 +25,8 @@
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
-# @(#) 2019-04-09: fix bad math in 2FS script & HC message [Patrick Van der Veken]
+# @(#) 2019-04-09: fix bad math in ZFS script & HC message [Patrick Van der Veken]
+# @(#) 2019-04-12: small fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_exadata_zfs_share_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-04-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-04-12"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # usage query script -- DO NOT CHANGE --
 # prj1:share1:16
@@ -51,11 +52,11 @@ typeset _ZFS_SCRIPT="
 
                 for (j = 0; j < shares.length; j++) {
                     try { run('select ' + shares[j]);
-                        printf('%s:%s:%d\n', projects[i], shares[j],
+                          printf('%s:%s:%d\n', projects[i], shares[j],
                             get('space_data')/get('quota')*100);
                             run('cd ..');
-                        } catch (err) { }
-                    }
+                    } catch (err) { }
+                }
                 run('cd ..');
             } catch (err) {
                 throw ('unexpected error occurred');
@@ -287,7 +288,7 @@ CONFIG      : $3 with parameters:
                ssh_key_file=<ssh_private_key_file>
                max_space_usage=<general_max_space_treshold>
               and formatted stanzas of:
-               zfs:<host_name>:<replication_name>:<replication_enabled>:<replication_result>:<max_space_threshold>
+               zfs:<host_name>:<project_name>:<share_name>:<max_space_threshold>
 PURPOSE     : Checks the space usage for the configured ZFS hosts/shares
               CLI: zfs > shares > select (project) > (select share) > show
 LOG HEALTHY : Supported
