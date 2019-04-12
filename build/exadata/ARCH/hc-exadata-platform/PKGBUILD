@@ -20,13 +20,14 @@ package() {
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform/exadata
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
     install -D -m 644 etc/opt/hc/check_exadata_zfs_logs.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_logs.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_services.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_services.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_share_replication.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_share_replication.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_share_usage.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_share_usage.conf.dist
-
 }
