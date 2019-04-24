@@ -10,15 +10,15 @@ Health checker for UNIX/Linux is a small framework of monitoring scripts. It is 
 
 ## Requirements
 
-* ksh88/ksh93 (mksh/pdksh will work also but YMMV)
+* *ksh88/ksh93* (mksh/pdksh will work also but YMMV)
 * some disk space for storing logs & event files
-* system dependant tools/utilities (see individual health checks)
-* UNIX cron or other scheduler
-* execute as user root only
+* system dependent tools/utilities (see individual health checks)
+* UNIX *cron* or other scheduler
+* execute as user *root* only
 
-## Build
+## Downloads
 
-Use the build templates & scripts in the `build/` directory to roll your own packages.
+See the [Release](https://github.com/patvdv/check_health/releases) page.
 
 ## Installation
 
