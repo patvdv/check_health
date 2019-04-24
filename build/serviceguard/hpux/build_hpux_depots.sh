@@ -37,11 +37,11 @@ BUILD_PRETTY_DATE="$(date +'%Y.%m.%d')"
 BUILD_DIR="$(dirname $0)"
 
 # clean up previous packages
-if [[ -d ../../depots ]]
+if [[ -d ../../../depots ]]
 then
-    rm -f ../../depots/* 2>/dev/null
+    rm -f ../../../depots/* 2>/dev/null
 else
-    mkdir -p ../../depots 2>/dev/null
+    mkdir -p ../../../depots 2>/dev/null
 fi
 
 # see if we have BUILD_DATE placeholder in PSF files
@@ -62,11 +62,11 @@ done
 
 # build hc_serviceguard_platform package
 cd ${BUILD_DIR}/hc_serviceguard_platform || exit 1
-swpackage -s hc_serviceguard_platform.psf -x media_type=tape -d ../../../depots/hc-serviceguard-platform-${BUILD_DATE}.sd
+swpackage -s hc_serviceguard_platform.psf -x media_type=tape -d ../../../../depots/hc-serviceguard-platform-${BUILD_DATE}.sd
 cd - || exit 1
 
 print "List of built packages:"
-ls -l ../../depots/*
+ls -l ../../../depots/*
 
 # when installed on an ignite server: possible addition of depot registration here
 
