@@ -41,7 +41,7 @@ Install the core bundle:
     zypper install hc-linux-<version>.noarch.rpm
     pacman -U hc-linux-<version>-any.pkg.tar.xz
 
-Install the Linux plugin bundle:
+Install the Linux OS plugins bundle:
 
     yum localinstall hc-linux-platform-<version>.noarch.rpm
     dpkg --install hc-linux-platform-<version>.noarch.rpm
@@ -54,19 +54,32 @@ Install the core bundle:
 
     installp -Xap -d hc-aix-<version>.bff all
 
-Install the AIX plugin bundle:
+Install the AIX OS plugins bundle:
 
     installp -Xap -d hc-aix-platform-<version> all
 
-### Exadata
+### Clusterware/Exadata
 
 Install the core bundle:
 
     yum localinstall hc-linux-<version>.noarch.rpm
 
-Install the Linux plugin bundle:
+Install Clusterware/Exadata Linux plugin bundle(s):
 
+    yum localinstall hc-clusterware-platform-<version>.noarch.rpm
     yum localinstall hc-exadata-platform-<version>.noarch.rpm
+
+### Serviceguard
+
+Install the core bundle:
+
+    swinstall -x mount_all_filesystems=false -s /tmp/hc-hpux-<version>.sd \*
+    yum localinstall hc-linux-<version>.noarch.rpm
+
+Install Serviceguard plugin bundle(s):
+
+    swinstall -x mount_all_filesystems=false -s /tmp/hc-serviceguard-platform-<version>.sd \*
+    yum localinstall hc-serviceguard-platform-<version>.noarch.rpm
 
 ### Miscellaneous
 
@@ -119,7 +132,6 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 /opt/hc/bin/check_health.sh --report --today
 /opt/hc/bin/check_health.sh --report --newer=20180101
 /opt/hc/bin/check_health.sh --report --id=20160704154001 --detail
-
 ```
 
 * **Alerting** on failed health checks:
