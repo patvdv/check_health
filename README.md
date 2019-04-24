@@ -18,7 +18,7 @@ Health checker for UNIX/Linux is a small framework of monitoring scripts. It is 
 
 ## Downloads
 
-See the [Release](https://github.com/patvdv/check_health/releases) page.
+See the [Releases](https://github.com/patvdv/check_health/releases) page.
 
 ## Installation
 
