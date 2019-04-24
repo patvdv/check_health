@@ -89,5 +89,5 @@ echo "INFO: finished post-uninstall script"
 %dir /etc/opt/hc/core/templates
 
 %changelog
-* Sa Apr 20 2019 <patrick@kudos.be> - 0.0.1
+* Sat Apr 20 2019 <patrick@kudos.be> - 0.0.1
 - Initial build

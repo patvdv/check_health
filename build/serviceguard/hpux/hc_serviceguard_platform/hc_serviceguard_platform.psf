@@ -17,12 +17,12 @@ bundle
         architecture    HP-UX_B.11_32/64
         machine_type    ia64*
         vendor_tag      KUDOS
-        contents        HC-SERVICEGUARD-PLATFORM,r=,a=,v=
+        contents        HC-SERVICEGUARD-PLATFORM-MAIN,r=,a=,v=
 end
 
 # Product definitions:
 product
-    tag             HC-SERVICEGUARD-PLATFORM
+    tag             HC-SERVICEGUARD-PLATFORM-MAIN
     revision        %BUILD_DATE%
     category        tools
     category_title  Tools
@@ -74,7 +74,7 @@ This is the OS/platform plugin package"
         is_reboot       false
         is_sparse       false
         is_patch        false
-        prerequisite    HC-SERVICEGUARD-PLATFORM.plugins
+        prerequisite    HC-SERVICEGUARD-PLATFORM-MAIN.plugins
 
         file_permissions -u 0222 -o root -g sys
 
@@ -87,16 +87,18 @@ This is the OS/platform plugin package"
 
     fileset
         tag             templates
-        title           UX Health Checker (OS/Platform plugins: templates)
+        title           UX Health Checker (Serviceguard plugins: templates)
         is_kernel       false
         is_locatable    false
         is_reboot       false
         is_sparse       false
         is_patch        false
-        prerequisite    HC-SERVICEGUARD-PLATFORM.plugins
+        prerequisite    HC-SERVICEGUARD-PLATFORM-MAIN.plugins
 
         file_permissions -u 0222 -o root -g sys
 
         directory       ../../../etc/opt/hc/core/templates=/etc/opt/hc/core/templates
+        file            -m 644 mail_body.tpl-check_hpux_sg_cluster_status
+        file            -m 644 mail_body.tpl-check_hpux_sg_package_status
     end
 end
