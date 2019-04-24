@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-04-20"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -76,6 +76,38 @@ function data_chop
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 
 print -R "${1%?}" 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_get_length_string()
+# DOES: get length of a string
+# EXPECTS: string
+# OUTPUTS: length of string [integer]
+# RETURNS: 0
+# REQUIRES: n/a
+function data_get_length_string
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${#1}" 2>/dev/null
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_get_substring()
+# DOES: get a substring of a string
+# EXPECTS: $1=string; $2=length of substring [integer]
+# OUTPUTS: substring [string]
+# RETURNS: 0
+# REQUIRES: n/a
+function data_get_substring
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+print -R "${1}" | cut -f1-${2} 2>/dev/null
 
 return 0
 }

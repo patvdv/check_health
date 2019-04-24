@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_hpux_sg_qs_status.sh
+# @(#) check_serviceguard_qs_status.sh
 #******************************************************************************
 # @(#) Copyright (C) 2017 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
@@ -16,28 +16,23 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_hpux_sg_qs_status
+# @(#) MAIN: check_serviceguard_qs_status
 # DOES: see _show_usage()
 # EXPECTS: n/a
 # REQUIRES: data_comma2space(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2017-05-01: initial version [Patrick Van der Veken]
-# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-04-20: merged HP-UX+Linux version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_hpux_sg_qs_status
+function check_serviceguard_qs_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
-typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
-typeset _QS_BIN="/usr/lbin/qsc"
-typeset _QS_AUTH_FILE="/etc/cmcluster/qs_authfile"
+typeset _VERSION="2019-04-20"                           # YYYY-MM-DD
+typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -73,6 +68,17 @@ else
     log "not logging/showing passed health checks"
 fi
 
+# set OS specific parameters
+case "${OS_NAME}" in
+    HP-UX)
+        typeset _QS_BIN="/usr/lbin/qsc"
+        typeset _QS_AUTH_FILE="/etc/cmcluster/qs_authfile"
+        ;;
+    Linux)
+        typeset _QS_BIN="/opt/qs/bin/qsc"
+        typeset _QS_AUTH_FILE="/opt/qs/conf/qs_authfile"
+        ;;
+esac
 
 # check QS presence
 if [[ ! -x ${_QS_BIN} ]]
@@ -82,7 +88,7 @@ then
 fi
 
 # ---- process state ----
-(( $(pgrep -u root -f ${_QS_BIN} 2>>${HC_STDERR_LOG} | wc -l) == 0 )) && _STC=1
+(( $(pgrep -u root -f ${_QS_BIN} 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 
 # evaluate results
 case ${_STC} in

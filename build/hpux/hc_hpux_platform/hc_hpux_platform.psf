@@ -83,11 +83,6 @@ This is the OS/platform plugin package"
         file            -m 755 check_hpux_postfix_status.sh
         file            -m 755 check_hpux_root_crontab.sh
         file            -m 755 check_hpux_sfm_status.sh
-        file            -m 755 check_hpux_sg_package_status.sh
-        file            -m 755 check_hpux_sg_package_config.sh
-        file            -m 755 check_hpux_sg_cluster_status.sh
-        file            -m 755 check_hpux_sg_cluster_config.sh
-        file            -m 755 check_hpux_sg_qs_status.sh
         file            -m 755 check_hpux_sshd_status.sh
         file            -m 755 check_hpux_syslog.sh
         file            -m 755 check_hpux_syslogd_status.sh
@@ -122,10 +117,6 @@ This is the OS/platform plugin package"
         file            -m 755 check_hpux_patch_version.conf.dist
         file            -m 644 check_hpux_root_crontab.conf.dist
         file            -m 644 check_hpux_sfm_status.conf.dist
-        file            -m 644 check_hpux_sg_package_status.conf.dist
-        file            -m 644 check_hpux_sg_package_config.conf.dist
-        file            -m 644 check_hpux_sg_cluster_status.conf.dist
-        file            -m 644 check_hpux_sg_cluster_config.conf.dist
         file            -m 644 check_hpux_syslog.conf.dist
     end
 

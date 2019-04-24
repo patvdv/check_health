@@ -41,11 +41,6 @@ package() {
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_hpssacli.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_process_limits.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_process_limits.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_root_crontab.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
-    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_cluster_config.sh
-    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_cluster_status.sh
-    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_package_config.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_package_config.sh
-    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_package_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_package_status.sh
-    install -D -m 755 opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_sg_qs_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
@@ -62,10 +57,6 @@ package() {
     install -D -m 644 etc/opt/hc/check_linux_ntp_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_ntp_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_process_limits.conf.dist ${pkgdir}/etc/opt/hc/check_linux_process_limits.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_root_crontab.conf.dist ${pkgdir}/etc/opt/hc/check_linux_root_crontab.conf.dist
-    install -D -m 644 etc/opt/hc/check_linux_sg_cluster_config.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_cluster_config.conf.dist
-    install -D -m 644 etc/opt/hc/check_linux_sg_cluster_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_cluster_status.conf.dist
-    install -D -m 644 etc/opt/hc/check_linux_sg_package_config.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_package_config.conf.dist
-    install -D -m 644 etc/opt/hc/check_linux_sg_package_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_sg_package_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_vz_ct_counters.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_vz_ct_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_status.conf.dist
     install -d -m 755 ${pkgdir}/etc/opt/hc/core

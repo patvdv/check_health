@@ -1,0 +1,29 @@
+# Maintainer: Patrick Van der Veken <patrick@kudos.be>
+
+_pkgname="check_health"
+pkgname="hc-clusterware-platform"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (Clusterware plugins)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform/clusterware
+    install -D -m 755 opt/hc/lib/platform/clusterware/check_clusterware_resource_config.sh ${pkgdir}/opt/hc/lib/platform/clusterware/check_clusterware_resource_config.sh
+    install -D -m 755 opt/hc/lib/platform/clusterware/check_clusterware_resource_status.sh ${pkgdir}/opt/hc/lib/platform/clusterware/check_clusterware_resource_status.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_clusterware_resource_config.conf.dist ${pkgdir}/etc/opt/hc/check_clusterware_resource_config.conf.dist
+    install -D -m 644 etc/opt/hc/check_clusterware_resource_status.conf.dist ${pkgdir}/etc/opt/hc/check_clusterware_resource_status.conf.dist
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/templates
+}

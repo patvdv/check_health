@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_linux_sg_cluster_status
+# @(#) check_serviceguard_cluster_status
 #******************************************************************************
 # @(#) Copyright (C) 2016 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
@@ -16,37 +16,29 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_linux_sg_cluster_status
+# @(#) MAIN: check_serviceguard_cluster_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2017-04-01: initial version [Patrick Van der Veken]
-# @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
-# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
-# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
-# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-03-09: changed format of stanzas in configuration file &
-# @(#)             added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2017-04-20: merged HP-UX+Linux version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_linux_sg_cluster_status
+function check_serviceguard_cluster_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
-typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
-typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
+typeset _VERSION="2019-04-20"                           # YYYY-MM-DD
+typeset _SUPPORTED_PLATFORMS="HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
-PATH=$PATH:/opt/cmcluster/bin
+PATH=$PATH:/opt/cmcluster/bin	# Linux
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
@@ -112,6 +104,14 @@ else
 fi
 
 # check & get serviceguard status
+case "${OS_NAME}" in
+    HP-UX)
+        typeset _SG_DAEMON="/usr/lbin/cmcld"
+        ;;
+    Linux)
+        typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
+        ;;
+esac
 if [[ ! -x ${_SG_DAEMON} ]]
 then
     warn "${_SG_DAEMON} is not installed here"
@@ -130,11 +130,11 @@ fi
 # do cluster status checks
 # (replace ':' by '|' for cmcviewcl output)
 grep -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null |\
-    while read -r _ _SG_ENTRY
+    while IFS=":" read -r _ _SG_ENTRY
 do
     # field split
-    _SG_CFG_PARAM="$(print ${_SG_ENTRY} | cut -f1 -d'=' 2>/dev/null)"   # field 1
-    _SG_CFG_VALUE="$(print ${_SG_ENTRY} | cut -f2 -d'=' 2>/dev/null)"   # field 2
+    _SG_CFG_PARAM=$(print "${_SG_ENTRY}" | cut -f1 -d'=' 2>/dev/null)   # field 1
+    _SG_CFG_VALUE=$(print "${_SG_ENTRY}" | cut -f2 -d'=' 2>/dev/null)   # field 2
 
     # check run-time values (anchored grep here!)
     _SG_MATCH=$(grep -i "^${_SG_CFG_PARAM}" ${HC_STDOUT_LOG} 2>/dev/null)

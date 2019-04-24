@@ -340,7 +340,7 @@ then
                 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "excluding table: ${_MYSQL_TABLE}"
             fi
         done
-        # add mysqlcheck output to stdout log_hc
+        # add mysqlcheck output to stdout log
         print "==== {${_MYSQLCHECK_BIN} <hidden_opts> --database ${_MYSQL_DB}} ====" >>${HC_STDOUT_LOG}
         print "${_MYSQLCHECK_OUTPUT}" >>${HC_STDOUT_LOG}
     done

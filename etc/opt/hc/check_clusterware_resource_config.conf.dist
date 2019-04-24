@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_hpux_sg_package_status.conf
+# @(#) check_clusterware_resource_config.conf
 #******************************************************************************
-# This is a configuration file for the check_hpux_sg_package_status HC plugin.
+# This is a configuration file for the check_clusterware_resource_config HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
@@ -11,11 +11,12 @@
 # [default: no]
 log_healthy="no"
 
-# list of required package statuses
-# Format:
-#  sg:<package_name>:<parameter>=<value>
-# Examples:
-#sg:my_package:status=up
+# stanza(s) of resource definitions (case sensitive).
+# Example:
+#[myresource]
+#NAME=myresource
+#TYPE=cluster_resource
+#ACL=owner:root:rwx,pgrp:root:r-x,other::r--,user:oracle:r-x
 
 
 #******************************************************************************

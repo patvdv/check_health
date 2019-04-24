@@ -1,11 +1,17 @@
 #******************************************************************************
-# @(#) check_linux_sg_package_config.conf
+# @(#) check_serviceguard_package_config.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_sg_package_config HC plugin.
+# This is a configuration file for the check_serviceguard_package_config HC plugin.
 # All lines starting with a '#' are comment lines.
-# It is recommended to only monitor unique "param1 value2" combinations
+# [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
 
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# Examples:
 #[mypkg1]
 #param1		value1
 #param2		value2

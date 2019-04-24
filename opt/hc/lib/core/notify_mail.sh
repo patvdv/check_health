@@ -30,7 +30,7 @@
 function notify_mail
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-04-20"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -130,6 +130,7 @@ fi
 eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_HEADER_TPL})
 __EOT" >>${_TMP1_MAIL_FILE}
+print "" >>${_TMP1_MAIL_FILE}
 
 # create body part (from $HC_MSG_VAR)
 print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _ _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
@@ -175,6 +176,7 @@ done
 eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_BODY_TPL})
 __EOT" >>${_TMP1_MAIL_FILE}
+print "" >>${_TMP1_MAIL_FILE}
 
 # HC STDOUT log? (drop the .$$ bit)
 _MAIL_STDOUT_LOG="${EVENTS_DIR}/${DIR_PREFIX}/${_MAIL_FAIL_ID}/${_HC_STDOUT_LOG_SHORT%.*}"

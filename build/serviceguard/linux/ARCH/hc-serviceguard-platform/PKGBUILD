@@ -1,0 +1,34 @@
+# Maintainer: Patrick Van der Veken <patrick@kudos.be>
+
+_pkgname="check_health"
+pkgname="hc-serviceguard-platform"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (Serviceguard plugins)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform
+    install -d -m 755 ${pkgdir}/opt/hc/lib/platform/serviceguard
+    install -D -m 755 opt/hc/lib/platform/serviceguard/check_serviceguard_cluster_config.sh ${pkgdir}/opt/hc/lib/platform/serviceguard/check_serviceguard_cluster_config.sh
+    install -D -m 755 opt/hc/lib/platform/serviceguard/check_serviceguard_cluster_status.sh ${pkgdir}/opt/hc/lib/platform/serviceguard/check_serviceguard_cluster_status.sh
+    install -D -m 755 opt/hc/lib/platform/serviceguard/check_serviceguard_package_config.sh ${pkgdir}/opt/hc/lib/platform/serviceguard/check_serviceguard_package_config.sh
+    install -D -m 755 opt/hc/lib/platform/serviceguard/check_serviceguard_package_status.sh ${pkgdir}/opt/hc/lib/platform/serviceguard/check_serviceguard_package_status.sh
+    install -D -m 755 opt/hc/lib/platform/serviceguard/check_serviceguard_qs_status.sh ${pkgdir}/opt/hc/lib/platform/serviceguard/check_serviceguard_qs_status.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_serviceguard_cluster_config.conf.dist ${pkgdir}/etc/opt/hc/check_serviceguard_cluster_config.conf.dist
+    install -D -m 644 etc/opt/hc/check_serviceguard_cluster_status.conf.dist ${pkgdir}/etc/opt/hc/check_serviceguard_cluster_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_serviceguard_package_config.conf.dist ${pkgdir}/etc/opt/hc/check_serviceguard_package_config.conf.dist
+    install -D -m 644 etc/opt/hc/check_serviceguard_package_status.conf.dist ${pkgdir}/etc/opt/hc/check_serviceguard_package_status.conf.dist
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/templates
+}

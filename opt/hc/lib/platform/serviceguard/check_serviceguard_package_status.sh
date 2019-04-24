@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_hpux_sg_cluster_status
+# @(#) check_serviceguard_package_status
 #******************************************************************************
 # @(#) Copyright (C) 2016 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
@@ -16,37 +16,29 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_hpux_sg_cluster_status
+# @(#) MAIN: check_serviceguard_package_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2016-03-25: initial version [Patrick Van der Veken]
-# @(#) 2016-12-01: more standardized error handling [Patrick Van der Veken]
-# @(#) 2017-05-07: made checks more detailed for log_hc() [Patrick Van der Veken]
-# @(#) 2018-05-20: added dump_logs() [Patrick Van der Veken]
-# @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-03-09: changed format of stanzas in configuration file &
-# @(#)             added support for --log-healthy [Patrick Van der Veken]
-# @(#) 2019-04-08: IFS fix [Patrick Van der Veken]
+# @(#) 2019-04-20: merged HP-UX+Linux version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_hpux_sg_cluster_status
+function check_serviceguard_package_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-04-08"                           # YYYY-MM-DD
-typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
-typeset _SG_DAEMON="/usr/lbin/cmcld"
+typeset _VERSION="2019-04-20"                           # YYYY-MM-DD
+typeset _SUPPORTED_PLATFORMS="HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+PATH=$PATH:/opt/cmcluster/bin	# Linux
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
@@ -56,6 +48,7 @@ typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _SG_ENTRY=""
 typeset _SG_MATCH=""
+typeset _SG_PACKAGE=""
 typeset _SG_CFG_PARAM=""
 typeset _SG_CFG_VALUE=""
 typeset _SG_RUN_VALUE=""
@@ -112,42 +105,51 @@ else
 fi
 
 # check & get serviceguard status
+case "${OS_NAME}" in
+    HP-UX)
+        typeset _SG_DAEMON="/usr/lbin/cmcld"
+        ;;
+    Linux)
+        typeset _SG_DAEMON="/opt/cmcluster/bin/cmcld"
+        ;;
+esac
 if [[ ! -x ${_SG_DAEMON} ]]
 then
     warn "${_SG_DAEMON} is not installed here"
     return 1
 else
-    cmviewcl -v -f line 2>>${HC_STDERR_LOG} | tr '|' ':' >>${HC_STDOUT_LOG}
-    (( $? > 0 )) && {
+    cmviewcl -v -f line -l package 2>>${HC_STDERR_LOG} | tr '|' ':' >>${HC_STDOUT_LOG}
+    (( $? > 0)) && {
         _MSG="unable to run command: {cmviewcl}"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
         (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-        return 0
+        return 1
     }
 fi
 
-# do cluster status checks
+# do package status checks
 # (replace ':' by '|' for cmcviewcl output)
 grep -E -e "^sg:" ${_CONFIG_FILE} 2>/dev/null | tr '|' ':' 2>/dev/null |\
     while IFS=":" read -r _ _SG_ENTRY
 do
     # field split
-    _SG_CFG_PARAM="$(print ${_SG_ENTRY} | cut -f1 -d'=')"   # field 1
-    _SG_CFG_VALUE="$(print ${_SG_ENTRY} | cut -f2 -d'=')"   # field 2
+    _SG_PACKAGE=$(print "${_SG_ENTRY}" | cut -f1 -d':')
+    _SG_CFG_PARAM=$(print "${_SG_ENTRY}" | cut -f2- -d':' 2>/dev/null | cut -f1 -d'=' 2>/dev/null)  # field 2-,1
+    _SG_CFG_VALUE=$(print "${_SG_ENTRY}" | cut -f2- -d':' 2>/dev/null | cut -f2 -d'=' 2>/dev/null)  # field 2-,2
 
     # check run-time values (anchored grep here!)
-    _SG_MATCH=$(grep -i "^${_SG_CFG_PARAM}" ${HC_STDOUT_LOG} 2>/dev/null)
+    _SG_MATCH=$(grep -i "^package:${_SG_PACKAGE}:${_SG_CFG_PARAM}" ${HC_STDOUT_LOG} 2>/dev/null)
     if [[ -n "${_SG_MATCH}" ]]
     then
-        _SG_RUN_VALUE=$(print "${_SG_MATCH}" | cut -f2 -d'=')   # field 2
+        _SG_RUN_VALUE=$(print "${_SG_MATCH}" | cut -f3- -d':' 2>/dev/null | cut -f2 -d'=' 2>/dev/null)   # field3-,2
 
         if [[ "${_SG_CFG_VALUE}" = "${_SG_RUN_VALUE}" ]]
         then
-            _MSG="cluster parameter ${_SG_CFG_PARAM} has a correct value [${_SG_RUN_VALUE}]"
+            _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a correct value [${_SG_RUN_VALUE}]"
             _STC=0
         else
-            _MSG="cluster parameter ${_SG_CFG_PARAM} has a wrong value [${_SG_RUN_VALUE}]"
+            _MSG="package ${_SG_PACKAGE} parameter ${_SG_CFG_PARAM} has a wrong value [${_SG_RUN_VALUE}]"
             _STC=1
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -155,7 +157,7 @@ do
             log_hc "$0" ${_STC} "${_MSG}" "${_SG_RUN_VALUE}" "${_SG_CFG_VALUE}"
         fi
     else
-        warn "could not determine status for ${_SG_CFG_PARAM} from command output {cmviewcl}"
+        warn "could not determine status for ${_SG_PACKAGE}/${_SG_CFG_PARAM} from command output {cmviewcl}"
     fi
 done
 
@@ -171,8 +173,8 @@ VERSION     : $2
 CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
               and formatted stanzas:
-                sg:<param>=<value>
-PURPOSE       : Checks the status of Serviceguard cluster parameters (SG 11.16+)
+                sg:<package_name>:<parameter>=<value>
+PURPOSE     : Checks the status of Serviceguard package parameters (SG 11.16+)
 LOG HEALTHY : Supported
 
 EOT
