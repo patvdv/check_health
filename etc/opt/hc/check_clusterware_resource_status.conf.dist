@@ -11,6 +11,10 @@
 # [default: no]
 log_healthy="no"
 
+# location of the crsctl tool
+# [default: null (autodiscovery)]
+crsctl_bin=""
+
 # list of required resource statuses
 # Format:
 #  crs:<resource_name>:<*|node>=<ONLINE|OFFLINE>,<*|node>=<ONLINE|OFFLINE>,...

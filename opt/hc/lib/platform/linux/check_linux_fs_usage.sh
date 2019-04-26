@@ -29,6 +29,7 @@
 # @(#) 2019-02-04: fix in cleanup [Patrick Van der Veken]
 # @(#) 2019-02-18: fixes + help update [Patrick Van der Veken]
 # @(#) 2019-03-25: exclude /dev/loop* + rationalization [Patrick Van der Veken]
+# @(#) 2019-04-26: small string fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_linux_fs_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-25"                           # YYYY-MM-DD
+typeset _VERSION="2019-04-26"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -160,7 +161,7 @@ then
     if (( $? > 0 ))
     then
         # df exits >0 if there are issues with some filesystems, consider non-fatal
-        warn "error(s) occurred executing the {df -Pil}"
+        warn "error(s) occurred executing {df -Pil}"
     fi
 fi
 if (( _DO_SPACE > 0 ))

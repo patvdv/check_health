@@ -23,6 +23,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-04-20: merged HP-UX+Linux version + fixes [Patrick Van der Veken]
+# @(#) 2019-04-26: made _CRSCTL_BIN path configurable + fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -32,7 +33,7 @@ function check_clusterware_resource_config
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-04-20"                           # YYYY-MM-DD
+typeset _VERSION="2019-04-26"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _MAX_LENGTH_VALUE_STRING=30
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -88,6 +89,19 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+_CRSCTL_BIN=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'crsctl_bin')
+if [[ -z "${_CRSCTL_BIN}" ]]
+then
+    _CRSCTL_BIN="$(command -v crsctl 2>>${HC_STDERR_LOG})"
+    [[ -n "${_CRSCTL_BIN}" ]] && (( ARG_DEBUG > 0 )) && debug "crsctl path: ${_CRSCTL_BIN} (discover)"
+else
+    (( ARG_DEBUG > 0 )) && debug "crsctl path: ${_CRSCTL_BIN} (config)"
+fi
+if [[ -z "${_CRSCTL_BIN}" || ! -x ${_CRSCTL_BIN} ]]
+then
+    warn "could not determine location for CRS {crsctl} (or it is not installed here)"
+    return 1
+fi
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -116,25 +130,18 @@ then
 fi
 
 # get resource information from crsctl
-_CRSCTL_BIN="$(command -v crsctl 2>>${HC_STDERR_LOG})"
-if [[ -z "${_CRSCTL_BIN}" || ! -x ${_CRSCTL_BIN} ]]
-then
-    warn "CRS {crsctl} is not installed here"
+for _RES_INSTANCE in ${_RES_INSTANCES}
+do
+${_CRSCTL_BIN} status resource ${_RES_INSTANCE} -f 2>>${HC_STDERR_LOG} |\
+    tr -d ' \t' >${_RES_RUN_FILE}.${_RES_INSTANCE} 2>/dev/null
+[[ -s ${_RES_RUN_FILE}.${_RES_INSTANCE} ]] || {
+    _MSG="unable to run command: {${_CRSCTL_BIN} status resource -f ${_RES_INSTANCE}}"
+    log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
     return 1
-else
-    for _RES_INSTANCE in ${_RES_INSTANCES}
-    do
-    crsctl status resource ${_RES_INSTANCE} -f 2>>${HC_STDERR_LOG} |\
-        tr -d ' \t' >${_RES_RUN_FILE}.${_RES_INSTANCE} 2>/dev/null
-    [[ -s ${_RES_RUN_FILE}.${_RES_INSTANCE} ]] || {
-        _MSG="unable to gather configuration cluster resource ${_RES_INSTANCE}"
-        log_hc "$0" 1 "${_MSG}"
-        # dump debug info
-        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-        return 1
-    }
-    done
-fi
+}
+done
 
 # gather resource information from healthcheck configuration
 for _RES_INSTANCE in ${_RES_INSTANCES}
@@ -221,6 +228,7 @@ NAME        : $1
 VERSION     : $2
 CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
+                crsctl_bin=<path_to_crsctl>
               and formatted stanzas for resource definitions
 PURPOSE     : Checks the configuration of Clusterware resources (parameters/values)
               (comparing serialized strings from the HC configuration file to the

@@ -24,6 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-04-20: merged HP-UX+Linux version [Patrick Van der Veken]
+# @(#) 2019-04-26: made _CRSCTL_BIN path configurable + fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,7 +34,7 @@ function check_clusterware_resource_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-04-20"                           # YYYY-MM-DD
+typeset _VERSION="2019-04-26"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -85,6 +86,19 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
+_CRSCTL_BIN=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'crsctl_bin')
+if [[ -z "${_CRSCTL_BIN}" ]]
+then
+    _CRSCTL_BIN="$(command -v crsctl 2>>${HC_STDERR_LOG})"
+    [[ -n "${_CRSCTL_BIN}" ]] && (( ARG_DEBUG > 0 )) && debug "crsctl path: ${_CRSCTL_BIN} (discover)"
+else
+    (( ARG_DEBUG > 0 )) && debug "crsctl path: ${_CRSCTL_BIN} (config)"
+fi
+if [[ -z "${_CRSCTL_BIN}" || ! -x ${_CRSCTL_BIN} ]]
+then
+    warn "could not determine location for CRS {crsctl} (or it is not installed here)"
+    return 1
+fi
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -100,24 +114,16 @@ else
     log "not logging/showing passed health checks"
 fi
 
-# check for clusterware
-_CRSCTL_BIN="$(command -v crsctl 2>>${HC_STDERR_LOG})"
-if [[ -z "${_CRSCTL_BIN}" || ! -x ${_CRSCTL_BIN} ]]
-then
-    warn "CRS {crsctl} is not installed here"
-    return 1
-fi
-
 # do resource status checks
 grep -E -e "^crs:" ${_CONFIG_FILE} 2>/dev/null |\
     while IFS=":" read -r _ _CRS_RESOURCE _CRS_STATES
 do
     # get actual resource info
     (( ARG_DEBUG > 0 )) && debug "checking for resource: ${_CRS_RESOURCE}"
-    _CRSCTL_STATUS=$(crsctl status resource "${_CRS_RESOURCE}" 2>>${HC_STDERR_LOG})
+    _CRSCTL_STATUS=$(${_CRSCTL_BIN} status resource "${_CRS_RESOURCE}" 2>>${HC_STDERR_LOG})
     if (( $? > 0 )) || [[ -z "${_CRSCTL_STATUS}" ]]
     then
-        _MSG="unable to run command: {crsctl status resource ${_CRS_RESOURCE}}"
+        _MSG="unable to run command: {${_CRSCTL_BIN} status resource ${_CRS_RESOURCE}}"
         log_hc "$0" 1 "${_MSG}"
         # dump debug info
         (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
@@ -202,6 +208,7 @@ NAME        : $1
 VERSION     : $2
 CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
+                crsctl_bin=<path_to_crsctl>
               and formatted stanzas:
                 crs:<resource_name>:<*|node>=<ONLINE|OFFLINE>,<*|node>=<ONLINE|OFFLINE>,...
 PURPOSE     : Checks the STATE of CRS resource(s)
