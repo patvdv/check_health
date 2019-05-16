@@ -19,12 +19,13 @@
 # @(#) MAIN: check_exadata_zfs_services
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), linux_exec_ssh(),
-#           log_hc(), warn()
+# REQUIRES: data_comma2space(), data_get_lvalue_from_config, dump_logs(),
+#           init_hc(), linux_exec_ssh(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-05-14: small fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_exadata_zfs_services
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # usage query script -- DO NOT CHANGE --
 # svc1:online
@@ -158,6 +159,7 @@ print "${_CFG_ZFS_HOSTS}" | while read -r _CFG_ZFS_HOST
 do
     (( ARG_DEBUG > 0 )) && debug "executing remote ZFS script on ${_CFG_ZFS_HOST}"
     _SSH_OUTPUT=$(linux_exec_ssh "${_CFG_SSH_OPTS}" "${_CFG_SSH_USER}" "${_CFG_ZFS_HOST}" "${_ZFS_SCRIPT}" 2>>${HC_STDERR_LOG})
+    # shellcheck disable=SC2181
     if (( $? > 0 )) || [[ -z "${_SSH_OUTPUT}" ]]
     then
         warn "unable to discover services data on ${_CFG_ZFS_HOST}"
@@ -172,7 +174,7 @@ do
                 _ZFS_DATA="${_CFG_ZFS_HOST}:${_SSH_LINE}"
             else
                 # shellcheck disable=SC1117
-                _ZFS_DATA="${_ZFS_DATA}\n${_CFG_ZFS_HOST}:${_SSH_LINE}"
+                _ZFS_DATA=$(printf "%s\n%s:%s" "${_ZFS_DATA}" "${_CFG_ZFS_HOST}" "${_SSH_LINE}")
             fi
         done
     fi
@@ -213,10 +215,10 @@ do
     then
         if [[ $(data_lc "${_SERVICE_STATE}") != $(data_lc "${_CFG_SERVICE_STATE}") ]]
         then
-            _MSG="state of ${_CFG_ZFS_HOST}/${_CFG_SERVICE_NAME} is incorrect (${_SERVICE_STATE}!=${_CFG_SERVICE_STATE})"
+            _MSG="state of ${_CFG_ZFS_HOST}/${_CFG_SERVICE_NAME} is NOK (${_SERVICE_STATE}!=${_CFG_SERVICE_STATE})"
             _STC=1
         else
-            _MSG="state of ${_CFG_ZFS_HOST}/${_CFG_SERVICE_NAME} is correct (${_SERVICE_STATE}=${_CFG_SERVICE_STATE})"
+            _MSG="state of ${_CFG_ZFS_HOST}/${_CFG_SERVICE_NAME} is OK (${_SERVICE_STATE}==${_CFG_SERVICE_STATE})"
             _STC=0
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))

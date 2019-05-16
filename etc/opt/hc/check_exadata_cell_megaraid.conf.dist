@@ -1,0 +1,41 @@
+#******************************************************************************
+# @(#) check_exadata_cell_megaraid.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_cell_megaraid HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the dcli session to the cell server
+# [default: root]
+dcli_user=""
+
+# specify the cell servers to query
+# [default: null]
+cell_servers=""
+
+# specify whether to check the controller state (yes|no)
+# [default: yes]
+check_controller="yes"
+
+# specify whether to check the BBU (battery) state (yes|no)
+# [default: yes]
+check_bbu="yes"
+
+# specify whether to check the physical devices (yes|no)
+# [default: yes]
+check_physical="yes"
+
+# specify whether to check the virtual devices (yes|no)
+# [default: yes]
+check_virtual="yes"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -19,12 +19,13 @@
 # @(#) MAIN: check_exadata_zfs_logs
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), dump_logs(), init_hc(), linux_exec_ssh(),
-#           log_hc(), warn()
+# REQUIRES: data_comma2space(), data_get_lvalue_from_config(), dump_logs(),
+#           init_hc(), linux_exec_ssh(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-05-14: _STC fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_exadata_zfs_logs
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -275,6 +276,7 @@ do
             fi
         else
             : >${_STATE_FILE}
+            # shellcheck disable=SC2181
             (( $? > 0 )) && {
                 warn "failed to create new state file at ${_STATE_FILE}"
                 return 1
@@ -284,6 +286,7 @@ do
 
         (( ARG_DEBUG > 0 )) && debug "executing remote ZFS script on ${_CFG_ZFS_HOST} for log ${_ZFS_LOG}"
         _SSH_OUTPUT=$(linux_exec_ssh "${_CFG_SSH_OPTS}" "${_CFG_SSH_USER}" "${_CFG_ZFS_HOST}" "${_ZFS_SCRIPT}" 2>>${HC_STDERR_LOG})
+        # shellcheck disable=SC2181
         if (( $? > 0 )) || [[ -z "${_SSH_OUTPUT}" ]]
         then
             warn "unable to discover ${_ZFS_LOG} log data on ${_CFG_ZFS_HOST}"
@@ -420,7 +423,7 @@ do
                             ;;
                     esac
                 else
-                    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                    if (( _LOG_HEALTHY > 0 ))
                     then
                         _MSG="no (new) messages discovered from ${_CFG_ZFS_HOST}:/${_ZFS_LOG}"
                         log_hc "$0" 0 "${_MSG}"
@@ -453,14 +456,14 @@ CONFIG      : $3 with parameters:
                ssh_key_file=<ssh_private_key_file>
               and formatted stanzas of:
                zfs:<host_name>:<alert|fltlog|scrk|system>:<filters>
-PURPOSE     : checks the ZFS logs for (new) entries with particular alert level(s)
+PURPOSE     : Checks the ZFS logs for (new) entries with particular alert level(s)
               Following logs are supported (filters in brackets):
                * alert (critical,major,minor)
                * fltlog (critical,major,minor)
                * system (error)
                * scrk (failed)
               CLI: zfs > maintenance > logs > select (log) > show
-CAVEAT:       plugin will use state files to track 'seen' messages. However each
+CAVEAT:       Plugin will use state files to track 'seen' messages. However each
               check will only retrieve the default 100 last log entries. So it
               is possible that log entries are lost between health checks (this
               can be avoided by scheduling the check quicker than the likely

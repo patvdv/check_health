@@ -1,0 +1,37 @@
+#******************************************************************************
+# @(#) check_exadata_cell_flash.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_cell_flash HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the dcli session to the cell server
+# [default: root]
+dcli_user=""
+
+# specify the cell servers to query
+# [default: null]
+cell_servers=""
+
+# specify which flash devices to exclude from the check (comma-separated)
+# [default: null]
+excluded_devices=""
+
+# specify whether to check the flash cache status (yes|no)
+# [default: yes]
+check_flashcache="yes"
+
+# specify whether to check the flash log status (yes|no)
+# [default: yes]
+check_flashlog="yes"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -27,6 +27,7 @@
 # @(#) 2019-02-19: fix for <unknown> replication value [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2019-04-12: small fixes [Patrick Van der Veken]
+# @(#) 2019-05-14: small fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-04-12"                           # YYYY-MM-DD
+typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -170,6 +171,7 @@ print "${_CFG_ZFS_HOSTS}" | while read -r _CFG_ZFS_HOST
 do
     (( ARG_DEBUG > 0 )) && debug "executing remote ZFS script on ${_CFG_ZFS_HOST}"
     _SSH_OUTPUT=$(linux_exec_ssh "${_CFG_SSH_OPTS}" "${_CFG_SSH_USER}" "${_CFG_ZFS_HOST}" "${_ZFS_SCRIPT}" 2>>${HC_STDERR_LOG})
+    # shellcheck disable=SC2181
     if (( $? > 0 )) || [[ -z "${_SSH_OUTPUT}" ]]
     then
         warn "unable to discover replication data on ${_CFG_ZFS_HOST}"
@@ -184,7 +186,7 @@ do
                 _ZFS_DATA="${_CFG_ZFS_HOST}:${_SSH_LINE}"
             else
                 # shellcheck disable=SC1117
-                _ZFS_DATA="${_ZFS_DATA}\n${_CFG_ZFS_HOST}:${_SSH_LINE}"
+                _ZFS_DATA=$(printf "%s\n%s:%s" "${_ZFS_DATA}" "${_CFG_ZFS_HOST}" "${_SSH_LINE}")
             fi
         done
     fi
@@ -240,6 +242,7 @@ do
     if [[ -n "${_CFG_REPLICATION_LAG}" ]]
     then
         data_is_numeric "${_CFG_REPLICATION_LAG}"
+        # shellcheck disable=SC2181
         if (( $? > 0 ))
         then
             warn "value for <max_replication_lag> is not numeric in configuration file ${_CONFIG_FILE}"
@@ -263,10 +266,10 @@ do
     # check replication enabled state (active or not?)
     if [[ $(data_lc "${_REPLICATION_ENABLED}") != $(data_lc "${_CFG_REPLICATION_ENABLED}") ]]
     then
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is incorrect [${_REPLICATION_ENABLED}!=${_CFG_REPLICATION_ENABLED}]"
+        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_ENABLED}!=${_CFG_REPLICATION_ENABLED}]"
         _STC=1
     else
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is correct [${_REPLICATION_ENABLED}=${_CFG_REPLICATION_ENABLED}]"
+        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_ENABLED}==${_CFG_REPLICATION_ENABLED}]"
         _STC=0
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -276,10 +279,10 @@ do
     # check replication last result (success or not?)
     if [[ $(data_lc "${_REPLICATION_RESULT}") !=  $(data_lc "${_CFG_REPLICATION_RESULT}") ]]
     then
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is incorrect [${_REPLICATION_RESULT}!=${_CFG_REPLICATION_RESULT}]"
+        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_RESULT}!=${_CFG_REPLICATION_RESULT}]"
         _STC=1
     else
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is correct [${_REPLICATION_RESULT}=${_CFG_REPLICATION_RESULT}]"
+        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_RESULT}==${_CFG_REPLICATION_RESULT}]"
         _STC=0
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -289,6 +292,7 @@ do
     # check replication lag
     # caveat: replication lag is <unknown> at initial replication
     data_contains_string "${_REPLICATION_LAG}" "unknown"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is unknown"

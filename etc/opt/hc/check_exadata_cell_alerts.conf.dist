@@ -1,0 +1,30 @@
+#******************************************************************************
+# @(#) check_exadata_cell_alerts.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_cell_alerts HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the dcli session to the cell server
+# [default: root]
+dcli_user=""
+
+# specify the cell servers to query
+# [default: null]
+cell_servers=""
+
+# specify the alert severities to report (comma-separated)
+# Possible values: critical/warning/info/clear
+# [default: critical]
+alert_severities="critical"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

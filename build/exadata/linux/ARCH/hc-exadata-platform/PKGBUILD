@@ -17,14 +17,32 @@ sha256sums=('SKIP')
 package() {
     cd "${srcdir}/${_pkgname}"
     install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/core
+    install -D -m 755 opt/hc/lib/core/include_exadata.sh ${pkgdir}/opt/hc/lib/core/include_exadata.sh
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform/exadata
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_alerts.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_alerts.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_celldisks.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_celldisks.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_flash.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_flash.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_griddisks.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_griddisks.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_replication.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_share_usage.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_exadata_cell_alerts.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_alerts.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_celldisks.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_celldisks.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_flash.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_flash.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_griddisks.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_griddisks.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_luns.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_luns.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_megaraid.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_megaraid.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_megaraid.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_megaraid.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_logs.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_logs.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_services.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_services.conf.dist

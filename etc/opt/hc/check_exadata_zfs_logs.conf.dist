@@ -25,7 +25,7 @@ ssh_opts=""
 
 # specify the ZFS hostname(s), log name(s) & alert levels. Filters
 # should be comma-separated. Following logs are supported (filters in brackets)
-#  alert (critical,major,minor
+#  alert (critical,major,minor)
 #  fltlog (critical,major,minor)
 #  system (error)
 #  scrk (failed)

@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-04-03"
+typeset -r SCRIPT_VERSION="2019-05-14"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -235,32 +235,28 @@ return 0
 function check_core
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset INCLUDE_FILE=""
 
-# check and include core helper libs
-if [[ -r ${FPATH_PARENT}/core/include_core.sh && -h ${FPATH_PARENT}/core/include_core ]]
+# check include_core (MUST be present)
+if [[ ! -r ${FPATH_PARENT}/core/include_core.sh || ! -h ${FPATH_PARENT}/core/include_core ]]
 then
-    # shellcheck source=/dev/null
-    . ${FPATH_PARENT}/core/include_core.sh
-else
-    print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_core.sh is not present (tip: run --fix-symlinks)"
+    print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_core(.sh) is not present (tip: run --fix-symlinks)"
     exit 1
 fi
-if [[ -r ${FPATH_PARENT}/core/include_data.sh && -h ${FPATH_PARENT}/core/include_data ]]
-then
-    # shellcheck source=/dev/null
-    . ${FPATH_PARENT}/core/include_data.sh
-else
-    print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_data.sh is not present (tip: run --fix-symlinks)"
-    exit 1
-fi
-if [[ -r ${FPATH_PARENT}/core/include_os.sh && -h ${FPATH_PARENT}/core/include_os ]]
-then
-    # shellcheck source=/dev/null
-    . ${FPATH_PARENT}/core/include_os.sh
-else
-    print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_os.sh is not present (tip: run --fix-symlinks)"
-    exit 1
-fi
+# include include_*
+find ${FPATH_PARENT}/core -name "include_*.sh" -type f -print 2>/dev/null | while read INCLUDE_FILE
+do
+    if [[ -h ${INCLUDE_FILE%%.sh} ]]
+    then
+        # shellcheck source=/dev/null
+        (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${INCLUDE_FILE}"
+        # shellcheck source=/dev/null
+        . ${INCLUDE_FILE}
+    else
+        print -u2 "ERROR: library file ${INCLUDE_FILE} exists but has no symlink. Run --fix-symlinks"
+        exit 1
+    fi
+done
 
 # check for core directories
 [[ -d ${ARCHIVE_DIR} ]] || mkdir -p "${ARCHIVE_DIR}" >/dev/null 2>&1
@@ -519,9 +515,9 @@ case "${KSH_VERSION}" in
         if [[ -z "${ERRNO}" ]]
         then
             # shellcheck disable=SC2154
-            (( ARG_DEBUG > 0 )) && print "running ksh: ${.sh.version}"
+            (( ARG_DEBUG > 0 )) && debug "running ksh: ${.sh.version}"
         else
-            (( ARG_DEBUG > 0 )) && print "running ksh: ksh88 or older"
+            (( ARG_DEBUG > 0 )) && debug "running ksh: ksh88 or older"
         fi
         ;;
 esac
