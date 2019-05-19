@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-05-19"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -327,6 +327,8 @@ else
 fi
 
 # check consistency of log(s)
+# note: should no longer be necessary as of release 19/05/2019 but we keep the
+# check alive for now
 # shellcheck disable=SC2086
 find ${_LOG_STASH} -type f -print 2>/dev/null | while read -r _CHECK_FILE
 do

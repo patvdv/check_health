@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2019-04-03"                               # YYYY-MM-DD
+typeset _VERSION="2019-05-19"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -62,7 +62,7 @@ typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 # shellcheck disable=SC2064
 trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
-# get pre-archive log co
+# get pre-archive log count
 PRE_LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
 if (( PRE_LOG_COUNT == 0 ))
 then
@@ -1129,15 +1129,16 @@ then
                 ONE_MSG_EXP_VAL=$(data_magic_unquote "${ONE_MSG_EXP_VAL}")
             fi
         fi
-        printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" \
-                "${ONE_MSG_TIME}" \
-                "${HC_NAME}" \
-                ${ONE_MSG_STC} \
-                "${ONE_MSG_TEXT}" >>${HC_LOG}
         if (( ONE_MSG_STC > 0 ))
         then
+            # do atomic log update
             # shellcheck disable=SC1117
-            printf "%s${LOG_SEP}\n" "${HC_FAIL_ID}" >>${HC_LOG}
+            printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}\n" \
+                    "${ONE_MSG_TIME}" \
+                    "${HC_NAME}" \
+                    ${ONE_MSG_STC} \
+                    "${ONE_MSG_TEXT}" \
+                    "${HC_FAIL_ID}" >>${HC_LOG}
             # RC handling (max/sum/count)
             if (( ARG_FLIP_RC > 0 ))
             then
@@ -1157,8 +1158,13 @@ then
                 HC_STC_RC=$(( HC_STC_RC + 1 ))
             fi
         else
+            # do atomic log update
             # shellcheck disable=SC1117
-            printf "\n" >>${HC_LOG}
+            printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}\n" \
+                    "${ONE_MSG_TIME}" \
+                    "${HC_NAME}" \
+                    ${ONE_MSG_STC} \
+                    "${ONE_MSG_TEXT}" >>${HC_LOG}
         fi
     done
 
