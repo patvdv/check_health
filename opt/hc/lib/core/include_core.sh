@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2019-05-19"                               # YYYY-MM-DD
+typeset _VERSION="2019-06-18"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -1569,6 +1569,7 @@ typeset FCONFIG=""
 typeset FSTATE=""
 typeset FFILE=""
 typeset FHEALTHY=""
+typeset FFIX=0
 typeset FSCHEDULED=0
 typeset FSCRIPT=""
 typeset HAS_FCONFIG=0
@@ -1587,9 +1588,9 @@ fi
 if [[ "${FACTION}" != "list" ]]
 then
     # shellcheck disable=SC1117
-    printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?"
+    printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?" "Fix?"
     # shellcheck disable=SC2183,SC1117
-    printf "%100s\n" | tr ' ' -
+    printf "%110s\n" | tr ' ' -
 fi
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core$" 2>/dev/null | sort 2>/dev/null |\
     while read -r FDIR
@@ -1654,6 +1655,13 @@ do
             FCONFIG="No"
             FHEALTHY="N/S"
         fi
+        # check fix
+        if (( $(print -R "${FSCRIPT}" | grep -c -E -e "_HC_CAN_FIX=1" 2>/dev/null) > 0 ))
+        then
+            FFIX="Yes"
+        else
+            FFIX="No"
+        fi
         # check state
         DISABLE_FFILE="$(print ${FFILE##*/} | sed 's/\.sh$//')"
         if [[ -f "${STATE_PERM_DIR}/${DISABLE_FFILE}.disabled" ]]
@@ -1678,13 +1686,14 @@ do
         if [[ "${FACTION}" != "list" ]]
         then
             # shellcheck disable=SC1117
-            printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\n" \
+            printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\t%s\n" \
                 "${FNAME#function *}" \
                 "${FSTATE}" \
                 "${FVERSION#typeset _VERSION=*}" \
                 "${FCONFIG}" \
                 "${FSCHEDULED}" \
-                "${FHEALTHY}"
+                "${FHEALTHY}" \
+                "${FFIX}"
         else
             # shellcheck disable=SC1117
             printf "%s\n" "${FNAME#function *}"
@@ -1723,6 +1732,7 @@ then
     print "Config?: plugin has a default configuration file (Yes/No)"
     print "Sched? : plugin is scheduled through cron (Yes/No)"
     print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Supported/Not supported)"
+    print "Fix?   : plugin contains fix/healing logic (Yes/No) -- not used by default!"
 fi
 
 return 0

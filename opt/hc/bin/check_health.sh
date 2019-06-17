@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-05-19"
+typeset -r SCRIPT_VERSION="2019-06-18"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -134,6 +134,7 @@ typeset ARG_LAST=0              # report last events
 typeset ARG_LIST=""             # list all by default
 typeset ARG_LOCK=1              # lock for concurrent script executions is on by default
 typeset ARG_LOG=1               # logging is on by default
+typeset ARG_NO_FIX=0            # fix/healing is not disabled by default
 typeset ARG_LOG_HEALTHY=0       # logging of healthy health checks is off by default
 typeset ARG_MONITOR=1           # killing long running HC processes is on by default
 typeset ARG_NEWER=""
@@ -543,7 +544,7 @@ Execute/report simple health checks (HC) on UNIX hosts.
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
     [--list=<needle>] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
-            [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-monitor] [--no-log] [--no-lock] [[--flip-rc] [--with-rc=<count|max|sum>]]]
+            [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-fix] [--no-log] [--no-lock] [--no-monitor] [[--flip-rc] [--with-rc=<count|max|sum>]]]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> [--with-history] ( ([--last] | [--today]) | [(--older|--newer)=<date>] | [--reverse] [--id=<fail_id> [--detail]] )]
 
@@ -588,6 +589,7 @@ Parameters:
                   (can be overridden by --no-log to disable all logging)
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
 --newer         : show the (failed) events for each HC that are newer than the given date
+--no-fix        : do not apply fix/healing logic for failed health checks (if available)
 --no-lock       : disable locking to allow concurrent script executions
 --no-log        : do not log any messages to the script log file or health check results.
 --no-monitor    : do not stop the execution of a HC after \$HC_TIME_OUT seconds
@@ -952,8 +954,13 @@ do
             # shellcheck disable=SC2034
             ARG_NOTIFY="${CMD_PARAMETER#--notify=}"
             ;;
+        -no-fix|--no-fix)
+            ARG_NO_FIX=1
+            ;;
         -no-log|--no-log)
             ARG_LOG=0
+            # --no-log always means --no-fix!
+            ARG_NO_FIX=1
             ;;
         -no-lock|--no-lock)
             ARG_LOCK=0
