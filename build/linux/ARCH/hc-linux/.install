@@ -40,6 +40,34 @@ post_install() {
     else
         echo "ERROR: could not locate or excute the HC main script (${HC_BIN})"
     fi
+    # set SELinux contexts for logrotate
+    SESTATUS_BIN=$(command -v sestatus 2>/dev/null)
+    if [[ -n "${SESTATUS_BIN}" ]]
+    then
+        IS_ENFORCING=$(${SESTATUS_BIN} | grep -c "Current mode.*enforcing" 2>/dev/null)
+        if (( IS_ENFORCING > 0 ))
+        then
+            SEMANAGE_BIN=$(command -v semanage 2>/dev/null)
+            if [[ -n "${SEMANAGE_BIN}" ]]
+            then
+                ${SEMANAGE_BIN} fcontext -a -t var_log_t "${HC_VAR_DIR}(/check_health\.sh\.log.*)?"
+                echo "INFO: SELinux fcontexts configured for log rotation"
+                if [[ -d ${HC_VAR_DIR} ]]
+                then
+                    RESTORECON_BIN=$(command -v restorecon 2>/dev/null)
+                    if [[ -n "${RESTORECON_BIN}" ]]
+                    then
+                        ${RESTORECON_BIN} -Frv ${HC_VAR_DIR}
+                        echo "INFO: SELinux fcontexts set on ${HC_VAR_DIR} for log rotation"
+                    else
+                        echo "WARN: SELinux is set to 'enforcing' but could not found 'restorecon' to set fcontexts for log rotation"
+                    fi
+                fi
+            else
+                echo "WARN: SELinux is set to 'enforcing' but could not found 'semanage' to set fcontexts for log rotation"
+            fi
+        fi
+    fi
     echo "INFO: finished post-install script"
 }
 
