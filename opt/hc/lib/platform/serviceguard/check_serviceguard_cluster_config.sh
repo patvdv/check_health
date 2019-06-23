@@ -16,7 +16,7 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_serviceguard_cluster_status
+# @(#) MAIN: check_serviceguard_cluster_config
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), dump_logs(), init_hc(), log_hc(), warn()
@@ -28,7 +28,7 @@
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_serviceguard_cluster_status
+function check_serviceguard_cluster_config
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
