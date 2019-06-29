@@ -4,7 +4,7 @@ Architecture: all
 Maintainer: Patrick Van der Veken <patrick@kudos.be>
 Essential: no
 Installed-Size: 300
-Depends: ksh
+Depends: ksh, aptitude
 Section: tools
 Priority: extra
 Description: The KUDOS Health Checker (HC) for UNIX.
