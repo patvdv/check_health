@@ -29,6 +29,7 @@ package() {
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
@@ -43,6 +44,7 @@ package() {
     install -D -m 644 etc/opt/hc/check_exadata_cell_megaraid.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_megaraid.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_megaraid.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_megaraid.conf.dist
+    install -D -m 644 etc/opt/hc/check_exadata_zfs_cluster.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_cluster.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_logs.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_logs.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist
     install -D -m 644 etc/opt/hc/check_exadata_zfs_services.conf.dist ${pkgdir}/etc/opt/hc/check_exadata_zfs_services.conf.dist

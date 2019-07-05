@@ -25,6 +25,7 @@
 # @(#) HISTORY:
 # @(#) 2019-04-12: initial version [Patrick Van der Veken]
 # @(#) 2019-05-14: small fixes [Patrick Van der Veken]
+# @(#) 2019-07-05: help fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,7 +35,7 @@ function check_exadata_zfs_pool_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
+typeset _VERSION="2019-07-05"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # usage query script -- DO NOT CHANGE --
 # prj1:share1:16
@@ -277,6 +278,7 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
+               ssh_opts=<ssh_options>
                max_space_usage=<general_max_space_treshold>
               and formatted stanzas of:
                zfs:<host_name>:<pool_name>:<max_space_threshold>

@@ -26,6 +26,7 @@
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2019-05-14: _STC fix [Patrick Van der Veken]
+# @(#) 2019-07-05: help fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,7 +36,7 @@ function check_exadata_zfs_logs
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
+typeset _VERSION="2019-07-05"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -454,6 +455,7 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
+               ssh_opts=<ssh_options>
               and formatted stanzas of:
                zfs:<host_name>:<alert|fltlog|scrk|system>:<filters>
 PURPOSE     : Checks the ZFS logs for (new) entries with particular alert level(s)

@@ -1,0 +1,35 @@
+#******************************************************************************
+# @(#) check_exadata_zfs_cluster.conf
+#******************************************************************************
+# This is a configuration file for the check_exadata_zfs_cluster HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify the user account for the SSH session to the ZFS appliance(s)
+# [default: root]
+ssh_user=""
+
+# specify the private key file for the SSH session to the ZFS appliance(s)
+# [default: ~root/.ssh/id_rsa]
+ssh_key_file=""
+
+# specify additional options for the SSH session to the ZFS appliance(s)
+# [default: null]
+ssh_opts=""
+
+# specify the ZFS hostname(s) to check the cluster states on
+# Format:
+#  zfs:<host_name>
+# Examples:
+# zfs:myzfs1
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

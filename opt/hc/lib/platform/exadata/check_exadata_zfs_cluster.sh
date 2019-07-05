@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_exadata_zfs_share_usage.sh
+# @(#) check_exadata_zfs_cluster.sh
 #******************************************************************************
 # @(#) Copyright (C) 2019 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
@@ -16,54 +16,45 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_exadata_zfs_share_usage
+# @(#) MAIN: check_exadata_zfs_cluster
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), data_get_lvalue_from_config, dump_logs(),
-#           init_hc(), linux_exec_ssh(), log_hc(), warn()
+#           data_strip_outer_space(), init_hc(), linux_exec_ssh(), log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2019-02-18: initial version [Patrick Van der Veken]
-# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
-# @(#) 2019-04-09: fix bad math in ZFS script & HC message [Patrick Van der Veken]
-# @(#) 2019-04-12: small fixes [Patrick Van der Veken]
-# @(#) 2019-05-14: small fixes [Patrick Van der Veken]
-# @(#) 2019-07-05: help fix [Patrick Van der Veken]
+# @(#) 2019-07-05: initial version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_exadata_zfs_share_usage
+function check_exadata_zfs_cluster
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VERSION="2019-07-05"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
-# usage query script -- DO NOT CHANGE --
-# prj1:share1:16
-# prj2:share1:85
+# cluster query script -- DO NOT CHANGE --
+# state=AKCS_CLUSTERED
+# link=clustron3_ng3:0/clustron_uart:0 = AKCIOS_ACTIVE
+# link=clustron3_ng3:0/clustron_uart:1 = AKCIOS_ACTIVE
+# link=clustron3_ng3:0/dlpi:0 = AKCIOS_ACTIVE
 typeset _ZFS_SCRIPT="
     script
-        run('shares');
-        projects = list();
-
-        for (i = 0; i < projects.length; i++) {
-            try { run('select ' + projects[i]);
-                shares = list();
-
-                for (j = 0; j < shares.length; j++) {
-                    try { run('select ' + shares[j]);
-                          printf('%s:%s:%d\n', projects[i], shares[j],
-                            get('space_data')/get('quota')*100);
-                            run('cd ..');
-                    } catch (err) { }
-                }
-                run('cd ..');
-            } catch (err) {
-                throw ('unexpected error occurred');
+        run('configuration cluster');
+        printf('state=%s\n', get('state'));
+        var links = run('links');
+        var links_array = links.split('\n');
+        for (var i = 0; i < links_array.length; ++i) {
+            if (links_array[i] != '') {
+                printf('link=%s\n', links_array[i].replace(/^\s+|\s+$/g,''));
             }
-       }"
+        }"
+# target state of the cluster
+typeset _CLUSTER_TARGET="AKCS_CLUSTERED"
+# target state of the cluster links
+typeset _LINK_TARGET="AKCIOS_ACTIVE"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -75,7 +66,6 @@ typeset _MSG=""
 typeset _STC=0
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
-typeset _CFG_MAX_SPACE_USAGE=""
 typeset _CFG_SSH_KEY_FILE=""
 typeset _CFG_SSH_OPTS=""
 typeset _CFG_SSH_USER=""
@@ -83,9 +73,6 @@ typeset _CFG_SPACE_THRESHOLD=""
 typeset _CFG_ZFS_HOSTS=""
 typeset _CFG_ZFS_HOST=""
 typeset _CFG_ZFS_LINE=""
-typeset _PROJECT_NAME=""
-typeset _SHARE_NAME=""
-typeset _SPACE_USAGE=""
 typeset _SSH_BIN=""
 typeset _SSH_OUTPUT=""
 typeset _ZFS_DATA=""
@@ -138,12 +125,6 @@ then
         return 1
     fi
 fi
-_CFG_MAX_SPACE_USAGE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'max_space_usage')
-if [[ -z "${_CFG_MAX_SPACE_USAGE}" ]]
-then
-    # default
-    _CFG_MAX_SPACE_USAGE=90
-fi
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -192,10 +173,10 @@ do
         do
             if [[ -z "${_ZFS_DATA}" ]]
             then
-                _ZFS_DATA="${_CFG_ZFS_HOST}:${_SSH_LINE}"
+                _ZFS_DATA="${_CFG_ZFS_HOST}#${_SSH_LINE}"
             else
                 # shellcheck disable=SC1117
-                _ZFS_DATA=$(printf "%s\n%s:%s" "${_ZFS_DATA}" "${_CFG_ZFS_HOST}" "${_SSH_LINE}")
+                _ZFS_DATA=$(printf "%s\n%s#%s" "${_ZFS_DATA}" "${_CFG_ZFS_HOST}" "${_SSH_LINE}")
             fi
         done
     fi
@@ -212,69 +193,45 @@ then
     fi
     return 1
 fi
-print "${_ZFS_DATA}" | while IFS=':' read -r _ZFS_HOST _PROJECT_NAME _SHARE_NAME _SPACE_USAGE
+print "${_ZFS_DATA}" | while IFS='#' read -r _ZFS_HOST _CLUSTER_LINE
 do
-    (( ARG_DEBUG > 0 )) && debug "parsing space data for share: ${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME}"
-    _CFG_SPACE_THRESHOLD=""
+    (( ARG_DEBUG > 0 )) && debug "parsing cluster data for appliance: ${_ZFS_HOST}"
 
-    # which threshold to use (general or custom?), keep in mind wildcards (custom will overrule wildcard entry)
-    _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:[*]:[*]:" ${_CONFIG_FILE} 2>/dev/null)
-    if [[ -n "${_CFG_ZFS_LINE}" ]]
-    then
-        (( ARG_DEBUG > 0 )) && debug "found wilcard definition for ${_ZFS_HOST} in configuration file ${_CONFIG_FILE}"
-        _CFG_SPACE_THRESHOLD=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
-        # null value means general threshold
-        if [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
-        then
-            (( ARG_DEBUG > 0 )) && debug "found empty space threshold for ${_ZFS_HOST}, using general threshold"
-            _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
-        fi
-    fi
-    _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:${_PROJECT_NAME}:${_SHARE_NAME}:" ${_CONFIG_FILE} 2>/dev/null)
-    if [[ -n "${_CFG_ZFS_LINE}" ]]
-    then
-        (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} in configuration file ${_CONFIG_FILE}"
-        _CFG_SPACE_THRESHOLD=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
-        # null value means general threshold
-        if [[ -z "${_CFG_SPACE_THRESHOLD}" ]]
-        then
-            (( ARG_DEBUG > 0 )) && debug "found empty space threshold for ${_ZFS_HOST}:${_PROJECT_NAME}:${_SHARE_NAME}, using general threshold"
-            _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
-        fi
-    fi
-    if [[ -n "${_CFG_SPACE_THRESHOLD}" ]]
-    then
-        data_is_numeric "${_CFG_SPACE_THRESHOLD}"
-        # shellcheck disable=SC2181
-        if (( $? > 0 ))
-        then
-            warn "value for <max_space_threshold> is not numeric in configuration file ${_CONFIG_FILE}"
-            continue
-        fi
-        # zero value means disabled check
-        if (( _CFG_SPACE_THRESHOLD == 0 ))
-        then
-            (( ARG_DEBUG > 0 )) && debug "found zero space threshold, disabling check"
-            continue
-        fi
-    else
-        (( ARG_DEBUG > 0 )) && debug "no custom space threshold for ${_ZFS_HOST}:${_PROJECT_NAME}:${_SHARE_NAME}, using general threshold"
-        _CFG_SPACE_THRESHOLD=${_CFG_MAX_SPACE_USAGE}
-    fi
+    # split up cluster data & perform checks
+    case "${_CLUSTER_LINE}" in
+        link=*)
+            _LINK_STATE=$(data_strip_outer_space "$(print "${_CLUSTER_LINE}" | cut -f3 -d'=' 2>/dev/null)")
 
-    # perform check
-    if (( _SPACE_USAGE > _CFG_SPACE_THRESHOLD ))
-    then
-        _MSG="${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} exceeds its space threshold (${_SPACE_USAGE}%>${_CFG_SPACE_THRESHOLD}%)"
-        _STC=1
-    else
-        _MSG="${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} does not exceed its space threshold (${_SPACE_USAGE}%<=${_CFG_SPACE_THRESHOLD}%)"
-        _STC=0
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_SPACE_USAGE}" "${_CFG_SPACE_THRESHOLD}"
-    fi
+            if [[ "${_LINK_STATE}" != "${_LINK_TARGET}" ]]
+            then
+                _MSG="${_ZFS_HOST} cluster link state is NOK ([${_LINK_STATE}!=${_LINK_TARGET})"
+                _STC=1
+            else
+                _MSG="${_ZFS_HOST} cluster link state is OK (${_LINK_STATE}==${_LINK_TARGET})"
+                _STC=0
+            fi
+            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+            then
+                log_hc "$0" ${_STC} "${_MSG}" "${_LINK_STATE}" "${_LINK_TARGET}"
+            fi
+            ;;
+        state=*)
+            _CLUSTER_STATE=$(print "${_CLUSTER_LINE##state=}")
+
+            if [[ "${_CLUSTER_STATE}" != "${_CLUSTER_TARGET}" ]]
+            then
+                _MSG="${_ZFS_HOST} cluster state is NOK (${_CLUSTER_STATE}!=${_CLUSTER_TARGET})"
+                _STC=1
+            else
+                _MSG="${_ZFS_HOST} cluster state is OK (${_CLUSTER_STATE}==${_CLUSTER_TARGET})"
+                _STC=0
+            fi
+            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+            then
+                log_hc "$0" ${_STC} "${_MSG}" "${_CLUSTER_STATE}" "${_CLUSTER_TARGET}"
+            fi
+            ;;
+    esac
 done
 
 return 0
@@ -291,11 +248,10 @@ CONFIG      : $3 with parameters:
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
                ssh_opts=<ssh_options>
-               max_space_usage=<general_max_space_treshold>
               and formatted stanzas of:
-               zfs:<host_name>:<project_name>:<share_name>:<max_space_threshold>
-PURPOSE     : Checks the space usage for the configured ZFS hosts/shares
-              CLI: zfs > shares > select (project) > (select share) > show
+               zfs:<host_name>
+PURPOSE     : Checks the state of the cluster and its links
+              CLI: zfs > configuration > cluster > show
 LOG HEALTHY : Supported
 
 EOT

@@ -37,6 +37,7 @@ cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh $RPM_BUILD_
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
@@ -52,6 +53,7 @@ cp ../SOURCES/etc/opt/hc/check_exadata_cell_luns.conf.dist $RPM_BUILD_ROOT/etc/o
 cp ../SOURCES/etc/opt/hc/check_exadata_cell_megaraid.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_cell_megaraid.conf.dist
 cp ../SOURCES/etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist
 cp ../SOURCES/etc/opt/hc/check_exadata_megaraid.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_megaraid.conf.dist
+cp ../SOURCES/etc/opt/hc/check_exadata_zfs_cluster.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_cluster.conf.dist
 cp ../SOURCES/etc/opt/hc/check_exadata_zfs_logs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_logs.conf.dist
 cp ../SOURCES/etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist
 cp ../SOURCES/etc/opt/hc/check_exadata_zfs_services.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_exadata_zfs_services.conf.dist
@@ -104,6 +106,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
+%attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_pool_usage.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_services.sh
@@ -118,6 +121,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_exadata_cell_megaraid.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_cell_physicaldisks.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_megaraid.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_exadata_zfs_cluster.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_zfs_logs.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_zfs_pool_usage.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_exadata_zfs_services.conf.dist
@@ -126,6 +130,8 @@ echo "INFO: finished post-uninstall script"
 
 
 %changelog
+* Fri Jul 07 2019 <patrick@kudos.be> - 0.4.0
+- Added check_exadata_zfs_cluster
 * Fri May 14 2019 <patrick@kudos.be> - 0.3.0
 - Added include_exadata
 - Added plugin check_exadata_cell_alerts
