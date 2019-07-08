@@ -24,6 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-05-14: initial version [Patrick Van der Veken]
+# @(#) 2019-07-08: update _CELL_COMMAND [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -33,9 +34,9 @@ function check_exadata_megaraid
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-05-14"                           # YYYY-MM-DD
+typeset _VERSION="2019-07-08"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
-typeset _MEGACLI_BIN="/opt/MegaRAID/MegaCli/MegaCli64"
+typeset _MEGACLI_BIN="/opt/MegaRAID/storcli/storcli64"
 typeset _MEGACLI_COMMAND="-ShowSummary -aALL"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
