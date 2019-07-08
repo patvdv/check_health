@@ -24,7 +24,7 @@
 #
 # @(#) HISTORY:
 # @(#) 2019-05-14: initial version [Patrick Van der Veken]
-# @(#) 2019-07-08: update _CELL_COMMAND [Patrick Van der Veken]
+# @(#) 2019-07-08: update _MEGACLI_BIN [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
