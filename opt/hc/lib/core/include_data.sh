@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2019-04-20"                               # YYYY-MM-DD
+typeset _VERSION="2019-07-14"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -199,7 +199,7 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_quote()
 # DOES: magically quotes a needle in a string (default needle is: %)
-# EXPECTS: to be magically quoted [string]; $2=needle [string]
+# EXPECTS: $1=to be magically quoted [string]; $2=needle [string]
 # OUTPUTS: magically quoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a
@@ -217,7 +217,7 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_unquote()
 # DOES: magically unquotes a needle in a string (default needle is: %)
-# EXPECTS: to be magically unquoted [string]; $2=needle [string]
+# EXPECTS: $1=to be magically unquoted [string]; $2=needle [string]
 # OUTPUTS: magically unquoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a

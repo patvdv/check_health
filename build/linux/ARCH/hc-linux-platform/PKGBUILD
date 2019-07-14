@@ -19,6 +19,7 @@ package() {
     install -d -m 755 ${pkgdir}/opt/hc/lib
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform
     install -d -m 755 ${pkgdir}/opt/hc/lib/platform/linux
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_autofs.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_autofs.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_backup.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_es_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_es_status.sh
@@ -44,6 +45,7 @@ package() {
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -D -m 644 etc/opt/hc/check_linux_autofs.conf.dist ${pkgdir}/etc/opt/hc/check_linux_autofs.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_burp_backup.conf.dist ${pkgdir}/etc/opt/hc/check_linux_burp_backup.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_es_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_es_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_file_age.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_age.conf.dist

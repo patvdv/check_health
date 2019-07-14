@@ -27,6 +27,7 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform
 install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform/linux
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_autofs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_autofs.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
@@ -52,6 +53,7 @@ cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_root_crontab.sh $RPM_BUILD_R
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
+cp ../SOURCES/etc/opt/hc/check_linux_autofs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_autofs.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
@@ -107,6 +109,7 @@ echo "INFO: finished post-uninstall script"
 %dir /opt/hc/lib
 %dir /opt/hc/lib/platform
 %dir /opt/hc/lib/platform/linux
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_autofs.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_es_status.sh
@@ -132,6 +135,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 %dir /etc/opt/hc
+%attr(644, root, root) /etc/opt/hc/check_linux_autofs.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_burp_backup.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_es_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_age.conf.dist
@@ -153,6 +157,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Sun Jul 14 2019 <patrick@kudos.be> - 0.3.1
+- Removed check_linux_autofs plugin
 * Sat Apr 20 2019 <patrick@kudos.be> - 0.3.0
 - Removed Serviceguard plugins
 * Tue Mar 26 2019 <patrick@kudos.be> - 0.2.0

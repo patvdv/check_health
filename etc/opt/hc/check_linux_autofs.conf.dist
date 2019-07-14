@@ -1,0 +1,31 @@
+#******************************************************************************
+# @(#) check_linux_autofs.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_autofs HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# specify whether to extend the current ELDO FS (if needed)
+# [default: no]
+fix_autofs="no"
+
+# number of times to attempt to restart the autofs daemon
+# (requires fix_autofs=yes)
+# [default: 3]
+retry_start=3
+
+# number of seconds to sleep between daemon restart attempts
+# (requires fix_autofs=yes)
+# [default: 5]
+sleep_time=5
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

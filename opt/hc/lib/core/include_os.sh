@@ -30,11 +30,105 @@
 # RETURNS: 0
 function version_include_os
 {
-typeset _VERSION="2019-03-16"                               # YYYY-MM-DD
+typeset _VERSION="2019-07-14"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
 return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: linux_change_service()
+# DOES: restarts a specific service
+# EXPECTS: $1=name of service [string]; $2=action [stop/start/restart]
+# OUTPUTS: n/a
+# RETURNS: 0=success; 1=error
+# REQUIRES: linux_get_init(), linux_has_systemd_service()
+function linux_change_service
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SERVICE="${1}"
+typeset _ACTION="${2}"
+
+# linux only
+check_platform 'Linux' || {
+    (( ARG_DEBUG > 0 )) && debug "may only run on platform(s): Linux"
+    return 1
+}
+
+# check action
+case "${_ACTION}" in
+    start|START|Start)
+        (( ARG_DEBUG > 0 )) && debug "requesting service start"
+        ;;
+    stop|STOP|Stop)
+        (( ARG_DEBUG > 0 )) && debug "requesting service stop"
+        ;;
+    restart|RESTART|Restart)
+        (( ARG_DEBUG > 0 )) && debug "requesting service restart"
+        ;;
+    *)
+        (( ARG_DEBUG > 0 )) && debug "requesting unknown service action"
+        return 1
+        ;;
+esac
+
+[[ -n "${LINUX_INIT}" ]] || linux_get_init
+case "${LINUX_INIT}" in
+    'systemd')
+        (( ARG_DEBUG > 0 )) && debug "is a systemd managed host"
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet ${_ACTION} ${_SERVICE} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+            return $?
+        else
+            warn "systemd unit file not found {${_SERVICE}}"
+            return 1
+        fi
+        ;;
+    'upstart')
+        (( ARG_DEBUG > 0 )) && debug "is an upstart managed host"
+        warn "code for upstart managed systems not implemented, NOOP"
+        return 1
+        ;;
+    'sysv')
+        (( ARG_DEBUG > 0 )) && debug "is a sysv managed host"
+        service ${_SERVICE} ${_ACTION} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+        return $?
+        ;;
+    *)
+        (( ARG_DEBUG > 0 )) && debug "unknown init system for this host?"
+        return 1
+        ;;
+esac
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: linux_exec_ssh()
+# DOES: execute a shell command remotely via SSH
+# EXPECTS: 1=options [string], 2=user [string], 3=host [string], 4=command [string]
+# RETURNS: exit code of remote command
+# OUTPUTS: STDOUT from SSH call
+# REQUIRES: ssh command-line utility
+function linux_exec_ssh
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+typeset _SSH_OPTS="${1}"
+typeset _SSH_USER="${2}"
+typeset _SSH_HOST="${3}"
+typeset _SSH_COMMAND="${4}"
+
+if [[ -z "${_SSH_USER}" || -z "${_SSH_HOST}" || -z "${_SSH_COMMAND}" ]]
+then
+    return 255
+fi
+# shellcheck disable=SC2086
+ssh ${_SSH_OPTS} -l ${_SSH_USER} ${_SSH_HOST} ${_SSH_COMMAND} 2>>${HC_STDERR_LOG} </dev/null
+
+return $?
 }
 
 # -----------------------------------------------------------------------------
@@ -118,8 +212,71 @@ elif [[ -r /usr/share/upstart ]]
 then
     # shellcheck disable=SC2034
     LINUX_INIT="upstart"
-
 fi
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: linux_has_service()
+# DOES: check if a specific service is present and/or enabled
+# EXPECTS: name of service [string]
+# OUTPUTS: 0=not present; 1=present (not enabled); 2=present (enabled)
+# RETURNS: 0=success; 1=error
+# REQUIRES: linux_get_init(), linux_has_systemd_service()
+function linux_has_service
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SERVICE="${1}"
+typeset _HAS_SERVICE=0
+
+# linux only
+check_platform 'Linux' || {
+    warn "may only run on platform(s): Linux"
+    return 1
+}
+
+[[ -n "${LINUX_INIT}" ]] || linux_get_init
+case "${LINUX_INIT}" in
+    'systemd')
+        (( ARG_DEBUG > 0 )) && debug "is a systemd managed host"
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet is-enabled ${_SERVICE} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+            if (( $? > 0 ))
+            then
+                _HAS_SERVICE=1
+            else
+                _HAS_SERVICE=2
+            fi
+        else
+            warn "systemd unit file not found {${_SERVICE}}"
+            return 1
+        fi
+        ;;
+    'upstart')
+        (( ARG_DEBUG > 0 )) && debug "is an upstart managed host"
+        warn "code for upstart managed systems not implemented, NOOP"
+        return 1
+        ;;
+    'sysv')
+        (( ARG_DEBUG > 0 )) && debug "is a sysv managed host"
+        chkconfig ${_SERVICE} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+        if (( $? > 0 ))
+        then
+            _HAS_SERVICE=2
+        else
+            _HAS_SERVICE=0
+        fi
+        ;;
+    *)
+        (( ARG_DEBUG > 0 )) && debug "unknown init system for this host?"
+        return 1
+        ;;
+esac
+
+print ${_HAS_SERVICE}
 
 return 0
 }
@@ -249,29 +406,69 @@ return ${_RC}
 }
 
 # -----------------------------------------------------------------------------
-# @(#) FUNCTION: linux_exec_ssh()
-# DOES: execute a shell command remotely via SSH
-# EXPECTS: 1=options [string], 2=user [string], 3=host [string], 4=command [string]
-# RETURNS: exit code of remote command
-# OUTPUTS: STDOUT from SSH call
-# REQUIRES: ssh command-line utility
-function linux_exec_ssh
+# @(#) FUNCTION: linux_runs_service()
+# DOES: check if a specific service is running (active)
+# EXPECTS: name of service [string]
+# OUTPUTS: 0=not running/not active; 1=running/active
+# RETURNS: 0=success; 1=error
+# REQUIRES: linux_get_init(), linux_has_systemd_service()
+function linux_runs_service
 {
-(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
-typeset _SSH_OPTS="${1}"
-typeset _SSH_USER="${2}"
-typeset _SSH_HOST="${3}"
-typeset _SSH_COMMAND="${4}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SERVICE="${1}"
+typeset _RUNS_SERVICE=0
 
-if [[ -z "${_SSH_USER}" || -z "${_SSH_HOST}" || -z "${_SSH_COMMAND}" ]]
-then
-    return 255
-fi
-# shellcheck disable=SC2086
-ssh ${_SSH_OPTS} -l ${_SSH_USER} ${_SSH_HOST} ${_SSH_COMMAND} 2>>${HC_STDERR_LOG} </dev/null
-
-return $?
+# linux only
+check_platform 'Linux' || {
+    (( ARG_DEBUG > 0 )) && debug "may only run on platform(s): Linux"
+    return 1
 }
+
+[[ -n "${LINUX_INIT}" ]] || linux_get_init
+case "${LINUX_INIT}" in
+    'systemd')
+        (( ARG_DEBUG > 0 )) && debug "is a systemd managed host"
+        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_SERVICE}")
+        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+        then
+            systemctl --quiet is-active ${_SERVICE} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+            if (( $? > 0 ))
+            then
+                _RUNS_SERVICE=0
+            else
+                _RUNS_SERVICE=1
+            fi
+        else
+            warn "systemd unit file not found {${_SERVICE}}"
+            return 1
+        fi
+        ;;
+    'upstart')
+        (( ARG_DEBUG > 0 )) && debug "is an upstart managed host"
+        warn "code for upstart managed systems not implemented, NOOP"
+        return 1
+        ;;
+    'sysv')
+        (( ARG_DEBUG > 0 )) && debug "is a sysv managed host"
+        service ${_SERVICE} status >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+        if (( $? > 0 ))
+        then
+            _RUNS_SERVICE=0
+        else
+            _RUNS_SERVICE=1
+        fi
+        ;;
+    *)
+        (( ARG_DEBUG > 0 )) && debug "unknown init system for this host?"
+        return 1
+        ;;
+esac
+
+print ${_RUNS_SERVICE}
+
+return 0
+}
+
 
 #******************************************************************************
 # END of script
