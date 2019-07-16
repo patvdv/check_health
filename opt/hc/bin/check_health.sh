@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-06-18"
+typeset -r SCRIPT_VERSION="2019-07-16"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -244,20 +244,47 @@ then
     print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_core(.sh) is not present (tip: run --fix-symlinks)"
     exit 1
 fi
-# include include_*
-find ${FPATH_PARENT}/core -name "include_*.sh" -type f -print 2>/dev/null | while read INCLUDE_FILE
-do
-    if [[ -h ${INCLUDE_FILE%%.sh} ]]
-    then
+
+# PDKSH hack (IS_PDKSH is not yet set here)
+case "${KSH_VERSION}" in
+    *MIRBSD*|*PD*|*LEGACY*)
         # shellcheck source=/dev/null
-        (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${INCLUDE_FILE}"
-        # shellcheck source=/dev/null
-        . ${INCLUDE_FILE}
-    else
-        print -u2 "ERROR: library file ${INCLUDE_FILE} exists but has no symlink. Run --fix-symlinks"
-        exit 1
-    fi
-done
+        . ${FPATH_PARENT}/core/include_core.sh
+        if [[ -r ${FPATH_PARENT}/core/include_data.sh && -h ${FPATH_PARENT}/core/include_data ]]
+        then
+                # shellcheck source=/dev/null
+                (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${FPATH_PARENT}/core/include_data.sh"
+                . ${FPATH_PARENT}/core/include_data.sh
+        else
+                print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_data.sh is not present (tip: run --fix-symlinks)"
+                exit 1
+        fi
+        if [[ -r ${FPATH_PARENT}/core/include_os.sh && -h ${FPATH_PARENT}/core/include_os ]]
+        then
+                # shellcheck source=/dev/null
+                (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${FPATH_PARENT}/core/include_os.sh"
+                . ${FPATH_PARENT}/core/include_os.sh
+        else
+                print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_os.sh is not present (tip: run --fix-symlinks)"
+                exit 1
+        fi
+        ;;
+    *)
+        # include include_*
+        find ${FPATH_PARENT}/core -name "include_*.sh" -type f -print 2>/dev/null | while read INCLUDE_FILE
+        do
+            if [[ -h ${INCLUDE_FILE%%.sh} ]]
+            then
+                # shellcheck source=/dev/null
+                (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${INCLUDE_FILE}"
+                # shellcheck source=/dev/null
+                . ${INCLUDE_FILE}
+            else
+                print -u2 "ERROR: library file ${INCLUDE_FILE} exists but has no symlink. Run --fix-symlinks"
+                exit 1
+            fi
+        done
+esac
 
 # check for core directories
 [[ -d ${ARCHIVE_DIR} ]] || mkdir -p "${ARCHIVE_DIR}" >/dev/null 2>&1
