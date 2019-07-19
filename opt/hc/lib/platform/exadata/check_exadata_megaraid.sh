@@ -19,12 +19,13 @@
 # @(#) MAIN: check_exadata_megaraid
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_comma2newline(), data_get_lvalue_from_config,
-#           dump_logs(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_comma2newline(), data_contains_string(),
+#           data_get_lvalue_from_config, dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-05-14: initial version [Patrick Van der Veken]
 # @(#) 2019-07-08: update _MEGACLI_BIN [Patrick Van der Veken]
+# @(#) 2019-07-18: added supercap check, see Oracle bug 28564584 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,10 +35,11 @@ function check_exadata_megaraid
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-07-08"                           # YYYY-MM-DD
+typeset _VERSION="2019-07-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _MEGACLI_BIN="/opt/MegaRAID/storcli/storcli64"
 typeset _MEGACLI_COMMAND="-ShowSummary -aALL"
+typeset _SUPERCAP_COMMAND="/c0/cv show all"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -53,6 +55,8 @@ typeset _CFG_CHECK_CONTROLLER=""
 typeset _CHECK_CONTROLLER=0
 typeset _CFG_CHECK_BBU=""
 typeset _CHECK_BBU=0
+typeset _CFG_CHECK_SUPERCAP=""
+typeset _CHECK_SUPERCAP=0
 typeset _CFG_CHECK_PHYSICAL=""
 typeset _CHECK_PHYSICAL=0
 typeset _CFG_CHECK_VIRTUAL=""
@@ -62,6 +66,7 @@ typeset _CLI_DATA=""
 typeset _RAID_DEVICE=""
 typeset _RAID_DEVICE_TYPE=""
 typeset _RAID_STATUS=""
+typeset _SUPERCAP_STATUS=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -111,6 +116,16 @@ case "${_CFG_CHECK_BBU}" in
         ;;
 esac
 (( _CHECK_BBU > 0 )) || log "checking bbu has been disabled"
+_CFG_CHECK_SUPERCAP=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'check_supercap')
+case "${_CFG_CHECK_SUPERCAP}" in
+    no|NO|No)
+        _CHECK_SUPERCAP=0
+        ;;
+    *)
+        _CHECK_SUPERCAP=1
+        ;;
+esac
+(( _CHECK_SUPERCAP > 0 )) || log "checking bbu (supercap) has been disabled"
 _CFG_CHECK_PHYSICAL=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'check_physical')
 case "${_CFG_CHECK_PHYSICAL}" in
     no|NO|No)
@@ -169,7 +184,7 @@ then
     return 1
 fi
 
-# perform checks on cell data
+# perform checks on MegaCLI data
 print -R "${_CLI_OUTPUT}" | awk '
 
     BEGIN { found_controller = 0; controller_status = "";
@@ -262,7 +277,7 @@ do
                     log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
                 fi
             else
-                (( ARG_DEBUG > 0 )) && debug "skipping check for controller (disabled)"
+                (( ARG_DEBUG > 0 )) && debug "excluded check for controller"
             fi
             ;;
         BBU)
@@ -271,10 +286,10 @@ do
                 _TARGET_STATUS="Healthy"
                 if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
                 then
-                    _MSG="state of bbu is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
+                    _MSG="state of bbu (battery) is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
                     _STC=1
                 else
-                    _MSG="state of bbu is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
+                    _MSG="state of bbu (battery) is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
                     _STC=0
                 fi
                 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -332,6 +347,49 @@ done
 print "==== {${_MEGACLI_COMMAND}} ====" >>${HC_STDOUT_LOG}
 print "${_CLI_DATA}" >>${HC_STDOUT_LOG}
 
+# check if we need to check the BBU (supercap). Use different storcli query
+# see Oracle Bug 28564584 : X5-2 Aspen w/storcli utility shows false bbu failed status
+if (( _CHECK_SUPERCAP > 0 ))
+then
+    # gather MegaCLI data
+    (( ARG_DEBUG > 0 )) && debug "executing Supercap command"
+    _CLI_OUTPUT=$(${_MEGACLI_BIN} "${_SUPERCAP_COMMAND}" 2>>${HC_STDERR_LOG})
+    # shellcheck disable=SC2181
+    if (( $?> 0 )) || [[ -z "${_CLI_OUTPUT}" ]]
+    then
+        _MSG="unable to query MegaRAID controller"
+        _STC=2
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+        fi
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 1
+    fi
+
+    # perform checks on MegaCLI data
+    _TARGET_STATUS="Optimal"
+    _SUPERCAP_STATUS=$(print -R "${_CLI_OUTPUT}" | grep -c -E -e "^State *${_TARGET_STATUS}" 2>/dev/null)
+    if (( _SUPERCAP_STATUS == 0 ))
+    then
+        _MSG="state of BBU (supercap) device is NOK"
+        _STC=1
+    else
+        _MSG="state of BBU (supercap) device is OK"
+        _STC=0
+    fi
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}" "Non-optimal" "${_TARGET_STATUS}"
+    fi
+
+    # add dcli output to stdout log
+    print "==== {dcli ${_SUPERCAP_COMMAND}} ====" >>${HC_STDOUT_LOG}
+    print "${_CELL_DATA}" >>${HC_STDOUT_LOG}
+else
+    (( ARG_DEBUG > 0 )) && debug "excluded check for bbu (supercap) on ${_CELL_SERVER}"
+fi
+
 return 0
 }
 
@@ -345,15 +403,18 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                check_controller=<yes|no>
                check_bbu=<yes|no>
+               check_supercap=<yes|no>
                check_physical=<yes|no>
                check_virtual=<yes|no>
-PURPOSE     : Checks the status of MegaRAID device(s)
+PURPOSE     : 1) Checks the status of MegaRAID device(s)
                 # /opt/MegaRAID/MegaCli/MegaCli64 -ShowSummary -aALL
               Target attributes:
                 * Controller: Optimal [optional]
-                * BBU: Healthy [optional]
+                * BBU (battery): Healthy [optional]
                 * Physical devices: Online [optional]
                 * Virtual devices: Optimal [optional]
+              2) Checks the status of the Supercap (battery):
+                dcli> /opt/MegaRAID/storcli/storcli64 /c0/cv show all
 LOG HEALTHY : Supported
 
 EOT

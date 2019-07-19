@@ -19,12 +19,15 @@
 # @(#) MAIN: check_exadata_cell_megaraid
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_comma2newline(), data_get_lvalue_from_config,
-#           dump_logs(), exadata_exec_dcli(), init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_comma2newline(), data_contains_string(),
+#           data_get_lvalue_from_config, dump_logs(), exadata_exec_dcli(),
+#           init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-05-14: initial version [Patrick Van der Veken]
 # @(#) 2019-07-08: update _CELL_COMMAND [Patrick Van der Veken]
+# @(#) 2019-07-18: added supercap check, see Oracle bug 28564584 + exclusion
+#                  logic for components (cell_exclude) [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -34,10 +37,11 @@ function check_exadata_cell_megaraid
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-07-08"                           # YYYY-MM-DD
+typeset _VERSION="2019-07-18"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # cell query command -- DO NOT CHANGE --
 typeset _CELL_COMMAND="/opt/MegaRAID/storcli/storcli64 -ShowSummary -aALL"
+typeset _SUPERCAP_COMMAND="/opt/MegaRAID/storcli/storcli64 /c0/cv show all"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
@@ -56,15 +60,19 @@ typeset _CFG_CHECK_CONTROLLER=""
 typeset _CHECK_CONTROLLER=0
 typeset _CFG_CHECK_BBU=""
 typeset _CHECK_BBU=0
+typeset _CFG_CHECK_SUPERCAP=""
+typeset _CHECK_SUPERCAP=0
 typeset _CFG_CHECK_PHYSICAL=""
 typeset _CHECK_PHYSICAL=0
 typeset _CFG_CHECK_VIRTUAL=""
 typeset _CHECK_VIRTUAL=0
+typeset _CFG_EXCLUDES=""
 typeset _CELL_OUTPUT=""
 typeset _CELL_DATA=""
 typeset _RAID_DEVICE=""
 typeset _RAID_DEVICE_TYPE=""
 typeset _RAID_STATUS=""
+typeset _SUPERCAP_STATUS=""
 typeset _CELL_ALL_RC=0
 typeset _CELL_RC=0
 
@@ -127,7 +135,17 @@ case "${_CFG_CHECK_BBU}" in
         _CHECK_BBU=1
         ;;
 esac
-(( _CHECK_BBU > 0 )) || log "checking bbu has been disabled"
+(( _CHECK_BBU > 0 )) || log "checking bbu (battery) has been disabled"
+_CFG_CHECK_SUPERCAP=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'check_supercap')
+case "${_CFG_CHECK_SUPERCAP}" in
+    no|NO|No)
+        _CHECK_SUPERCAP=0
+        ;;
+    *)
+        _CHECK_SUPERCAP=1
+        ;;
+esac
+(( _CHECK_SUPERCAP > 0 )) || log "checking bbu (supercap) has been disabled"
 _CFG_CHECK_PHYSICAL=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'check_physical')
 case "${_CFG_CHECK_PHYSICAL}" in
     no|NO|No)
@@ -148,6 +166,7 @@ case "${_CFG_CHECK_VIRTUAL}" in
         ;;
 esac
 (( _CHECK_VIRTUAL > 0 )) || log "checking virtual has been disabled"
+_CFG_EXCLUDES=$(grep -i -E -e '^cell_exclude:' ${_CONFIG_FILE} 2>/dev/null)
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -272,58 +291,79 @@ do
         CONTROLLER)
             if (( _CHECK_CONTROLLER > 0 ))
             then
-                _TARGET_STATUS="Optimal"
-                if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                # check for exclusion
+                $(data_contains_string "${_CFG_EXCLUDES}" "${_CELL_SERVER}:controller")
+                if (( $? == 0 ))
                 then
-                    _MSG="state of controller on ${_CELL_SERVER} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
-                    _STC=1
+                    _TARGET_STATUS="Optimal"
+                    if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                    then
+                        _MSG="state of controller on ${_CELL_SERVER} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
+                        _STC=1
+                    else
+                        _MSG="state of controller on ${_CELL_SERVER} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
+                        _STC=0
+                    fi
+                    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                    then
+                        log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    fi
                 else
-                    _MSG="state of controller on ${_CELL_SERVER} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
-                    _STC=0
-                fi
-                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-                then
-                    log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    (( ARG_DEBUG > 0 )) && debug "excluded check for controller on ${_CELL_SERVER}"
                 fi
             else
-                (( ARG_DEBUG > 0 )) && debug "skipping check for controller (disabled)"
+                (( ARG_DEBUG > 0 )) && debug "skipping check for controller (disabled) [${_CELL_SERVER}]"
             fi
             ;;
         BBU)
             if (( _CHECK_BBU > 0 ))
             then
-                _TARGET_STATUS="Healthy"
-                if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                # check for exclusion
+                $(data_contains_string "${_CFG_EXCLUDES}" "${_CELL_SERVER}:bbu")
+                if (( $? == 0 ))
                 then
-                    _MSG="state of bbu on ${_CELL_SERVER} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
-                    _STC=1
+                    _TARGET_STATUS="Healthy"
+                    if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                    then
+                        _MSG="state of bbu (battery) on ${_CELL_SERVER} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
+                        _STC=1
+                    else
+                        _MSG="state of bbu (battery) on ${_CELL_SERVER} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
+                        _STC=0
+                    fi
+                    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                    then
+                        log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    fi
                 else
-                    _MSG="state of bbu on ${_CELL_SERVER} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
-                    _STC=0
-                fi
-                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-                then
-                    log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    (( ARG_DEBUG > 0 )) && debug "excluded check for BBU (battery) on ${_CELL_SERVER}"
                 fi
             else
-                (( ARG_DEBUG > 0 )) && debug "skipping check for bbu (disabled)"
+                (( ARG_DEBUG > 0 )) && debug "skipping check for bbu (battery) (disabled) [${_CELL_SERVER}]"
             fi
             ;;
         PHYSICAL)
             if (( _CHECK_PHYSICAL > 0 ))
             then
-                _TARGET_STATUS="Online"
-                if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                # check for exclusion
+                $(data_contains_string "${_CFG_EXCLUDES}" "${_CELL_SERVER}:physical")
+                if (( $? == 0 ))
                 then
-                    _MSG="state of physical device ${_CELL_SERVER}:/${_RAID_DEVICE} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
-                    _STC=1
+                    _TARGET_STATUS="Online"
+                    if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                    then
+                        _MSG="state of physical device ${_CELL_SERVER}:/${_RAID_DEVICE} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
+                        _STC=1
+                    else
+                        _MSG="state of physical device on ${_CELL_SERVER}:/${_RAID_DEVICE} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
+                        _STC=0
+                    fi
+                    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                    then
+                        log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    fi
                 else
-                    _MSG="state of physical device on ${_CELL_SERVER}:/${_RAID_DEVICE} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
-                    _STC=0
-                fi
-                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-                then
-                    log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    (( ARG_DEBUG > 0 )) && debug "excluded check for physical devices on ${_CELL_SERVER}"
                 fi
             else
                 (( ARG_DEBUG > 0 )) && debug "skipping check for physical device [${_CELL_SERVER}:/${_RAID_DEVICE}] (disabled)"
@@ -332,18 +372,25 @@ do
         VIRTUAL)
             if (( _CHECK_VIRTUAL > 0 ))
             then
-                _TARGET_STATUS="Optimal"
-                if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                # check for exclusion
+                $(data_contains_string "${_CFG_EXCLUDES}" "${_CELL_SERVER}:virtual")
+                if (( $? == 0 ))
                 then
-                    _MSG="state of virtual device ${_CELL_SERVER}:/${_RAID_DEVICE} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
-                    _STC=1
+                    _TARGET_STATUS="Optimal"
+                    if [[ "${_RAID_STATUS}" != "${_TARGET_STATUS}" ]]
+                    then
+                        _MSG="state of virtual device ${_CELL_SERVER}:/${_RAID_DEVICE} is NOK (${_RAID_STATUS}!=${_TARGET_STATUS})"
+                        _STC=1
+                    else
+                        _MSG="state of virtual device on ${_CELL_SERVER}:/${_RAID_DEVICE} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
+                        _STC=0
+                    fi
+                    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                    then
+                        log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    fi
                 else
-                    _MSG="state of virtual device on ${_CELL_SERVER}:/${_RAID_DEVICE} is OK (${_RAID_STATUS}==${_TARGET_STATUS})"
-                    _STC=0
-                fi
-                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-                then
-                    log_hc "$0" ${_STC} "${_MSG}" "${_RAID_STATUS}" "${_TARGET_STATUS}"
+                    (( ARG_DEBUG > 0 )) && debug "excluded check for virtual devices on ${_CELL_SERVER}"
                 fi
             else
                 (( ARG_DEBUG > 0 )) && debug "skipping check for virtual device [${_CELL_SERVER}:/${_RAID_DEVICE}] (disabled)"
@@ -353,8 +400,75 @@ do
 done
 
 # add dcli output to stdout log
-print "==== {dcli ${_CELL_COMMAND}} ====" >>${HC_STDOUT_LOG}
+print "==== {dcli ${_CELL_COMMAND} [${_CFG_CELL_SERVER}]} ====" >>${HC_STDOUT_LOG}
 print "${_CELL_DATA}" >>${HC_STDOUT_LOG}
+
+# check if we need to check the BBU (supercap). Use different storcli query
+# see Oracle Bug 28564584 : X5-2 Aspen w/storcli utility shows false bbu failed status
+if (( _CHECK_SUPERCAP > 0 ))
+then
+    _CELL_DATA=""
+    # gather cell data (serialized way to have better control of output & errors)
+    data_comma2newline "${_CFG_CELL_SERVERS}" | while read -r _CFG_CELL_SERVER
+    do
+        (( ARG_DEBUG > 0 )) && debug "executing remote cell script on ${_CFG_CELL_SERVER}"
+        _CELL_OUTPUT=$(exadata_exec_dcli "" "${_CFG_DCLI_USER}" "${_CFG_CELL_SERVER}" "" "${_SUPERCAP_COMMAND}" 2>>${HC_STDERR_LOG})
+        _CELL_RC=$?
+        if (( _CELL_RC > 0 )) || [[ -z "${_CELL_OUTPUT}" ]]
+        then
+            _CELL_ALL_RC=$(( _CELL_ALL_RC + _CELL_RC ))
+            warn "unable to discover cell data on ${_CFG_CELL_SERVER}"
+            (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+            continue
+        else
+        # _CELL_OUTPUT is always prefixed by cell server name, so no mangling needed
+        # shellcheck disable=SC1117
+        _CELL_DATA=$(printf "%s\n%s\n" "${_CELL_DATA}" "${_CELL_OUTPUT}")
+        fi
+    done
+
+    # validate cell data
+    if (( _CELL_ALL_RC > 0 )) || [[ -z "${_CELL_DATA}" ]]
+    then
+        _MSG="did not discover cell data or one of the discoveries failed"
+        _STC=2
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+        fi
+        return 1
+    fi
+
+    # perform checks on cell data
+    _TARGET_STATUS="Optimal"
+    data_comma2newline "${_CFG_CELL_SERVERS}" | while read -r _CFG_CELL_SERVER
+    do
+        # check for exclusion
+        $(data_contains_string "${_CFG_EXCLUDES}" "${_CELL_SERVER}:supercap")
+        if (( $? == 0 ))
+        then
+            _SUPERCAP_STATUS=$(print -R "${_CELL_DATA}" | grep -c -E -e "^${_CFG_CELL_SERVER}: *State *${_TARGET_STATUS}" 2>/dev/null)
+            if (( _SUPERCAP_STATUS == 0 ))
+            then
+                _MSG="state of BBU (supercap) device on ${_CFG_CELL_SERVER} is NOK"
+                _STC=1
+            else
+                _MSG="state of BBU (supercap) device on ${_CFG_CELL_SERVER} is OK"
+                _STC=0
+            fi
+            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+            then
+                log_hc "$0" ${_STC} "${_MSG}" "Non-optimal" "${_TARGET_STATUS}"
+            fi
+        else
+            (( ARG_DEBUG > 0 )) && debug "excluded check for bbu (supercap) on ${_CELL_SERVER}"
+        fi
+    done
+
+    # add dcli output to stdout log
+    print "==== {dcli ${_SUPERCAP_COMMAND}} ====" >>${HC_STDOUT_LOG}
+    print "${_CELL_DATA}" >>${HC_STDOUT_LOG}
+fi
 
 return 0
 }
@@ -371,15 +485,20 @@ CONFIG      : $3 with parameters:
                cell_servers=<list_of_cell_servers>
                check_controller=<yes|no>
                check_bbu=<yes|no>
+               check_supercap=<yes|no>
                check_physical=<yes|no>
                check_virtual=<yes|no>
-PURPOSE     : Checks the status of MegaRAID device(s) on cell servers (via dcli)
+              and formatted stanzas of:
+               cell_exclude:<cell_server>:<component>
+PURPOSE     : 1) Checks the status of MegaRAID device(s) on cell servers (via dcli)
                 dcli> /opt/MegaRAID/MegaCli/MegaCli64 -ShowSummary -aALL
               Target attributes:
                 * Controller: Optimal [optional]
-                * BBU: Healthy [optional]
+                * BBU (battery): Healthy [optional]
                 * Physical devices: Online [optional]
                 * Virtual devices: Optimal [optional]
+              2) Checks the status of the Supercap (battery):
+                dcli> /opt/MegaRAID/storcli/storcli64 /c0/cv show all
 CAVEAT      : Requires a working dcli setup for the root user
 LOG HEALTHY : Supported
 

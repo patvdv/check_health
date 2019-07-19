@@ -19,6 +19,10 @@ check_controller="yes"
 # [default: yes]
 check_bbu="yes"
 
+# specify whether to check the BBU (supercap) state (yes|no)
+# [default: yes]
+check_supercap="yes"
+
 # specify whether to check the physical devices (yes|no)
 # [default: yes]
 check_physical="yes"

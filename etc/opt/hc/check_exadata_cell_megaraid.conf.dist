@@ -27,6 +27,10 @@ check_controller="yes"
 # [default: yes]
 check_bbu="yes"
 
+# specify whether to check the BBU (supercap) state (yes|no)
+# [default: yes]
+check_supercap="yes"
+
 # specify whether to check the physical devices (yes|no)
 # [default: yes]
 check_physical="yes"
@@ -34,6 +38,14 @@ check_physical="yes"
 # specify whether to check the virtual devices (yes|no)
 # [default: yes]
 check_virtual="yes"
+
+# individual checks that should be disabled (wildcards are not supported)
+#  cell_exclude:<cell_server>:<controller|bbu|supercap|physical|virtual>
+# Examples:
+# disable controller check on mycell1
+# cell_exclude:mycell1:controller
+# disable bbu check on mycell2
+# cell_exclude:mycell2:bbu
 
 
 #******************************************************************************
