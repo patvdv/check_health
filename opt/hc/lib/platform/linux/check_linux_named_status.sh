@@ -29,6 +29,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-09-01: fix for systemd service on Ubuntu/Mint [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -37,7 +38,7 @@
 function check_linux_named_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2019-09-01"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -81,7 +82,7 @@ fi
 
 # set init script & systemd service
 case "${LINUX_DISTRO}" in
-    Debian)
+    Debian|Ubuntu|*Mint*)
         _NAMED_INIT_SCRIPT="/etc/init.d/bind9"
         _NAMED_SYSTEMD_SERVICE="bind9.service"
         ;;
