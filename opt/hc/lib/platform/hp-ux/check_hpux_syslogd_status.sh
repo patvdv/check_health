@@ -26,6 +26,7 @@
 # @(#) 2018-02-13: fix to avoid log check if syslogd is not active [Patrick Van der Veken]
 # @(#) 2019-03-09: text updates [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-10-07: fixed syslog.log checking [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -35,8 +36,8 @@ function check_hpux_syslogd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _SYSLOGD_PID_FILE="/var/run/syslog.pid"
-typeset _SYSLOGD_LOG_FILE="/var/adm/syslog.log"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _SYSLOGD_LOG_FILE="/var/adm/syslog/syslog.log"
+typeset _VERSION="2019-10-07"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -121,35 +122,44 @@ then
 fi
 
 # ---- log state ----
-_LOGGER_BIN="$(command -v logger 2>>${HC_STDERR_LOG})"
-if [[ -x ${_LOGGER_BIN} && -n "${_LOGGER_BIN}" ]]
+# check syslog.log
+(( ARG_DEBUG > 0 )) && debug "checking syslogd log via file check"
+if [[ -r ${_SYSLOGD_LOG_FILE} ]] && [[ -s ${_SYSLOGD_LOG_FILE} ]]
 then
-    # write test entry
-    (( ARG_DEBUG > 0 )) && debug "checking syslogd log via {${_LOGGER_BIN}}"
-    ${_LOGGER_BIN} -i -t "check_health" "*** LOG CHECK ***" >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-    if (( $? == 0 ))
-    then
-        _MSG="syslogd is logging correctly, write via {${_LOGGER_BIN}} OK"
-        _STC=0
-    else
-        _MSG="syslogd is not logging (correctly), write via {${_LOGGER_BIN}} NOK"
-        _STC=1
-    fi
+    _MSG="syslog.log is present (${_SYSLOGD_LOG_FILE})"
+    _STC=0
 else
-    # check the syslog itself
-    (( ARG_DEBUG > 0 )) && debug "checking syslogd log via file check"
-    if [[ -r ${_SYSLOGD_LOG_FILE} ]] && [[ -s ${_SYSLOGD_LOG_FILE} ]]
-    then
-        _MSG="syslogd is logging correctly (${_CRON_LOG_FILE})"
-        _STC=0
-    else
-        _MSG="syslogd is not logging (correctly) (${_SYSLOGD_LOG_FILE})"
-        _STC=1
-    fi
+    _MSG="syslog.log is not present or empty (${_SYSLOGD_LOG_FILE})"
+    _STC=1
 fi
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
 then
     log_hc "$0" ${_STC} "${_MSG}"
+fi
+# check logger if syslog.log check did not fail
+if (( _STC == 0 ))
+then
+    _LOGGER_BIN="$(command -v logger 2>>${HC_STDERR_LOG})"
+    if [[ -x ${_LOGGER_BIN} && -n "${_LOGGER_BIN}" ]]
+    then
+        # write test entry
+        (( ARG_DEBUG > 0 )) && debug "checking syslogd log via {${_LOGGER_BIN}}"
+        ${_LOGGER_BIN} -i -t "check_health" "*** LOG CHECK ***" >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+        if (( $? == 0 ))
+        then
+            _MSG="syslogd is logging correctly, write via {${_LOGGER_BIN}} OK"
+            _STC=0
+        else
+            _MSG="syslogd is not logging (correctly), write via {${_LOGGER_BIN}} NOK"
+            _STC=1
+        fi
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}"
+        fi
+    else
+        (( ARG_DEBUG > 0 )) && debug "no logger facility found, skipping logger check"
+    fi
 fi
 
 return 0
