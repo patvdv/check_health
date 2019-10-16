@@ -27,6 +27,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: changed format of stanzas in configuration file &
 # @(#)             added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2019-10-16: fix for cron nicknames extensions [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -36,7 +37,7 @@ function check_linux_root_crontab
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2019-10-16"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -53,6 +54,7 @@ typeset _CRON_LINE=""
 typeset _CRON_ENTRY=""
 typeset _CRON_MATCH=0
 typeset _IS_OLD_STYLE=0
+typeset _USER_FIELD=""
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -122,9 +124,16 @@ print "=== /etc/cron.(hourly|daily|weekly|monthly) ===" >>${HC_STDOUT_LOG}
 print "=== /etc/cron.d ===" >>${HC_STDOUT_LOG}
 if [[ -d /etc/cron.d ]]
 then
-    cat /etc/cron.d/* 2>/dev/null | while read _CRON_LINE
+    cat /etc/cron.d/* 2>/dev/null | grep -v -E -e '^#' -e '^$' 2>/dev/null | while read _CRON_LINE
     do
-        if [[ $(print "${_CRON_LINE}" | awk '{print $6}' 2>/dev/null) == "root" ]]
+        # format: standard cron times or extension nicknames
+        if [[ "${_CRON_LINE}" =~ ^@ ]]
+        then
+            _USER_FIELD=2
+        else
+            _USER_FIELD=6
+        fi
+        if [[ $(print "${_CRON_LINE}" | awk -v field=${_USER_FIELD} '{print $field}' 2>/dev/null) == "root" ]]
         then
             print "${_CRON_LINE}" >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
         fi
