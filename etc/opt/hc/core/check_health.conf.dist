@@ -10,6 +10,17 @@
 # maximum timeout for HC calls/plugins (seconds) [default: 60]
 HC_TIME_OUT=60
 
+# enable/disable logging of passed health checks (warning: this may rapidly grow the HC log)
+# see also: '--log-healthy' command-line parameter
+#           'log_healthy' setting in HC plugin configuration file(s)
+# [values: Yes|No]
+HC_LOG_HEALTHY="No"
+
+# enable/disable healing logic if available in HC plugin(s)
+# see also: '--no-fix' command-line parameter
+# [values: Yes|No]
+HC_WILL_FIX="Yes"
+
 
 #******************************************************************************
 # End of FILE
