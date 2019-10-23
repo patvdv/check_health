@@ -10,14 +10,19 @@ echo "INFO: starting post-install script ..."
 # debian: reset ownerships
 chown -R root:root /opt/hc /etc/opt/hc 2>/dev/null
 # copy plugin configuration file
-if [[ ! -f ${HC_ETC_DIR}/core/providers/notify_sms.conf ]]
+if [[ -f ${HC_ETC_DIR}/core/providers/notify_sms.conf.dist ]]
 then
-    cp -p ${HC_ETC_DIR}/core/providers/notify_sms.conf.dist ${HC_ETC_DIR}/core/providers/notify_sms.conf >/dev/null
-    (( $? == 0 )) || \
-    {
-        echo "ERROR: could not copy plugin config file in ${HC_ETC_DIR}/core/providers"
-        exit 1
-    }
+    if [[ ! -f ${HC_ETC_DIR}/core/providers/notify_sms.conf ]]
+    then
+        cp -p ${HC_ETC_DIR}/core/providers/notify_sms.conf.dist ${HC_ETC_DIR}/core/providers/notify_sms.conf >/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not copy plugin config file in ${HC_ETC_DIR}/core/providers"
+            exit 1
+        }
+    fi
+else
+    echo "WARN: could not find plugin config .dist file in ${HC_ETC_DIR}/core/providers"
 fi
 # refresh symbolic FPATH links
 if [[ -x ${HC_BIN} ]]
