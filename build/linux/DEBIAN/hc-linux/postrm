@@ -8,6 +8,27 @@ HC_ETC_DIR="/etc/opt/hc"
 HC_VAR_DIR="/var/opt/hc"
 # ------------------------- CONFIGURATION ends here ---------------------------
 echo "INFO: starting post-uninstall script ..."
+if [[ -d ${HC_DIR} ]]
+then
+    # remove all symlinks
+    find ${HC_DIR} -type l -exec rm -f {} \; 2>/dev/null
+    (( $? == 0 )) || echo "WARN: failed to remove symlinks in ${HC_DIR}"
+fi
+if [[ -d ${HC_ETC_DIR} ]]
+then
+    rm -rf ${HC_ETC_DIR}/*.dist >/dev/null
+    (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}"
+fi
+if [[ -d ${HC_ETC_DIR}/core ]]
+then
+    rm -rf ${HC_ETC_DIR}/core/*.dist >/dev/null
+    (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core"
+fi
+if [[ -d ${HC_ETC_DIR}/core/providers ]]
+then
+    rm -rf ${HC_ETC_DIR}/core/providers/*.dist >/dev/null
+    (( $? == 0 )) || echo "WARN: could not remove .dist files in directory ${HC_ETC_DIR}/core/providers"
+fi
 if [[ -d ${HC_VAR_DIR} ]]
 then
     rm -rf ${HC_VAR_DIR}/state/temporary 2>/dev/null
