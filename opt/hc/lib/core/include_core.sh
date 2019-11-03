@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2019-06-18"                               # YYYY-MM-DD
+typeset _VERSION="2019-11-03"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -76,6 +76,13 @@ grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} 2>/dev/null |\
     cut -f1-2 -d'-' 2>/dev/null | sort -u 2>/dev/null |\
     while read -r YEAR_MONTH
 do
+    # skip messages with bogus date
+    if [[ -z "${YEAR_MONTH}" ]]
+    then
+       warn "skipping bogus log lines (lines without proper datestamp)"
+       continue
+    fi
+
     # find all messages for that YEAR-MONTH combination
     grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} >${TMP1_FILE}
     TODO_LOG_COUNT=$(wc -l ${TMP1_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
