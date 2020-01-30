@@ -33,6 +33,7 @@ max_space_usage=90
 # will for this given share will be skipped (this allows for exclusion of shares)
 # In order to check share(s) for a given ZFS appliance at least one configuration
 # entry must be present: either a wildcard or custom entry.
+# Caveat: any share must finally resolve to one entry only.
 # Format:
 #  zfs:<host_name>:<project_name|*>:<share_name|*>:[<usage_threshold_%>]
 # Examples:

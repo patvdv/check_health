@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2019-07-14"                               # YYYY-MM-DD
+typeset _VERSION="2020-01-27"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -197,9 +197,29 @@ return 0
 }
 
 # -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_has_newline()
+# DOES: checks if a string contains newlines
+# EXPECTS: $1=haystack [string]
+# OUTPUTS: n/a
+# RETURNS: 0=no newline found; 1=newlines found
+# REQUIRES: n/a
+function data_has_newline
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+
+typeset _HAYSTACK="${1}"
+
+typeset _COUNT=$(print -R "${_HAYSTACK}" | wc -l 2>/dev/null)
+
+(( _COUNT > 1 )) && return 1
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_quote()
 # DOES: magically quotes a needle in a string (default needle is: %)
-# EXPECTS: $1=to be magically quoted [string]; $2=needle [string]
+# EXPECTS: to be magically quoted [string]; $2=needle [string]
 # OUTPUTS: magically quoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a
@@ -217,7 +237,7 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_unquote()
 # DOES: magically unquotes a needle in a string (default needle is: %)
-# EXPECTS: $1=to be magically unquoted [string]; $2=needle [string]
+# EXPECTS: to be magically unquoted [string]; $2=needle [string]
 # OUTPUTS: magically unquoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a

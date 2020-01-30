@@ -20,7 +20,8 @@
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), data_contains_string(), data_get_lvalue_from_config(),
-#           dump_logs(), init_hc(), linux_exec_ssh(), log_hc(), warn()
+#           data_has_newline(), dump_logs(), init_hc(), linux_exec_ssh(),
+#           log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
@@ -28,7 +29,8 @@
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2019-04-12: small fixes [Patrick Van der Veken]
 # @(#) 2019-05-14: small fixes [Patrick Van der Veken]
-# @(#) 2019-07-05: help fix [Patrick Van der Veken]
+# @(#) 2020-01-27: addition of day check option +
+# @(#)             newline config value check [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +40,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-07-05"                           # YYYY-MM-DD
+typeset _VERSION="2020-01-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -75,12 +77,14 @@ typeset _CFG_SSH_USER=""
 typeset _CFG_ZFS_HOSTS=""
 typeset _CFG_ZFS_HOST=""
 typeset _CFG_ZFS_LINE=""
+typeset _CFG_REPLICATION_DAYS=""
 typeset _REPLICATION_ENABLED=""
 typeset _REPLICATION_LAG=""
 typeset _REPLICATION_RESULT=""
 typeset _SSH_BIN=""
 typeset _SSH_OUTPUT=""
 typeset _ZFS_DATA=""
+typeset _WEEKDAY=$(data_lc "$(date '+%a' 2>/dev/null)")  # Sun
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -210,6 +214,7 @@ do
     _CFG_REPLICATION_ENABLED=""
     _CFG_REPLICATION_RESULT=""
     _CFG_REPLICATION_LAG=""
+    _CFG_REPLICATION_DAYS=""
 
     # which values to use (general or custom?), keep in mind wildcards (custom will overrule wildcard entry)
     _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:[*]:" ${_CONFIG_FILE} 2>/dev/null)
@@ -219,6 +224,7 @@ do
         _CFG_REPLICATION_ENABLED=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
         _CFG_REPLICATION_RESULT=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
         _CFG_REPLICATION_LAG=$(print "${_CFG_ZFS_LINE}" | cut -f6 -d':' 2>/dev/null)
+        _CFG_REPLICATION_DAYS=$(print "${_CFG_ZFS_LINE}" | cut -f7 -d':' 2>/dev/null)
         # null value means general threshold
         if [[ -z "${_CFG_REPLICATION_LAG}" ]]
         then
@@ -229,10 +235,18 @@ do
     _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:${_REPLICATION_NAME}:" ${_CONFIG_FILE} 2>/dev/null)
     if [[ -n "${_CFG_ZFS_LINE}" ]]
     then
+        data_has_newline "${_CFG_ZFS_LINE}"
+        # shellcheck disable=SC2181
+        if (( $? > 0 ))
+        then
+            warn "ignoring ${_ZFS_HOST}:${_REPLICATION_NAME} because it parses to multiple results in ${_CONFIG_FILE}"
+            continue
+        fi
         (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_ZFS_HOST}:${_REPLICATION_NAME} in configuration file ${_CONFIG_FILE}"
         _CFG_REPLICATION_ENABLED=$(print "${_CFG_ZFS_LINE}" | cut -f4 -d':' 2>/dev/null)
         _CFG_REPLICATION_RESULT=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
         _CFG_REPLICATION_LAG=$(print "${_CFG_ZFS_LINE}" | cut -f6 -d':' 2>/dev/null)
+        _CFG_REPLICATION_DAYS=$(print "${_CFG_ZFS_LINE}" | cut -f7 -d':' 2>/dev/null)
         # null value means general threshold
         if [[ -z "${_CFG_REPLICATION_LAG}" ]]
         then
@@ -262,56 +276,65 @@ do
     # fixed defaults if missing
     [[ -z "${_CFG_REPLICATION_ENABLED}" || "${_CFG_REPLICATION_ENABLED}" = '*' ]] && _CFG_REPLICATION_ENABLED="true"
     [[ -z "${_CFG_REPLICATION_RESULT}" || "${_CFG_REPLICATION_RESULT}" = '*' ]] && _CFG_REPLICATION_RESULT="success"
+    _CFG_REPLICATION_DAYS=$(data_lc "${_CFG_REPLICATION_DAYS}")
+    [[ -z "${_CFG_REPLICATION_DAYS}" || "${_CFG_REPLICATION_DAYS}" = '*' ]] && _CFG_REPLICATION_DAYS="${_WEEKDAY}"
 
     # perform checks
-    # check replication enabled state (active or not?)
-    if [[ $(data_lc "${_REPLICATION_ENABLED}") != $(data_lc "${_CFG_REPLICATION_ENABLED}") ]]
-    then
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_ENABLED}!=${_CFG_REPLICATION_ENABLED}]"
-        _STC=1
-    else
-        _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_ENABLED}==${_CFG_REPLICATION_ENABLED}]"
-        _STC=0
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_ENABLED}" "${_CFG_REPLICATION_ENABLED}"
-    fi
-    # check replication last result (success or not?)
-    if [[ $(data_lc "${_REPLICATION_RESULT}") !=  $(data_lc "${_CFG_REPLICATION_RESULT}") ]]
-    then
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_RESULT}!=${_CFG_REPLICATION_RESULT}]"
-        _STC=1
-    else
-        _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_RESULT}==${_CFG_REPLICATION_RESULT}]"
-        _STC=0
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_RESULT}" "${_CFG_REPLICATION_RESULT}"
-    fi
-    # check replication lag
-    # caveat: replication lag is <unknown> at initial replication
-    data_contains_string "${_REPLICATION_LAG}" "unknown"
-    # shellcheck disable=SC2181
+    # do we need to perform the check today?
+    data_contains_string "${_CFG_REPLICATION_DAYS}" "${_WEEKDAY}"
     if (( $? > 0 ))
     then
-        _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is unknown"
-        _REPLICATION_LAG=-1
-        _STC=1
-    else
-        if (( _REPLICATION_LAG > _CFG_REPLICATION_LAG ))
+        # check replication enabled state (active or not?)
+        if [[ $(data_lc "${_REPLICATION_ENABLED}") != $(data_lc "${_CFG_REPLICATION_ENABLED}") ]]
         then
-            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is too big [${_REPLICATION_LAG}>${_CFG_REPLICATION_LAG}]"
+            _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_ENABLED}!=${_CFG_REPLICATION_ENABLED}]"
             _STC=1
         else
-            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_LAG}<=${_CFG_REPLICATION_LAG}]"
+            _MSG="state for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_ENABLED}==${_CFG_REPLICATION_ENABLED}]"
             _STC=0
         fi
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_LAG}" "${_CFG_REPLICATION_LAG}"
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_ENABLED}" "${_CFG_REPLICATION_ENABLED}"
+        fi
+        # check replication last result (success or not?)
+        if [[ $(data_lc "${_REPLICATION_RESULT}") !=  $(data_lc "${_CFG_REPLICATION_RESULT}") ]]
+        then
+            _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is NOK [${_REPLICATION_RESULT}!=${_CFG_REPLICATION_RESULT}]"
+            _STC=1
+        else
+            _MSG="result for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_RESULT}==${_CFG_REPLICATION_RESULT}]"
+            _STC=0
+        fi
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_RESULT}" "${_CFG_REPLICATION_RESULT}"
+        fi
+        # check replication lag
+        # caveat: replication lag is <unknown> at initial replication
+        data_contains_string "${_REPLICATION_LAG}" "unknown"
+        # shellcheck disable=SC2181
+        if (( $? > 0 ))
+        then
+            _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is unknown"
+            _REPLICATION_LAG=-1
+            _STC=1
+        else
+            if (( _REPLICATION_LAG > _CFG_REPLICATION_LAG ))
+            then
+                _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is too big [${_REPLICATION_LAG}>${_CFG_REPLICATION_LAG}]"
+                _STC=1
+            else
+                _MSG="lag for ${_ZFS_HOST}:${_REPLICATION_NAME} is OK [${_REPLICATION_LAG}<=${_CFG_REPLICATION_LAG}]"
+                _STC=0
+            fi
+        fi
+        if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+        then
+            log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_LAG}" "${_CFG_REPLICATION_LAG}"
+        fi
+    else
+        warn "check of ${_ZFS_HOST}:${_REPLICATION_NAME} was not configured for today"
     fi
 done
 
@@ -328,11 +351,10 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
-               ssh_opts=<ssh_options>
                max_replication_lag=<general_max_replication>
               and formatted stanzas of:
-               zfs:<host_name>:<replication_name>:<replication_enabled>:<replication_result>:<max_replication_lag>
-PURPOSE     : Checks the replication state, sync status and maximum lag of the configured ZFS hosts/shares
+               zfs:<host_name>:<replication_name>:<replication_enabled>:<replication_result>:<max_replication_lag>:<day1,day2>
+PURPOSE     : Checks the replication state, sync status and maximum lag of the configured ZFS hosts/shares on certain days
               CLI: zfs > shares > replications > packages > select (action) > show
 LOG HEALTHY : Supported
 
