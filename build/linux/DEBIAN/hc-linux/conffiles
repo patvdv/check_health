@@ -1,3 +1,4 @@
+/etc/opt/hc/core/templates/check_health.conf
 /etc/opt/hc/core/templates/mail_body.tpl
 /etc/opt/hc/core/templates/mail_footer.tpl
 /etc/opt/hc/core/templates/mail_header.tpl

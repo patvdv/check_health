@@ -63,6 +63,7 @@ cp ../SOURCES/etc/opt/hc/check_linux_hpasmcli.conf.dist $RPM_BUILD_ROOT/etc/opt/
 cp ../SOURCES/etc/opt/hc/check_linux_hpacucli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpacucli.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_hplog.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hplog.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_hpssacli.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_hpssacli.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_httpd_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_httpd_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_mysqld_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_mysqld_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
@@ -145,6 +146,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_hpacucli.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_hplog.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_hpssacli.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_httpd_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_mysqld_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_ntp_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_process_limits.conf.dist
@@ -157,6 +159,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Fri Nov  1 2019 <patrick@kudos.be> - 0.3.2
+- Added configuration file for check_linux_httpd_status plugin
 * Sun Jul 14 2019 <patrick@kudos.be> - 0.3.1
 - Removed check_linux_autofs plugin
 * Sat Apr 20 2019 <patrick@kudos.be> - 0.3.0

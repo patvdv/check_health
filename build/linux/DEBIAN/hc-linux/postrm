@@ -10,8 +10,9 @@ HC_VAR_DIR="/var/opt/hc"
 echo "INFO: starting post-uninstall script ..."
 if [[ -d ${HC_DIR} ]]
 then
-    rm -rf ${HC_DIR} 2>/dev/null
-    (( $? == 0 )) || echo "WARN: failed to remove ${HC_DIR}"
+    # remove all symlinks
+    find ${HC_DIR} -type l -exec rm -f {} \; 2>/dev/null
+    (( $? == 0 )) || echo "WARN: failed to remove symlinks in ${HC_DIR}"
 fi
 if [[ -d ${HC_ETC_DIR} ]]
 then

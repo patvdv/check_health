@@ -16,25 +16,35 @@ chown -R root:root /opt/hc /etc/opt/hc 2>/dev/null
 chown root:root /etc/logrotate.d/check_health 2>/dev/null
 chmod 644 /etc/logrotate.d/check_health 2>/dev/null
 # copy configuration files
-if [[ ! -f ${HC_ETC_DIR}/core/check_health.conf ]]
+if [[ -f ${HC_ETC_DIR}/core/check_health.conf.dist ]]
 then
-    # copy main configuration file
-    cp -p ${HC_ETC_DIR}/core/check_health.conf.dist ${HC_ETC_DIR}/core/check_health.conf >/dev/null
-    (( $? == 0 )) || \
-    {
-        echo "ERROR: could not copy main config file in ${HC_ETC_DIR}/core"
-        exit 1
-    }
+    if [[ ! -f ${HC_ETC_DIR}/core/check_health.conf ]]
+    then
+        # copy main configuration file
+        cp -p ${HC_ETC_DIR}/core/check_health.conf.dist ${HC_ETC_DIR}/core/check_health.conf >/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not copy main config file in ${HC_ETC_DIR}/core"
+            exit 1
+        }
+    fi
+else
+    echo "WARN: could not check_health config .dist file in ${HC_ETC_DIR}/core"
 fi
-if [[ ! -f ${HC_ETC_DIR}/check_host.conf ]]
+if [[ -f ${HC_ETC_DIR}/check_host.conf.dist ]]
 then
-    # copy host check configuration file
-    cp -p ${HC_ETC_DIR}/check_host.conf.dist ${HC_ETC_DIR}/check_host.conf >/dev/null
-    (( $? == 0 )) || \
-    {
-        echo "ERROR: could not copy host check config file in ${HC_ETC_DIR}"
-        exit 1
-    }
+    if [[ ! -f ${HC_ETC_DIR}/check_host.conf ]]
+    then
+        # copy host check configuration file
+        cp -p ${HC_ETC_DIR}/check_host.conf.dist ${HC_ETC_DIR}/check_host.conf >/dev/null
+        (( $? == 0 )) || \
+        {
+            echo "ERROR: could not copy host check config file in ${HC_ETC_DIR}"
+            exit 1
+        }
+    fi
+else
+    echo "WARN: could not find check_host config .dist file in ${HC_ETC_DIR}"
 fi
 # refresh symbolic FPATH links for core includes & plugins
 if [[ -x ${HC_BIN} ]]

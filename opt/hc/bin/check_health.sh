@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-07-16"
+typeset -r SCRIPT_VERSION="2019-10-24"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -94,6 +94,7 @@ typeset HC_RUN=""
 typeset HC_FAIL_ID=""
 # shellcheck disable=SC2034
 typeset HC_FILE_LINE=""
+typeset HC_LOG_HEALTHY=""
 typeset HC_NOW=""
 typeset HC_TIME_OUT=60
 typeset HC_MIN_TIME_OUT=30
@@ -101,6 +102,7 @@ typeset HC_MIN_TIME_OUT=30
 typeset HC_MSG_VAR=""
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
+typeset HC_WILL_FIX=""
 # shellcheck disable=SC2034
 typeset LINUX_DISTRO=""
 # shellcheck disable=SC2034
@@ -613,10 +615,11 @@ Parameters:
 --list-core     : show the available core plugins (mail,SMS,...)
 --list-include  : show the available includes/libraries
 --log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
-                  (can be overridden by --no-log to disable all logging)
+                  (overrides \$HC_LOG_HEALTHY and can itself be overridden by --no-log to disable all logging)
 --mail-to       : list of e-mail address(es) to which an e-mail alert will be send to [requires mail core plugin]
 --newer         : show the (failed) events for each HC that are newer than the given date
 --no-fix        : do not apply fix/healing logic for failed health checks (if available)
+                  (overrides \$HC_WILL_FIX)
 --no-lock       : disable locking to allow concurrent script executions
 --no-log        : do not log any messages to the script log file or health check results.
 --no-monitor    : do not stop the execution of a HC after \$HC_TIME_OUT seconds
@@ -630,7 +633,7 @@ Parameters:
 --sms-provider  : name of a supported SMS provider (see \$SMS_PROVIDERS) [requires SMS core plugin]
 --sms-to        : name of person or group to which a sms alert will be send to [requires SMS core plugin]
 --timeout       : maximum runtime of a HC plugin in seconds (overrides \$HC_TIME_OUT)
---today         : show today's (failed) events (HC and their combined STC value)
+--today         : show (failed) events of today (HC and their combined STC value)
 --version       : show the timestamp of the script.
 --with-history  : also include events that have been archived already (reporting)
 --with-rc       : define RC handling (plugin) when --flip-rc is used
@@ -741,6 +744,24 @@ then
 else
     # shellcheck source=/dev/null
     . "${CONFIG_FILE}"
+fi
+
+# reconcile global settings w/ cmd-line parameters
+if (( ARG_LOG_HEALTHY == 0 ))
+then
+    case "${HC_LOG_HEALTHY}" in
+        yes|YES|Yes)
+            ARG_LOG_HEALTHY=1
+            ;;
+    esac
+fi
+if (( ARG_NO_FIX == 0 ))
+then
+    case "${HC_WILL_FIX}" in
+        no|NO|No)
+            ARG_NO_FIX=1
+            ;;
+    esac
 fi
 
 return 0

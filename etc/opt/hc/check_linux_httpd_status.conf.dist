@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_linux_autofs.conf
+# @(#) check_linux_httpd_status.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_autofs HC plugin.
+# This is a configuration file for the check_linux_httpd_status HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
@@ -11,19 +11,16 @@
 # [default: no]
 log_healthy="no"
 
-# specify whether to fix autofs (if needed)
-# [default: no]
-fix_autofs="no"
+# specify which type of process check to use
+# Format: <auto|pgrep|sysv|systemd>. NULL value equals to "auto"
+# [default: auto]
+# Compatibility: >=2019-11-01
+check_type="auto"
 
-# number of times to attempt to restart the autofs daemon
-# (requires fix_autofs=yes)
-# [default: 3]
-retry_start=3
-
-# number of seconds to sleep between daemon restart attempts
-# (requires fix_autofs=yes)
-# [default: 5]
-sleep_time=5
+# specify custom path to the httpd binary
+# [default: null]
+# Compatibility: >=2019-11-01
+httpd_bin=""
 
 
 #******************************************************************************

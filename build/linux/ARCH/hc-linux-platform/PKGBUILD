@@ -55,6 +55,7 @@ package() {
     install -D -m 644 etc/opt/hc/check_linux_hpacucli.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hpacucli.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_hplog.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hplog.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_hpssacli.conf.dist ${pkgdir}/etc/opt/hc/check_linux_hpssacli.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_httpd_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_httpd_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_mysqld_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_mysqld_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_ntp_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_ntp_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_process_limits.conf.dist ${pkgdir}/etc/opt/hc/check_linux_process_limits.conf.dist

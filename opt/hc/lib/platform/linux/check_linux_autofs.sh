@@ -33,7 +33,7 @@ function check_linux_autofs
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-07-14"                           # YYYY-MM-DD
+typeset _VERSION="2019-10-24"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # shellcheck disable=SC2034
 typeset _HC_CAN_FIX=1                                   # plugin has fix/healing logic?
@@ -136,6 +136,13 @@ fi
 # check if autofs is enabled
 log "checking if autofs daemon is enabled"
 _HAS_SERVICE=$(linux_has_service "autofs")
+(( $? > 0)) && {
+    _MSG="error in function {linux_has_service}"
+    log_hc "$0" 1 "${_MSG}"
+    # dump debug info
+    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+    return 1
+}
 if (( _HAS_SERVICE == 2 ))
 then
     _MSG="autofs service is enabled"
@@ -147,6 +154,13 @@ then
     # check if autofs is running
     log "checking if autofs daemon is active"
     _IS_ACTIVE=$(linux_runs_service autofs)
+    (( $? > 0)) && {
+        _MSG="error in function {linux_runs_service }"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 1
+    }
     if (( _IS_ACTIVE > 0 ))
     then
         _MSG="autofs daemon is running"
@@ -170,9 +184,23 @@ then
                 sleep ${_SLEEP_TIME}
                 _RETRY_COUNT=$(( _RETRY_COUNT + 1 ))
                 _IS_ACTIVE=$(linux_runs_service "autofs")
+                (( $? > 0)) && {
+                    _MSG="error in function {linux_runs_service }"
+                    log_hc "$0" 1 "${_MSG}"
+                    # dump debug info
+                    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+                    return 1
+                }
             done
             # check again if autofs is running
             _IS_ACTIVE=$(linux_runs_service "autofs")
+            (( $? > 0)) && {
+                _MSG="error in function {linux_runs_service }"
+                log_hc "$0" 1 "${_MSG}"
+                # dump debug info
+                (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+                return 1
+            }
             if (( _IS_ACTIVE > 0 ))
             then
                 _MSG="autofs daemon is running"

@@ -11,7 +11,7 @@
 # [default: no]
 log_healthy="no"
 
-# specify whether to extend the current ELDO FS (if needed)
+# specify whether to fix autofs (if needed)
 # [default: no]
 fix_autofs="no"
 

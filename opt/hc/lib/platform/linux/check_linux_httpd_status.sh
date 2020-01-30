@@ -30,6 +30,8 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2019-11-01: added support for configuration parameters 'check_type' and
+# @(#)             'httpd_bin' [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,9 +40,10 @@
 function check_linux_httpd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
+typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _HTTPD_INIT_SCRIPT="/etc/init.d/httpd"
 typeset _HTTPD_SYSTEMD_SERVICE="httpd.service"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2019-11-01"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -49,11 +52,15 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
-typeset _CHECK_SYSTEMD_SERVICE=0
-typeset _HTTPD_BIN=""
 typeset _MSG=""
 typeset _STC=0
+typeset _CHECK_SYSTEMD_SERVICE=0
+typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
+typeset _CFG_HTTPD_BIN=""
+typeset _HTTPD_BIN=""
+typeset _CFG_CHECK_TYPE=""
+typeset _DO_PGREP=0
 typeset _RC=0
 
 # handle arguments (originally comma-separated)
@@ -65,6 +72,50 @@ do
             ;;
     esac
 done
+
+# handle configuration file
+[[ -n "${ARG_CONFIG_FILE}" ]] && _CONFIG_FILE="${ARG_CONFIG_FILE}"
+if [[ ! -r ${_CONFIG_FILE} ]]
+then
+    warn "unable to read configuration file at ${_CONFIG_FILE}"
+    return 1
+fi
+# read configuration values
+_CFG_CHECK_TYPE=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'check_type')
+case "${_CFG_CHECK_TYPE}" in
+    pgrep|Pgrep|PGREP)
+        _DO_PGREP=1
+        log "using pgrep process check (config override)"
+        ;;
+    sysv|Sysv|SYSV)
+        LINUX_INIT="sysv"
+        log "using init based process check (config override)"
+        ;;
+    systemd|Systemd|SYSTEMD)
+        LINUX_INIT="systemd"
+        log "using systemd based process check (config override)"
+        ;;
+    *)
+        # no overrides
+        :
+        ;;
+esac
+_CFG_HTTPD_BIN=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'httpd_bin')
+if [[ -n "${_CFG_HTTPD_BIN}" ]]
+then
+    _HTTPD_BIN="${_CFG_HTTPD_BIN}"
+    log "setting httpd path to {${_HTTPD_BIN}} (config override)"
+fi
+_CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
+case "${_CFG_HEALTHY}" in
+    yes|YES|Yes)
+        _LOG_HEALTHY=1
+        ;;
+    *)
+        # do not override hc_arg
+        (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
+        ;;
+esac
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -80,44 +131,58 @@ else
     log "not logging/showing passed health checks"
 fi
 
+# check httpd (if specified)
+if [[ -z "${_HTTPD_BIN}" ]]
+then
+    _HTTPD_BIN="$(command -v httpd 2>>${HC_STDERR_LOG})"
+fi
+if [[ ! -x ${_HTTPD_BIN} || -z "${_HTTPD_BIN}" ]]
+then
+    warn "httpd (apache) is not installed here"
+    return 1
+fi
+
 # ---- process state ----
 # 1) try using the init ways
-linux_get_init
-case "${LINUX_INIT}" in
-    'systemd')
-        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_HTTPD_SYSTEMD_SERVICE}")
-        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
-        then
-            systemctl --quiet is-active ${_HTTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
-        else
-            warn "systemd unit file not found {${_HTTPD_SYSTEMD_SERVICE}}"
-            _RC=1
-        fi
-        ;;
-    'upstart')
-        warn "code for upstart managed systems not implemented, NOOP"
-        _RC=1
-        ;;
-    'sysv')
-        # check running SysV
-        if [[ -x ${_HTTPD_INIT_SCRIPT} ]]
-        then
-            if (( $(${_HTTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+if (( _DO_PGREP == 0 ))
+then
+    [[ -n "${LINUX_INIT}" ]] || linux_get_init
+    case "${LINUX_INIT}" in
+        'systemd')
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_HTTPD_SYSTEMD_SERVICE}")
+            if (( _CHECK_SYSTEMD_SERVICE > 0 ))
             then
-                _STC=1
+                systemctl --quiet is-active ${_HTTPD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+            else
+                warn "systemd unit file not found {${_HTTPD_SYSTEMD_SERVICE}}"
+                _RC=1
             fi
-        else
-            warn "sysv init script not found {${_HTTPD_INIT_SCRIPT}}"
+            ;;
+        'upstart')
+            warn "code for upstart managed systems not implemented, NOOP"
             _RC=1
-        fi
-        ;;
-    *)
-        _RC=1
-        ;;
-esac
+            ;;
+        'sysv')
+            # check running SysV
+            if [[ -x ${_HTTPD_INIT_SCRIPT} ]]
+            then
+                if (( $(${_HTTPD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+                then
+                    _STC=1
+                fi
+            else
+                warn "sysv init script not found {${_HTTPD_INIT_SCRIPT}}"
+                _RC=1
+            fi
+            ;;
+        *)
+            _RC=1
+            ;;
+    esac
+fi
 
 # 2) try the pgrep way (note: old pgreps do not support '-c')
-if (( _RC > 0 ))
+if (( _DO_PGREP > 0 || _RC > 0 ))
 then
     (( $(pgrep -u root httpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
@@ -140,23 +205,18 @@ then
 fi
 
 # ---- config state ----
-_HTTPD_BIN="$(command -v httpd 2>>${HC_STDERR_LOG})"
-if [[ -x ${_HTTPD_BIN} && -n "${_HTTPD_BIN}" ]]
+${_HTTPD_BIN} -t >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+if (( $? == 0 ))
 then
-    # validate main configuration
-    ${_HTTPD_BIN} -t >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-    if (( $? == 0 ))
-    then
-        _MSG="httpd configuration files are syntactically correct"
-        _STC=0
-    else
-        _MSG="httpd configuration files have syntax error(s) {httpd -s}"
-        _STC=1
-    fi
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-    then
-        log_hc "$0" ${_STC} "${_MSG}"
-    fi
+    _MSG="httpd configuration files are syntactically correct"
+    _STC=0
+else
+    _MSG="httpd configuration files have syntax error(s) {httpd -s}"
+    _STC=1
+fi
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
 fi
 
 return 0
@@ -168,6 +228,10 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
+CONFIG      : $3 with parameters:
+               log_healthy=<yes|no>
+               check_type=<auto|pgrep|sysv|systemd> [compt. >=2019-11-01]
+               httpd_bin=<path_to_httpd> [compt. >=2019-11-01]
 PURPOSE     : Checks whether httpd (apache service) is running and whether the
               httpd configuration files are syntactically correct
 LOG HEALTHY : Supported
