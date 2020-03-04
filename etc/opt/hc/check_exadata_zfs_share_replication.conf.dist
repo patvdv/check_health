@@ -35,14 +35,18 @@ max_replication_lag=300
 # entry must be present: either a wildcard or custom entry.
 # Caveat: any share must finally resolve to one entry only.
 # Format:
-#  zfs:<host_name>:<replication_name|*>:<true|false|*>:<success|failed|*>:[<max_replication_lag>]:[day1,day2,..|*>]
+#  zfs:<host_name>:<replication_name|*>:<true|false|*>:<success|failed|*>:[<max_replication_lag>]:[day1,day2,..|*>]:[<hour|<start_hour-end_hour>|*>]
+#
+#   <day>: 3 letter day name (case insensitive)
+#   <hour>: 24 hours notation (start and end hours are inclusive)
+#
 # Examples:
 # check rep_share1 on myzfs1 with a custom threshold of 300 seconds on every day of the week
 # zfs:myzfs1:rep_share1:*:*:600:*
 # check all shares of myzfs2 with a custom threshold of 1200 seconds on Sunday and Monday
 # zfs:myzfs2:*:*:*:1200:Sun,Mon
-# check all shares of myzfs3 with the general threshold but only on Friday
-# zfs:myzfs3:*:*:*:Fri
+# check all shares of myzfs3 with the general threshold but only on Friday between 7am-10m
+# zfs:myzfs3:*:*:*:Fri:07-10
 # disable all shares of myzfs4 from checking
 # zfs:myzfs4:*:*:*:0:*
 # disable check of rep_share7 on myzfs5

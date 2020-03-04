@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2020-01-27"                               # YYYY-MM-DD
+typeset _VERSION="2020-03-04"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -607,6 +607,64 @@ case "${1}" in
     *)
         # not numeric
         return 1
+        ;;
+esac
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_expand_numerical_range()
+# DOES: expand numerical range (X-Y) to comma-separated list of numbers
+# EXPECTS: [string]
+# OUTPUTS: [string]
+# RETURNS: 0=no error occurred; <>0=some error occurred
+# REQUIRES: n/a
+function data_expand_numerical_range
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _NUM_LIST=""
+
+case "${1}" in
+    *-*)
+        # range operator, expand
+        # check if there are only 2 operands (fields)
+        if (( $(print "${1}" | awk -F '-' '{ print NF }' 2>/dev/null) > 2 ))
+        then
+            (( ARG_DEBUG > 0 )) && debug "in range $1 found more than one range (-) operator"
+            return 1
+        fi
+        # check if X < Y
+        if $(print "${1}" | awk -F '-' '{ if ($1 < $2) { exit 1 }}' 2>/dev/null)
+        then
+            (( ARG_DEBUG > 0 )) && debug "in range $1 operator Y is smaller or equal to operator Y"
+            return 1
+        fi
+        # expand list
+        _NUM_LIST=$(print "${1}"| awk -F '-' '
+            BEGIN { count = 0; }
+            {
+                while ($1 + count < $2) {
+                    if (length (NUM_LIST) == 0) {
+                        NUM_LIST = sprintf ("%s", $1 + count);
+                    } else {
+                        NUM_LIST = sprintf ("%s,%s", NUM_LIST, $1 + count);
+                    }
+                    count++;
+                }
+            }
+            END { print NUM_LIST; }')
+        if [[ -z "${_NUM_LIST}" ]]
+        then
+            (( ARG_DEBUG > 0 )) && debug "range conversion returned empty list"
+            return 1
+        else
+            print "${_NUM_LIST}"
+        fi
+        ;;
+    *)
+        # no range, return as-is
+        print "${1}"
         ;;
 esac
 
