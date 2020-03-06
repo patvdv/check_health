@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2020-03-04"                               # YYYY-MM-DD
+typeset _VERSION="2020-03-06"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -237,7 +237,7 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_magic_unquote()
 # DOES: magically unquotes a needle in a string (default needle is: %)
-# EXPECTS: to be magically unquoted [string]; $2=needle [string]
+# EXPECTS: $1=to be magically unquoted [string]; $2=needle [string]
 # OUTPUTS: magically unquoted [string]
 # RETURNS: n/a
 # REQUIRES: n/a
@@ -616,7 +616,8 @@ return 0
 # -----------------------------------------------------------------------------
 # @(#) FUNCTION: data_expand_numerical_range()
 # DOES: expand numerical range (X-Y) to comma-separated list of numbers
-# EXPECTS: [string]
+# EXPECTS: $1=numerical range [string]
+#          $2=flag for leading zeroes <10 [0=do not add (default),1=add]
 # OUTPUTS: [string]
 # RETURNS: 0=no error occurred; <>0=some error occurred
 # REQUIRES: n/a
@@ -624,6 +625,7 @@ function data_expand_numerical_range
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _NUM_LIST=""
+typeset _HAS_LEAD_ZERO=${2:0}
 
 case "${1}" in
     *-*)
@@ -641,19 +643,21 @@ case "${1}" in
             return 1
         fi
         # expand list
-        _NUM_LIST=$(print "${1}"| awk -F '-' '
+        _NUM_LIST=$(print "${1}"| awk -F '-' -v has_lead_zero=${_HAS_LEAD_ZERO} '
             BEGIN { count = 0; }
             {
-                while ($1 + count < $2) {
+                while ($1 + count <= $2) {
+                    # add leading zero to sprintf when < 10
+                    if (has_lead_zero > 0 && $1 + count < 10) { lead_zero = "0" } else { lead_zero = "" }
                     if (length (NUM_LIST) == 0) {
-                        NUM_LIST = sprintf ("%s", $1 + count);
+                        NUM_LIST = sprintf ("%" lead_zero "2d", $1 + count);
                     } else {
-                        NUM_LIST = sprintf ("%s,%s", NUM_LIST, $1 + count);
-                    }
+                        NUM_LIST = sprintf ("%s,%" lead_zero "2d", NUM_LIST, $1 + count);                    }
                     count++;
                 }
             }
-            END { print NUM_LIST; }')
+            # remove space from end result and print
+            END { gsub(/[[:space:]]/, "", NUM_LIST); print NUM_LIST; }')
         if [[ -z "${_NUM_LIST}" ]]
         then
             (( ARG_DEBUG > 0 )) && debug "range conversion returned empty list"

@@ -31,7 +31,8 @@
 # @(#) 2019-05-14: small fixes [Patrick Van der Veken]
 # @(#) 2020-01-27: addition of day check option +
 # @(#)             newline config value check [Patrick Van der Veken]
-# @(#) 2020-03-05: addition of hour check option
+# @(#) 2020-03-05: addition of hour check option + fix
+# @(#) 2020-03-06: fix for expanding numerical range
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -41,7 +42,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2020-03-04"                           # YYYY-MM-DD
+typeset _VERSION="2020-03-06"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -88,7 +89,7 @@ typeset _SSH_BIN=""
 typeset _SSH_OUTPUT=""
 typeset _ZFS_DATA=""
 typeset _WEEKDAY=$(data_lc "$(date '+%a' 2>/dev/null)")  # Sun
-typeset _HOUR=$(data_strip_space "$(date '+%k' 2>/dev/null)") # 7,23 etc
+typeset _HOUR=$(data_strip_space "$(date '+%H' 2>/dev/null)") # 7,23 etc
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -289,7 +290,8 @@ do
     then
         _REPLICATION_HOURS="${_HOUR}"
     else
-        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}")
+        # expand range with leading zeroes
+        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}" 1)
     fi
 
     # perform checks
@@ -351,7 +353,7 @@ do
                 log_hc "$0" ${_STC} "${_MSG}" "${_REPLICATION_LAG}" "${_CFG_REPLICATION_LAG}"
             fi
         else
-            warn "check of ${_ZFS_HOST}:${_REPLICATION_NAME} is not configured for this hour/these hours: ${_REPLICATION_HOURS}"
+            warn "check of ${_ZFS_HOST}:${_REPLICATION_NAME} is only configured for this/these hour(s): ${_REPLICATION_HOURS}"
         fi
     else
         warn "check of ${_ZFS_HOST}:${_REPLICATION_NAME} is not configured for today"
