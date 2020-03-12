@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2019-10-24"
+typeset -r SCRIPT_VERSION="2020-03-12"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -134,6 +134,7 @@ typeset ARG_HC_ARGS=""          # no extra arguments to HC plug-in by default
 typeset ARG_HISTORY=0           # include historical events is off by default
 typeset ARG_LAST=0              # report last events
 typeset ARG_LIST=""             # list all by default
+typeset ARG_LIST_DETAILS=0      # list with full details is off by default
 typeset ARG_LOCK=1              # lock for concurrent script executions is on by default
 typeset ARG_LOG=1               # logging is on by default
 typeset ARG_NO_FIX=0            # fix/healing is not disabled by default
@@ -571,7 +572,7 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
+    [--list=<needle>] | [--list-details] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
         (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-fix] [--no-log] [--no-lock] [--no-monitor] [[--flip-rc] [--with-rc=<count|max|sum>]]]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
@@ -606,12 +607,15 @@ Parameters:
                   in double quotes (example: --hc_args="arg1,arg2=value,arg3").
 --id            : value of a FAIL ID (must be specified as uninterrupted sequence of numbers)
 --last          : show the last (failed) events for each HC and their combined STC value
---list          : show the available health checks. Use <needle> to search with wildcards. Following details are shown:
+--list          : show the available health checks in a terse manner. Use --list-details for a more extensive list.
+--list-details  : show the available health checks with following details included:
                   - health check (plugin) name
                   - state of the HC plugin (disabled/enabled)
                   - version of the HC plugin
                   - whether the HC plugin requires a configuration file in ${CONFIG_DIR}
                   - whether the HC plugin is scheduled by cron
+                  - whether the plugin contains a facility for --log-healthy and/or whether it is enabled
+                  - whether the plugin contains fix/healing logic (see --no-fix)
 --list-core     : show the available core plugins (mail,SMS,...)
 --list-include  : show the available includes/libraries
 --log-healthy   : log/show also passed health checks. By default this is off when the plugin support this feature.
@@ -953,6 +957,10 @@ do
             else
                 ARG_ACTION=9
             fi
+            ;;
+        -list-details|--list-details)
+            ARG_LIST_DETAILS=1
+            ARG_ACTION=9
             ;;
         -list-hc|--list-hc|-list-all|--list-all)
             print -u2 "WARN: deprecated option. Use --list | --list=<needle>"

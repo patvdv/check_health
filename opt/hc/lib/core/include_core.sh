@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2019-11-03"           # YYYY-MM-DD
+typeset _VERSION="2020-03-12"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -1594,10 +1594,18 @@ fi
 # print header
 if [[ "${FACTION}" != "list" ]]
 then
-    # shellcheck disable=SC1117
-    printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?" "Fix?"
-    # shellcheck disable=SC2183,SC1117
-    printf "%110s\n" | tr ' ' -
+    if (( ARG_LIST_DETAILS > 0 ))
+    then
+        # shellcheck disable=SC1117
+        printf "%-40s\t%-8s\t%s\t\t%s\t%s\t%s\t%s\n" "Health Check" "State" "Version" "Config?" "Sched?" "H+?" "Fix?"
+        # shellcheck disable=SC2183,SC1117
+        printf "%110s\n" | tr ' ' -
+    else
+        # shellcheck disable=SC1117
+        printf "%-40s\t%-8s\n" "Health Check" "State"
+        # shellcheck disable=SC2183,SC1117
+        printf "%60s\n" | tr ' ' -
+    fi
 fi
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core$" 2>/dev/null | sort 2>/dev/null |\
     while read -r FDIR
@@ -1607,68 +1615,10 @@ do
         # cache script contents in memory
         FSCRIPT=$(<${FFILE})
 
+        # --list (basic)
         # find function name but skip helper functions in the plug-in file (function _name)
         FNAME=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]]+[^_]" 2>/dev/null)
-        # look for version string (cut off comments but don't use [:space:] in tr)
-        FVERSION=$(print -R "${FSCRIPT}" | grep '^typeset _VERSION=' 2>/dev/null |\
-            awk 'match($0,/[0-9]+-[0-9]+-[0-9]+/){print substr($0, RSTART, RLENGTH)}' 2>/dev/null)
-        # look for configuration file string
-        HAS_FCONFIG=$(print -R "${FSCRIPT}" | grep -c '^typeset _CONFIG_FILE=' 2>/dev/null)
-        if (( HAS_FCONFIG > 0 ))
-        then
-            FCONFIG="Yes"
-            # *.conf.dist first
-            if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf.dist ]]
-            then
-                # check for log_healthy parameter (config file)
-                HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf.dist" data_get_lvalue_from_config 'log_healthy')
-                case "${HAS_FHEALTHY}" in
-                    no|NO|No)
-                        FHEALTHY="No"
-                        ;;
-                    yes|YES|Yes)
-                        FHEALTHY="Yes"
-                        ;;
-                    *)
-                        FHEALTHY="N/S"
-                        ;;
-                esac
-            else
-                FHEALTHY="N/S"
-            fi
-            # *.conf next
-            if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
-            then
-                # check for log_healthy parameter (config file)
-                HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf" data_get_lvalue_from_config 'log_healthy')
-                case "${HAS_FHEALTHY}" in
-                    no|NO|No)
-                        FHEALTHY="No"
-                        ;;
-                    yes|YES|Yes)
-                        FHEALTHY="Yes"
-                        ;;
-                    *)
-                        FHEALTHY="N/S"
-                        ;;
-                esac
-            fi
-        # check for log_healthy support through --hc-args (plugin)
-        elif (( $(print -R "${FSCRIPT}" | grep -c -E -e "_LOG_HEALTHY" 2>/dev/null) > 0 ))
-        then
-            FCONFIG="No"
-            FHEALTHY="S"
-        else
-            FCONFIG="No"
-            FHEALTHY="N/S"
-        fi
-        # check fix
-        if (( $(print -R "${FSCRIPT}" | grep -c -E -e "_HC_CAN_FIX=1" 2>/dev/null) > 0 ))
-        then
-            FFIX="Yes"
-        else
-            FFIX="No"
-        fi
+
         # check state
         DISABLE_FFILE="$(print ${FFILE##*/} | sed 's/\.sh$//')"
         if [[ -f "${STATE_PERM_DIR}/${DISABLE_FFILE}.disabled" ]]
@@ -1677,30 +1627,104 @@ do
         else
             FSTATE="enabled"
         fi
-        # reset state when unlinked
-        [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
-        # check scheduling
-        is_scheduled "${FNAME#function *}"
-        # shellcheck disable=SC2181
-        if (( $? == 0 ))
+
+        # --list-details
+        if (( ARG_LIST_DETAILS > 0 ))
         then
-            FSCHEDULED="No"
-        else
-            FSCHEDULED="Yes"
+            # look for version string (cut off comments but don't use [:space:] in tr)
+            FVERSION=$(print -R "${FSCRIPT}" | grep '^typeset _VERSION=' 2>/dev/null |\
+                awk 'match($0,/[0-9]+-[0-9]+-[0-9]+/){print substr($0, RSTART, RLENGTH)}' 2>/dev/null)
+                # look for configuration file string
+                HAS_FCONFIG=$(print -R "${FSCRIPT}" | grep -c '^typeset _CONFIG_FILE=' 2>/dev/null)
+                if (( HAS_FCONFIG > 0 ))
+                then
+                    FCONFIG="Yes"
+                    # *.conf.dist first
+                    if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf.dist ]]
+                    then
+                        # check for log_healthy parameter (config file)
+                        HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf.dist" data_get_lvalue_from_config 'log_healthy')
+                        case "${HAS_FHEALTHY}" in
+                            no|NO|No)
+                            FHEALTHY="No"
+                            ;;
+                            yes|YES|Yes)
+                            FHEALTHY="Yes"
+                            ;;
+                            *)
+                            FHEALTHY="N/S"
+                            ;;
+                        esac
+                    else
+                        FHEALTHY="N/S"
+                    fi
+                    # *.conf next
+                    if [[ -r ${CONFIG_DIR}/${FNAME#function *}.conf ]]
+                    then
+                        # check for log_healthy parameter (config file)
+                        HAS_FHEALTHY=$(_CONFIG_FILE="${CONFIG_DIR}/${FNAME#function *}.conf" data_get_lvalue_from_config 'log_healthy')
+                        case "${HAS_FHEALTHY}" in
+                            no|NO|No)
+                            FHEALTHY="No"
+                            ;;
+                            yes|YES|Yes)
+                            FHEALTHY="Yes"
+                            ;;
+                            *)
+                            FHEALTHY="N/S"
+                            ;;
+                        esac
+                    fi
+                    # check for log_healthy support through --hc-args (plugin)
+                elif (( $(print -R "${FSCRIPT}" | grep -c -E -e "_LOG_HEALTHY" 2>/dev/null) > 0 ))
+                then
+                    FCONFIG="No"
+                    FHEALTHY="S"
+                else
+                    FCONFIG="No"
+                    FHEALTHY="N/S"
+                fi
+                # check fix
+                if (( $(print -R "${FSCRIPT}" | grep -c -E -e "_HC_CAN_FIX=1" 2>/dev/null) > 0 ))
+                then
+                    FFIX="Yes"
+                else
+                    FFIX="No"
+                fi
+
+                # reset state when unlinked
+                [[ -h ${FFILE%%.*} ]] || FSTATE="unlinked"
+                # check scheduling
+                is_scheduled "${FNAME#function *}"
+                # shellcheck disable=SC2181
+                if (( $? == 0 ))
+                then
+                    FSCHEDULED="No"
+                else
+                    FSCHEDULED="Yes"
+                fi
         fi
 
         # show results
         if [[ "${FACTION}" != "list" ]]
         then
-            # shellcheck disable=SC1117
-            printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\t%s\n" \
-                "${FNAME#function *}" \
-                "${FSTATE}" \
-                "${FVERSION#typeset _VERSION=*}" \
-                "${FCONFIG}" \
-                "${FSCHEDULED}" \
-                "${FHEALTHY}" \
-                "${FFIX}"
+            if (( ARG_LIST_DETAILS > 0 ))
+            then
+                # shellcheck disable=SC1117
+                printf "%-40s\t%-8s\t%s\t%s\t%s\t%s\t%s\n" \
+                    "${FNAME#function *}" \
+                    "${FSTATE}" \
+                    "${FVERSION#typeset _VERSION=*}" \
+                    "${FCONFIG}" \
+                    "${FSCHEDULED}" \
+                    "${FHEALTHY}" \
+                    "${FFIX}"
+            else
+                # shellcheck disable=SC1117
+                printf "%-40s\t%-8s\n" \
+                    "${FNAME#function *}" \
+                    "${FSTATE}"
+            fi
         else
             # shellcheck disable=SC1117
             printf "%s\n" "${FNAME#function *}"
@@ -1735,11 +1759,18 @@ fi
 # legend
 if [[ "${FACTION}" != "list" ]]
 then
-    print
-    print "Config?: plugin has a default configuration file (Yes/No)"
-    print "Sched? : plugin is scheduled through cron (Yes/No)"
-    print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Supported/Not supported)"
-    print "Fix?   : plugin contains fix/healing logic (Yes/No) -- not used by default!"
+    if (( ARG_LIST_DETAILS > 0 ))
+    then
+        print
+        print "Config?: plugin has a default configuration file (Yes/No)"
+        print "Sched? : plugin is scheduled through cron (Yes/No)"
+        print "H+?    : plugin can choose whether to log/show passed health checks (Yes/No/Supported/Not supported)"
+        print "Fix?   : plugin contains fix/healing logic (Yes/No) -- not used by default!"
+    else
+        print
+        print "Tip: use --list-details to see a list of health checks with more details"
+
+    fi
 fi
 
 return 0
