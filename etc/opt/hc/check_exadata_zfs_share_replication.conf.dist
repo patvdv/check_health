@@ -33,21 +33,26 @@ max_replication_lag=300
 # will for this given share will be skipped (this allows for exclusion of shares)
 # In order to check share(s) for a given ZFS appliance at least one configuration
 # entry must be present: either a wildcard or custom entry.
+# Caveat: any share must finally resolve to one entry only.
 # Format:
-#  zfs:<host_name>:<replication_name|*>:<true|false|*>:<success|failed|*>:[<max_replication_lag>]
+#  zfs:<host_name>:<replication_name|*>:<true|false|*>:<success|failed|*>:[<max_replication_lag>]:[day1,day2,..|*>]:[<hour|<start_hour-end_hour>|*>]
+#
+#   <day>: 3 letter day name (case insensitive)
+#   <hour>: 24 hours notation (start and end hours are inclusive)
+#
 # Examples:
-# check rep_share1 on myzfs1 with a custom threshold of 300 seconds
-# zfs:myzfs1:rep_share1:*:*:600
-# check all shares of myzfs2 with a custom threshold of 1200 seconds
-# zfs:myzfs2:*:*:*:1200
-# check all shares of myzfs3 with the general threshold
-# zfs:myzfs3:*:*:*:
+# check rep_share1 on myzfs1 with a custom threshold of 300 seconds on every day of the week
+# zfs:myzfs1:rep_share1:*:*:600:*
+# check all shares of myzfs2 with a custom threshold of 1200 seconds on Sunday and Monday
+# zfs:myzfs2:*:*:*:1200:Sun,Mon
+# check all shares of myzfs3 with the general threshold but only on Friday between 7am-10m
+# zfs:myzfs3:*:*:*:Fri:07-10
 # disable all shares of myzfs4 from checking
-# zfs:myzfs4:*:*:*:0
+# zfs:myzfs4:*:*:*:0:*
 # disable check of rep_share7 on myzfs5
-# zfs:myzfs5:rep_share7:*:*:0
-# check that rep_share4 on myzfs6 is inactive
-# zfs:myzfs6:rep_share4:false:*:
+# zfs:myzfs5:rep_share7:*:*:0:*
+# check that rep_share4 on myzfs6 is inactive (every day of the week)
+# zfs:myzfs6:rep_share4:false:*:*
 
 
 #******************************************************************************

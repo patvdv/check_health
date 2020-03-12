@@ -19,8 +19,8 @@
 # @(#) MAIN: check_exadata_zfs_share_usage
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_get_lvalue_from_config, dump_logs(),
-#           init_hc(), linux_exec_ssh(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_get_lvalue_from_config, data_has_newline(),
+#           dump_logs(), init_hc(), linux_exec_ssh(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
@@ -28,7 +28,7 @@
 # @(#) 2019-04-09: fix bad math in ZFS script & HC message [Patrick Van der Veken]
 # @(#) 2019-04-12: small fixes [Patrick Van der Veken]
 # @(#) 2019-05-14: small fixes [Patrick Van der Veken]
-# @(#) 2019-07-05: help fix [Patrick Van der Veken]
+# @(#) 2020-01-27: newline config value check [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +38,7 @@ function check_exadata_zfs_share_usage
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-07-05"                           # YYYY-MM-DD
+typeset _VERSION="2020-01-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # usage query script -- DO NOT CHANGE --
 # prj1:share1:16
@@ -233,6 +233,13 @@ do
     _CFG_ZFS_LINE=$(grep -E -e "^zfs:${_ZFS_HOST}:${_PROJECT_NAME}:${_SHARE_NAME}:" ${_CONFIG_FILE} 2>/dev/null)
     if [[ -n "${_CFG_ZFS_LINE}" ]]
     then
+        data_has_newline "${_CFG_ZFS_LINE}"
+        # shellcheck disable=SC2181
+        if (( $? > 0 ))
+        then
+            warn "ignoring ${_ZFS_HOST}:${_PROJECT_NAME}:${_SHARE_NAME} because it parses to multiple results in ${_CONFIG_FILE}"
+            continue
+        fi
         (( ARG_DEBUG > 0 )) && debug "found custom definition for ${_ZFS_HOST}:${_PROJECT_NAME}/${_SHARE_NAME} in configuration file ${_CONFIG_FILE}"
         _CFG_SPACE_THRESHOLD=$(print "${_CFG_ZFS_LINE}" | cut -f5 -d':' 2>/dev/null)
         # null value means general threshold
@@ -290,7 +297,6 @@ CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                ssh_user=<ssh_user_account>
                ssh_key_file=<ssh_private_key_file>
-               ssh_opts=<ssh_options>
                max_space_usage=<general_max_space_treshold>
               and formatted stanzas of:
                zfs:<host_name>:<project_name>:<share_name>:<max_space_threshold>
