@@ -21,7 +21,8 @@
 # EXPECTS: see _show_usage()
 # REQUIRES: data_comma2space(), data_contains_string(), data_expand_numerical_range(),
 #           data_get_lvalue_from_config(), data_has_newline(), data_is_numeric(),
-#           dump_logs(), init_hc(), linux_exec_ssh(), log_hc(), warn()
+#           data_lc(), data_strip_space(), dump_logs(), init_hc(), linux_exec_ssh(),
+#           log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-18: initial version [Patrick Van der Veken]
@@ -291,7 +292,7 @@ do
         _REPLICATION_HOURS="${_HOUR}"
     else
         # expand range with leading zeroes
-        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}" 1)
+        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}"
     fi
 
     # perform checks

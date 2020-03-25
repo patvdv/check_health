@@ -625,7 +625,7 @@ function data_expand_numerical_range
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _NUM_LIST=""
-typeset _HAS_LEAD_ZERO=${2:0}
+typeset _HAS_LEAD_ZERO=${2:-0}
 
 case "${1}" in
     *-*)
