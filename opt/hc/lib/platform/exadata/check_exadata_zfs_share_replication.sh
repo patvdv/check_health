@@ -33,7 +33,7 @@
 # @(#) 2020-01-27: addition of day check option +
 # @(#)             newline config value check [Patrick Van der Veken]
 # @(#) 2020-03-05: addition of hour check option + fix
-# @(#) 2020-03-06: fix for expanding numerical range
+# @(#) 2020-03-26: fix for expanding numerical range
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -43,7 +43,7 @@ function check_exadata_zfs_share_replication
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2020-03-06"                           # YYYY-MM-DD
+typeset _VERSION="2020-03-26"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # replication query script -- DO NOT CHANGE --
 # prj1/share1:true:idle:success:111
@@ -292,7 +292,7 @@ do
         _REPLICATION_HOURS="${_HOUR}"
     else
         # expand range with leading zeroes
-        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}"
+        _REPLICATION_HOURS=$(data_expand_numerical_range "${_CFG_REPLICATION_HOURS}" 1)
     fi
 
     # perform checks
