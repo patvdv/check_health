@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2020-03-12"
+typeset -r SCRIPT_VERSION="2020-04-07"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -103,6 +103,10 @@ typeset HC_MSG_VAR=""
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 typeset HC_WILL_FIX=""
+# shellcheck disable=SC2034
+typeset HC_REPORT_CACHE_LAST=""
+# shellcheck disable=SC2034
+typeset HC_REPORT_CACHE_TODAY=""
 # shellcheck disable=SC2034
 typeset LINUX_DISTRO=""
 # shellcheck disable=SC2034
@@ -255,8 +259,8 @@ case "${KSH_VERSION}" in
         . ${FPATH_PARENT}/core/include_core.sh
         if [[ -r ${FPATH_PARENT}/core/include_data.sh && -h ${FPATH_PARENT}/core/include_data ]]
         then
-                # shellcheck source=/dev/null
                 (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${FPATH_PARENT}/core/include_data.sh"
+                # shellcheck source=/dev/null
                 . ${FPATH_PARENT}/core/include_data.sh
         else
                 print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_data.sh is not present (tip: run --fix-symlinks)"
@@ -264,8 +268,8 @@ case "${KSH_VERSION}" in
         fi
         if [[ -r ${FPATH_PARENT}/core/include_os.sh && -h ${FPATH_PARENT}/core/include_os ]]
         then
-                # shellcheck source=/dev/null
                 (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${FPATH_PARENT}/core/include_os.sh"
+                # shellcheck source=/dev/null
                 . ${FPATH_PARENT}/core/include_os.sh
         else
                 print -u2 "ERROR: library file ${FPATH_PARENT}/core/include_os.sh is not present (tip: run --fix-symlinks)"
@@ -274,7 +278,7 @@ case "${KSH_VERSION}" in
         ;;
     *)
         # include include_*
-        find ${FPATH_PARENT}/core -name "include_*.sh" -type f -print 2>/dev/null | while read INCLUDE_FILE
+        find ${FPATH_PARENT}/core -name "include_*.sh" -type f -print 2>/dev/null | while read -r INCLUDE_FILE
         do
             if [[ -h ${INCLUDE_FILE%%.sh} ]]
             then
@@ -330,7 +334,7 @@ function check_lock_dir
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 if (( ARG_LOCK > 0 ))
 then
-    mkdir ${LOCK_DIR} >/dev/null || {
+    mkdir ${LOCK_DIR} >/dev/null 2>/dev/null || {
         print -u2 "ERROR: unable to acquire lock ${LOCK_DIR}"
         ARG_VERBOSE=0 warn "unable to acquire lock ${LOCK_DIR}"
         if [[ -f ${LOCK_DIR}/.pid ]]
@@ -464,12 +468,6 @@ then
         print -u2 "ERROR: you can only specify a value for '--timeout' in combination with '--run'"
         exit 1
     fi
-fi
-# --log-healthy
-if (( ARG_LOG_HEALTHY > 0 && ARG_ACTION != 4 ))
-then
-    print -u2 "ERROR: you can only use '--log-healthy' in combination with '--run'"
-    exit 1
 fi
 # check log location
 if (( ARG_LOG > 0 ))
@@ -959,6 +957,7 @@ do
             fi
             ;;
         -list-details|--list-details)
+            # shellcheck disable=SC2034
             ARG_LIST_DETAILS=1
             ARG_ACTION=9
             ;;

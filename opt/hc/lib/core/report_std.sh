@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-05-19"                               # YYYY-MM-DD
+typeset _VERSION="2020-04-07"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -59,8 +59,13 @@ typeset _OLDER_MONTH=""
 typeset _OLDER_YEAR=""
 typeset _NEWER_MONTH=""
 typeset _NEWER_YEAR=""
+typeset _HC_REPORT_CACHE_LAST_STUB="${STATE_PERM_DIR}/cache.report-last"
+typeset _HC_REPORT_CACHE_LAST_FILE=""
+typeset _HC_REPORT_CACHE_TODAY_FILE="${STATE_PERM_DIR}/cache.report-today"
+typeset _USE_CACHE=0
+typeset _CACHE_NOTE_BIT=""
 
-# set archive log stash
+# set archive log stash (never use cache files)
 if (( ARG_HISTORY > 0 )) || [[ -n "${ARG_OLDER}" ]] || [[ -n "${ARG_NEWER}" ]]
 then
     set +f  # file globbing must be on
@@ -148,10 +153,45 @@ then
         _HC_LAST_TIME=""
         _HC_LAST_STC=0
         _HC_LAST_FAIL_ID="-"
-        # find last event or block of events (same timestamp)
-        # (but unfortunately this is only accurate to events within the SAME second!)
-        # shellcheck disable=SC2086
-        _HC_LAST_TIME="$(grep -h ${_HC_LAST} ${_LOG_STASH} 2>/dev/null | sort -n 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null | uniq 2>/dev/null | tail -1 2>/dev/null)"
+        _USE_CACHE=0
+
+        # check for cache usage
+        if (( ARG_HISTORY == 0 ))
+        then
+            case "${HC_REPORT_CACHE_LAST}" in
+                Yes|yes|YES)
+                    _HC_REPORT_CACHE_LAST_FILE="${_HC_REPORT_CACHE_LAST_STUB}-${_HC_LAST}"
+                    # check if cache file exists
+                    if [[ -s "${_HC_REPORT_CACHE_LAST_FILE}" ]]
+                    then
+                        _LOG_STASH="${_HC_REPORT_CACHE_LAST_FILE}"
+                        _USE_CACHE=1
+                        (( ARG_DEBUG > 0 )) && debug "setting log stash to cache file at ${_HC_REPORT_CACHE_LAST_FILE}"
+                    else
+                        (( ARG_DEBUG > 0 )) && debug "HC_REPORT_CACHE_LAST is enabled but unable to find cache file at ${_HC_REPORT_CACHE_LAST_FILE}"
+                        # reset log stash to current log
+                        _LOG_STASH="${HC_LOG} ${_LOG_STASH}"
+                    fi
+                    ;;
+                *)
+                    # no caching: reset log stash to current log
+                    (( ARG_DEBUG > 0 )) && debug "HC_REPORT_CACHE_LAST is disabled"
+                    _LOG_STASH="${HC_LOG} ${_LOG_STASH}"
+                    ;;
+            esac
+        fi
+
+        # determine LAST_TIME from cache or log(s)
+        if (( ARG_HISTORY == 0 )) && (( _USE_CACHE > 1 ))
+        then
+            _HC_LAST_TIME="$(tail -n 1 ${_LOG_STASH} 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null)"
+        else
+            # find last event or block of events (same timestamp)
+            # (but unfortunately this is only accurate to events within the SAME second!)
+            # shellcheck disable=SC2086
+            _HC_LAST_TIME="$(grep -h ${_HC_LAST} ${_LOG_STASH} 2>/dev/null | sort -n 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null | uniq 2>/dev/null | tail -1 2>/dev/null)"
+        fi
+
         if [[ -z "${_HC_LAST_TIME}" ]]
         then
             _HC_LAST_TIME="-"
@@ -181,12 +221,26 @@ then
         fi
         # report on findings
         # shellcheck disable=SC1117
-        printf "| %-40s | %-20s | %-14s | %-4s\n" \
-            "${_HC_LAST}" "${_HC_LAST_TIME}" "${_HC_LAST_FAIL_ID}" "${_HC_LAST_STC}"
+        if (( _USE_CACHE > 0 ))
+        then
+            printf "| %-40s | %-20s | %-14s | %-4s (C)\n" \
+                "${_HC_LAST}" "${_HC_LAST_TIME}" "${_HC_LAST_FAIL_ID}" "${_HC_LAST_STC}"
+        else
+            printf "| %-40s | %-20s | %-14s | %-4s\n" \
+                "${_HC_LAST}" "${_HC_LAST_TIME}" "${_HC_LAST_FAIL_ID}" "${_HC_LAST_STC}"
+        fi
     done
-    # disclaimer
-    print "NOTE: this report only shows the overall combined status of all events of each HC within exactly"
-    print "      the *same* time stamp (seconds precise). It may therefore fail to report certain FAIL IDs."
+    # spacer
+    print
+    # disclaimer & note(s)
+    if (( _USE_CACHE > 0 ))
+    then
+        print "NOTE: entries suffixed by (C) indicate results were retrieved from a cache file. If you wish to use "
+        print "      the real log files then disable HC_REPORT_CACHE_LAST in ${CONFIG_FILE}"
+    fi
+    (( ARG_HISTORY == 0 )) && _CACHE_NOTE_BIT="for non-cached entries: "
+    print "NOTE: ${_CACHE_NOTE_BIT}this report only shows the overall combined status of all events of each HC"
+    print "      within exactly the *same* time stamp (seconds precise). It may therefore fail to report certain FAIL IDs."
     print "      Use '--report' to get the exact list of failure events."
 # other reports
 else
@@ -198,7 +252,31 @@ else
         (( _IS_VALID_ID > 0 )) || die "invalid ID specified"
          _ID_NEEDLE="${ARG_FAIL_ID}"
     fi
-    (( ARG_TODAY > 0 )) && _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
+    # set today's needle and check cache usage
+    if (( ARG_TODAY > 0 ))
+    then
+        _ID_NEEDLE="$(date '+%Y%m%d')"    # refers to timestamp of HC FAIL_ID
+        # do not use a cache file when --with-history
+        if (( ARG_HISTORY == 0 ))
+        then
+            case "${HC_REPORT_CACHE_TODAY}" in
+                Yes|yes|YES)
+                    # check if cache file exists
+                    if [[ -s "${_HC_REPORT_CACHE_TODAY_FILE}" ]]
+                    then
+                        _LOG_STASH="${_HC_REPORT_CACHE_TODAY_FILE}"
+                        _USE_CACHE=1
+                        (( ARG_DEBUG > 0 )) && debug "setting log stash to today's cache file at ${_HC_REPORT_CACHE_TODAY_FILE}"
+                    else
+                        (( ARG_DEBUG > 0 )) && debug "HC_REPORT_CACHE_TODAY is enabled but unable to find cache file at ${_HC_REPORT_CACHE_TODAY_FILE}"
+                    fi
+                    ;;
+                *)
+                    (( ARG_DEBUG > 0 )) && debug "HC_REPORT_CACHE_TODAY is disabled"
+                    ;;
+            esac
+        fi
+    fi
 
     # reverse?
     if (( ARG_REVERSE == 0 ))
@@ -262,9 +340,9 @@ else
                         split (events[i], event, "|");
                         printf ("\n| %-20s | %-14s | %-40s | %-s", event[1], event[5], event[2], event[4]);
                     }
-                    printf ("\n\nSUMMARY: %s failed HC event(s) found.\n", event_count);
+                    printf ("\n\nSUMMARY: %s failed HC event(s) found.\n\n", event_count);
                 } else {
-                    printf ("\nSUMMARY: 0 failed HC events found.\n");
+                    printf ("\nSUMMARY: 0 failed HC events found.\n\n");
                 }
             }
             ' 2>/dev/null
@@ -316,14 +394,23 @@ else
         # shellcheck disable=SC2183,SC1117
         printf "%80s\n" | tr ' ' -
     fi
+
+    # add notes
+    # cache or not?
+    if (( _USE_CACHE > 0 ))
+    then
+        print "NOTE: results were retrieved from a cache file. If you wish to use the real log files then"
+        print "      remove ${_HC_REPORT_CACHE_TODAY_FILE} and/or disable HC_REPORT_CACHE_TODAY in ${CONFIG_FILE}"
+    fi
 fi
 
-# general note: history or not?
+# add general notes
+# history or not?
 if (( ARG_HISTORY > 0 ))
 then
     print "NOTE: showing results with all history (archive) included (--with-history)"
 else
-    print "NOTE: showing results only of current log entries (use --with-history to view all entries)"
+    print "NOTE: showing only results of current entries (use --with-history to view all entries)"
 fi
 
 # check consistency of log(s)

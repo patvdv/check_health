@@ -21,6 +21,16 @@ HC_LOG_HEALTHY="No"
 # [values: Yes|No]
 HC_WILL_FIX="Yes"
 
+# cache "last" reporting entries. Set to 'Yes' to speed up reporting of the last
+# registered HC events
+# [values: Yes|No]
+HC_REPORT_CACHE_LAST="No"
+
+# cache "today" reporting entries.  Set to 'Yes' to speed up reporting of today's
+# registered HC events
+# [values: Yes|No]
+HC_REPORT_CACHE_TODAY="No"
+
 
 #******************************************************************************
 # End of FILE
