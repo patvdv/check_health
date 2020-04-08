@@ -30,7 +30,7 @@
 function report_std
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2020-04-07"                               # YYYY-MM-DD
+typeset _VERSION="2020-04-08"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -63,6 +63,7 @@ typeset _HC_REPORT_CACHE_LAST_STUB="${STATE_PERM_DIR}/cache.report-last"
 typeset _HC_REPORT_CACHE_LAST_FILE=""
 typeset _HC_REPORT_CACHE_TODAY_FILE="${STATE_PERM_DIR}/cache.report-today"
 typeset _USE_CACHE=0
+typeset _USE_ANY_CACHE=0
 typeset _CACHE_NOTE_BIT=""
 
 # set archive log stash (never use cache files)
@@ -166,6 +167,7 @@ then
                     then
                         _LOG_STASH="${_HC_REPORT_CACHE_LAST_FILE}"
                         _USE_CACHE=1
+                        _USE_ANY_CACHE=1
                         (( ARG_DEBUG > 0 )) && debug "setting log stash to cache file at ${_HC_REPORT_CACHE_LAST_FILE}"
                     else
                         (( ARG_DEBUG > 0 )) && debug "HC_REPORT_CACHE_LAST is enabled but unable to find cache file at ${_HC_REPORT_CACHE_LAST_FILE}"
@@ -233,7 +235,7 @@ then
     # spacer
     print
     # disclaimer & note(s)
-    if (( _USE_CACHE > 0 ))
+    if (( _USE_ANY_CACHE > 0 ))
     then
         print "NOTE: entries suffixed by (C) indicate results were retrieved from a cache file. If you wish to use "
         print "      the real log files then disable HC_REPORT_CACHE_LAST in ${CONFIG_FILE}"
