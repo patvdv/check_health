@@ -19,8 +19,8 @@
 # @(#) MAIN: check_linux_vz_ct_counters
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_is_numeric(), dump_logs(), init_hc(),
-#           log_hc(), warn()
+# REQUIRES: data_comma2space(), data_is_numeric(), data_get_lvalue_from_config(),
+#           dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2019-02-08: initial version [Patrick Van der Veken]
