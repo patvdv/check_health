@@ -255,6 +255,7 @@ CONFIG      : $3 with parameters:
 PURPOSE     : Checks whether UBC (User Bean Counters) for OpenVZ containers have
               increased (failures)
 LOG HEALTHY : Supported
+NOTES       : Supports OpenVZ 6.x & OpenVZ 7.x
 
 EOT
 
