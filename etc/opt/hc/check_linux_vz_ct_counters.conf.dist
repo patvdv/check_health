@@ -11,6 +11,11 @@
 # [default: no]
 log_healthy="no"
 
+# specify UBC names to exclude from being checked (comma-separated list)
+# [default: none]
+# Examples: numfile,numpty
+exclude_counters=""
+
 # specify containers for which to check the UBC
 # Format:
 #  [ct:<ct_id>]
