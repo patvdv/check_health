@@ -11,7 +11,7 @@
 # [default: no]
 log_healthy="no"
 
-# specify UBC names to exclude from being checked (comma-separated list)
+# specify UBC names to exclude (comma-separated list) (release >20200411)
 # [default: none]
 # Examples: numfile,numpty
 exclude_counters=""

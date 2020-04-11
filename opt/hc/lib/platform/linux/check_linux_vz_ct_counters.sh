@@ -64,6 +64,7 @@ typeset _UBC_HELD=""
 typeset _UBC_MAX_HELD=""
 typeset _UBC_STATE_FILE_STUB="${STATE_PERM_DIR}/vzct.failtcnt"
 typeset _UBC_STATE_FILE=""
+typeset _RC=0
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -231,6 +232,7 @@ do
         done
     else
         warn "unable to find UBC data for CT ID ${_CT_ID}"
+        _RC=$(( _RC + 1 ))
         continue
     fi
 done
@@ -239,7 +241,7 @@ done
 print "==== ${_UBC_FILE} ====" >>${HC_STDOUT_LOG}
 print "${_UBC_OUTPUT}" >>${HC_STDOUT_LOG}
 
-return 0
+return ${_RC}
 }
 
 # -----------------------------------------------------------------------------
@@ -249,13 +251,13 @@ cat <<- EOT
 NAME        : $1
 VERSION     : $2
 CONFIG      : $3 with parameters:
-               exclude_counters=<ubc_name>,<ubc_name>,...
+               exclude_counters=<ubc_name>,<ubc_name>,... (release >20200411)
               with formatted stanzas:
                ct:<ct_id>
 PURPOSE     : Checks whether UBC (User Bean Counters) for OpenVZ containers have
               increased (failures)
 LOG HEALTHY : Supported
-NOTES       : Supports OpenVZ 6.x & OpenVZ 7.x
+NOTES       : Supports OpenVZ 6.x & OpenVZ 7.x (release >20200411)
 
 EOT
 
