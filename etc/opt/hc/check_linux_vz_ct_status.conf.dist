@@ -11,13 +11,18 @@
 # [default: no]
 log_healthy="no"
 
-# specify properties as displayed by the 'vzlist -a -H -o ctid,status,onboot' command
+# specify properties as displayed by the following commands:
+#   OpenVZ 6.x: 'vzlist -a -H -o ctid,status,onboot'
+#   OpenVZ 7.x: 'prlctl list --info -a' (release >20200411)
 # Format:
 #  [ct:<ct_id>:<runtime_status>:<boot_status>]
 # runtime_status should be 'running' or 'stopped'
-# boot_status should be 'yes' or 'no'
-# Examples:
+# boot_status should be 'yes' or 'no' (OpenVZ 6.x)
+# boot_status should be 'on' of 'off' (OpenVZ 7.x)
+# Examples (OpenVZ 6.x):
 #ct:100:running:yes
+# Examples (OpenVZ 7.x) (release >20200411): 
+#ct:621240e6-fa79-406a-a3f9-26de47b5d789:running:on
 
 
 #******************************************************************************

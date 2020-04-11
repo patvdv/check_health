@@ -19,8 +19,8 @@
 # @(#) MAIN: check_linux_vz_ct_status
 # DOES: see _show_usage()
 # EXPECTS: see _show_usage()
-# REQUIRES: data_comma2space(), data_is_numeric(), data_lc(), dump_logs(),
-#           init_hc(), log_hc(), warn()
+# REQUIRES: data_comma2space(), data_is_numeric(), data_has_newline(), data_lc(),
+#           dump_logs(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
 # @(#) 2017-04-01: initial version [Patrick Van der Veken]
@@ -32,6 +32,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-02-08: added support for log_healthy + fixes [Patrick Van der Veken]
+# @(#) 2020-04-11: added support for OpenVZ 7 [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -43,7 +44,9 @@ function check_linux_vz_ct_status
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _VZLIST_BIN="/usr/sbin/vzlist"
 typeset _VZLIST_OPTS="-a -H -o ctid,status,onboot"
-typeset _VERSION="2019-02-08"                           # YYYY-MM-DD
+typeset _PRLCTL_BIN="/bin/prlctl"
+typeset _PRLCTL_OPTS="list --info -a"
+typeset _VERSION="2020-04-11"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -64,8 +67,9 @@ typeset _CT_RUN_STATUS=""
 typeset _CT_CFG_BOOT=""
 typeset _CT_RUN_BOOT=""
 typeset _CT_ENTRY=""
-typeset _CT_MATCH=""
+typeset _HAS_VZ6=0
 typeset _RC=0
+set -A _CHECK_CT
 
 # handle arguments (originally comma-separated)
 for _ARG in ${_ARGS}
@@ -110,22 +114,42 @@ else
     log "not logging/showing passed health checks"
 fi
 
-# check openvz
-if [[ ! -x ${_VZLIST_BIN} || -z "${_VZLIST_BIN}" ]]
+# check openvz (6.x or 7.x)
+if [[ ! -x ${_PRLCTL_BIN} || -z "${_PRLCTL_BIN}" ]]
 then
-    warn "OpenVZ is not installed here"
-    return 1
+    if [[ ! -x ${_VZCTL_BIN} || -z "${_VZCTL_BIN}" ]]
+    then
+        warn "OpenVZ is not installed here"
+        return 1
+    else
+        log "OpenVZ 6.x is installed here"
+        _HAS_VZ6=1
+    fi
+else
+    log "OpenVZ 7.x is installed here"
 fi
 
 # get container stati
-${_VZLIST_BIN} ${_VZLIST_OPTS} >${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
-(( $? > 0 )) && {
-    _MSG="unable to run command {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
-    log_hc "$0" 1 "${_MSG}"
-    # dump debug info
-    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
-    return 0
-}
+if (( _HAS_VZ6 > 0 ))
+then
+    ${_VZLIST_BIN} ${_VZLIST_OPTS} >${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
+    (( $? > 0 )) && {
+        _MSG="unable to run command {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 0
+    }
+else
+    ${_PRLCTL_BIN} ${_PRLCTL_OPTS} >${HC_STDOUT_LOG} 2>${HC_STDERR_LOG}
+    (( $? > 0 )) && {
+        _MSG="unable to run command {${_PRLCTL_BIN} ${_PRLCTL_OPTS}}"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        return 0
+    }
+fi
 
 # check configuration values
 grep -E -e '^ct:' ${_CONFIG_FILE} 2>/dev/null | cut -f2- -d':' 2>/dev/null |\
@@ -137,11 +161,14 @@ do
     _CT_CFG_BOOT=$(data_lc "$(print ${_CT_ENTRY} | cut -f3 -d':' 2>/dev/null)")
 
     # check config
-    data_is_numeric "${_CT_ID}"
-    if (( $? > 0 ))
+    if (( _HAS_VZ6 > 0 ))
     then
-        warn "invalid container ID '${_CT_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-        continue
+        data_is_numeric "${_CT_ID}"
+        if (( $? > 0 ))
+        then
+            warn "invalid container ID '${_CT_ID}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+            continue
+        fi
     fi
     case "${_CT_CFG_STATUS}" in
         running|stopped)
@@ -151,41 +178,109 @@ do
             continue
             ;;
     esac
-    case "${_CT_CFG_BOOT}" in
-        yes|no)
-            ;;
-        *)
-            warn "invalid container boot value '${_CT_CFG_BOOT}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
-            continue
-            ;;
-    esac
+    if (( _HAS_VZ6 > 0 ))
+    then
+        case "${_CT_CFG_BOOT}" in
+            yes|no)
+                ;;
+                *)
+                warn "invalid container boot value '${_CT_CFG_BOOT}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+                continue
+                ;;
+            esac
+    else
+        case "${_CT_CFG_BOOT}" in
+            on|off)
+                ;;
+                *)
+                warn "invalid container boot value '${_CT_CFG_BOOT}' in configuration file ${_CONFIG_FILE} at data line ${_LINE_COUNT}"
+                continue
+                ;;
+            esac
+    fi
+
+    # add CT to check check list
+    _CHECK_CT[${#_CHECK_CT[*]}+1]="${_CT_ID}"
     _LINE_COUNT=$(( _LINE_COUNT + 1 ))
 done
 
-# perform checks
-grep -E -e '^ct:' ${_CONFIG_FILE} 2>/dev/null | cut -f2- -d':' 2>/dev/null |\
-    while read -r _CT_ENTRY
+# fetch data & perform checks
+for _CT_ID in "${_CHECK_CT[@]}"
 do
     # field split
-    _CT_ID=$(print "${_CT_ENTRY}" | cut -f1 -d':' 2>/dev/null)
-    _CT_CFG_STATUS=$(data_lc "$(print ${_CT_ENTRY} | cut -f2 -d':' 2>/dev/null)")
-    _CT_CFG_BOOT=$(data_lc "$(print ${_CT_ENTRY} | cut -f3 -d':' 2>/dev/null)")
+    _CT_CFG_STATUS=$(grep "^ct:${_CT_ID}" ${_CONFIG_FILE} 2>/dev/null | cut -f3 -d':' 2>/dev/null)
+    _CT_CFG_BOOT=$(grep "^ct:${_CT_ID}" ${_CONFIG_FILE} 2>/dev/null | cut -f4 -d':' 2>/dev/null)
 
-    # check run-time values
-    _CT_MATCH=$(grep -i "^[[:space:]]*${_CT_ID}" ${HC_STDOUT_LOG} 2>/dev/null)
-    if [[ -n "${_CT_MATCH}" ]]
+    # check for multiple hits
+    data_has_newline "${_CT_CFG_STATUS}"
+    # shellcheck disable=SC2181
+    if (( $? > 0 ))
     then
-        # field split
-        _CT_RUN_STATUS=$(data_lc "$(print ${_CT_MATCH} | awk '{print $2}' 2>/dev/null)")
-        _CT_RUN_BOOT=$(data_lc "$(print ${_CT_MATCH} | awk '{print $3}' 2>/dev/null)")
+        warn "ignoring ${_CT_ID}:${_CT_CFG_STATUS} because it parses to multiple results in ${_CONFIG_FILE}"
+        continue
+    fi
+    data_has_newline "${_CT_CFG_BOOT}"
+    # shellcheck disable=SC2181
+    if (( $? > 0 ))
+    then
+        warn "ignoring ${_CT_ID}:${_CT_CFG_BOOT} because it parses to multiple results in ${_CONFIG_FILE}"
+        continue
+    fi
+    _CT_CFG_STATUS=$(data_lc "${_CT_CFG_STATUS}")
+    _CT_CFG_BOOT=$(data_lc "${_CT_CFG_BOOT}")
 
+    # fetch current data
+    if (( _HAS_VZ6 > 0 ))
+    then
+        _CT_ENTRY=$(grep -i "^[[:space:]]*${_CT_ID}" ${HC_STDOUT_LOG} 2>/dev/null)
+        if [[ -n "${_CT_ENTRY}" ]]
+        then
+            # field split
+            _CT_RUN_STATUS=$(data_lc "$(print ${_CT_ENTRY} | awk '{print $2}' 2>/dev/null)")
+            _CT_RUN_BOOT=$(data_lc "$(print ${_CT_ENTRY} | awk '{print $3}' 2>/dev/null)")
+        fi
+    else
+        awk -F":" -v ct_id="${_CT_ID}" '
+        BEGIN {
+            found_ct = 0; ct_state = ""; auto_start = "";
+            regex_ct = "^EnvID:[[:space:]]+"ct_id;
+        }
+
+        {
+            if ($0 ~ regex_ct) {
+                found_ct = 1;
+            } else {
+                if (found_ct == 1 && $0 ~ /State:/) {
+                    ct_state = $2;
+                    gsub (/[[:space:]]/, "", ct_state);
+                    #print "State:" ct_state;
+                }
+                if (found_ct == 1 && $0 ~ /Autostart:/) {
+                    auto_start = $2;
+                    gsub (/[[:space:]]/, "", auto_start);
+                    #print "Start:" auto_start;
+                }
+            }
+            if ($0 ~ /^$/) { found_ct = 0; }
+            # bail out when we have both data points
+            if (found_ct == 0 && ct_state && auto_start) { nextfile; };
+        }
+        END {
+            printf ("%s:%s", ct_state, auto_start);
+        }
+        ' ${HC_STDOUT_LOG} 2>/dev/null | IFS=":" read -r _CT_RUN_STATUS _CT_RUN_BOOT
+    fi
+
+    # check stati
+    if [[ -n "${_CT_RUN_STATUS}" ]] && [[ -n "${_CT_RUN_BOOT}" ]]
+    then
         if [[ "${_CT_RUN_STATUS}" = "${_CT_CFG_STATUS}" ]]
         then
             _MSG="container ${_CT_ID} has a correct status [${_CT_RUN_STATUS}]"
             _STC=0
         else
-             _MSG="container ${_CT_ID} has a wrong status [${_CT_RUN_STATUS}]"
-             _STC=1
+            _MSG="container ${_CT_ID} has a wrong status [${_CT_RUN_STATUS}]"
+            _STC=1
         fi
         if (( _LOG_HEALTHY > 0 || _STC > 0 ))
         then
@@ -205,8 +300,14 @@ do
             log_hc "$0" ${_STC} "${_MSG}" "${_CT_RUN_BOOT}" "${_CT_CFG_BOOT}"
         fi
     else
-        warn "could not determine status for container ${_CT_ID} from command output {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
+        if (( _HAS_VZ6 > 0 ))
+        then
+            warn "could not determine status for container ${_CT_ID} from command output {${_VZLIST_BIN} ${_VZLIST_OPTS}}"
+        else
+            warn "could not determine status for container ${_CT_ID} from command output {${_PRLCTL_BIN} ${_PRLCTL_OPTS}}"
+        fi
         _RC=$(( _RC + 1 ))
+        continue
     fi
 done
 
@@ -219,10 +320,11 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3 with:
+CONFIG      : $3 with formatted stanzas:
                ct:<ctid>:<runtime_status>:<boot_status>
 PURPOSE     : Checks whether OpenVZ containers are running or not
 LOG HEALTHY : Supported
+NOTES       : Supports OpenVZ 6.x & OpenVZ 7.x (release >20200411)
 
 EOT
 
