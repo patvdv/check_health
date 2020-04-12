@@ -33,6 +33,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-02-08: added support for log_healthy + fixes [Patrick Van der Veken]
 # @(#) 2020-04-11: added support for OpenVZ 7 [Patrick Van der Veken]
+# @(#) 2020-04-12: copy/paste fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -46,7 +47,7 @@ typeset _VZLIST_BIN="/usr/sbin/vzlist"
 typeset _VZLIST_OPTS="-a -H -o ctid,status,onboot"
 typeset _PRLCTL_BIN="/bin/prlctl"
 typeset _PRLCTL_OPTS="list --info -a"
-typeset _VERSION="2020-04-11"                           # YYYY-MM-DD
+typeset _VERSION="2020-04-12"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -117,7 +118,7 @@ fi
 # check openvz (6.x or 7.x)
 if [[ ! -x ${_PRLCTL_BIN} || -z "${_PRLCTL_BIN}" ]]
 then
-    if [[ ! -x ${_VZCTL_BIN} || -z "${_VZCTL_BIN}" ]]
+    if [[ ! -x ${_VZLIST_BIN} || -z "${_VZLIST_BIN}" ]]
     then
         warn "OpenVZ is not installed here"
         return 1
