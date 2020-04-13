@@ -12,6 +12,7 @@
 log_healthy="no"
 
 # location of 'hpacucli' tool
+# [default: /sbin/hplog]
 hplog_bin="/sbin/hplog"
 
 # comma-separated list of severities to search for (case insensitive)

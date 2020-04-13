@@ -12,18 +12,23 @@
 log_healthy="no"
 
 # location of 'hpacucli' tool
+# [default: /usr/sbin/hpacucli]
 hpacucli_bin="/usr/sbin/hpacucli"
 
-# controller all show status (0=off, 1=on) [default: 1]
+# controller all show status (0=off, 1=on)
+# [default: 1]
 do_acu_controller=1
 
-# controller slot=X enclosure all show (0=off, 1=on) [default: 1]
+# controller slot=X enclosure all show (0=off, 1=on)
+# [default: 1]
 do_acu_enclosure=1
 
-# controller slot=X physicaldrive all show status (0=off, 1=on) [default: 1]
+# controller slot=X physicaldrive all show status (0=off, 1=on)
+# [default: 1]
 do_acu_physical=1
 
-#  controller slot=X logicaldrive all show status (0=off, 1=on) [default: 1]
+#  controller slot=X logicaldrive all show status (0=off, 1=on)
+# [default: 1]
 do_acu_logical=1
 
 

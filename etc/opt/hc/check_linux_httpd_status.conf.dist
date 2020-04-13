@@ -14,12 +14,12 @@ log_healthy="no"
 # specify which type of process check to use
 # Format: <auto|pgrep|sysv|systemd>. NULL value equals to "auto"
 # [default: auto]
-# Compatibility: >=2019-11-01
+# [release >20191101]
 check_type="auto"
 
 # specify custom path to the httpd binary
 # [default: null]
-# Compatibility: >=2019-11-01
+# [release >20191101]
 httpd_bin=""
 
 

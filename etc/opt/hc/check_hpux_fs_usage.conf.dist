@@ -32,7 +32,7 @@ max_space_usage=90
 # defining a threshold of 0 (zero), then the check will for this give filesystem
 # will be skipped (this allows for exclusion of filesystems)
 # Format:
-#  fs:<mount_point>:[<max_inode_usage_%>]:[<max_space_usage_%]
+#  fs:<mount_point>:[<max_inodes_usage_%>]:[<max_space_usage_%]
 # Examples:
 # check myfs1 with a custom inodes + space usage threshold
 #fs:myfs1:70:95

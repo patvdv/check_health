@@ -13,9 +13,11 @@ log_healthy="no"
 
 # full path to the location of mksysb images, the tool expects sub-directories
 # per host underneath this location
+# [default: /export/images]
 backup_path=/export/images
 
 # name of the file containing the mksysb output
+# [default: mksysb.log]
 mksysb_log=mksysb.log
 
 # maximum days before backup gets flagged as 'too old'
