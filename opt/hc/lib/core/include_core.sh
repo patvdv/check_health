@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2020-04-08"           # YYYY-MM-DD
+typeset _VERSION="2020-04-15"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -1274,7 +1274,7 @@ then
         if [[ -s ${HC_STDOUT_LOG} ]] || [[ -s ${HC_STDERR_LOG} ]]
         then
             # organize logs in sub-directories: YYYY/MM
-            mkdir -p "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}" >/reportdev/null 2>&1 || \
+            mkdir -p "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}" >/dev/null 2>&1 || \
             die "failed to create event directory at ${1}"
             if [[ -f ${HC_STDOUT_LOG} ]]
             then
