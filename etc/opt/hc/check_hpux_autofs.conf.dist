@@ -1,7 +1,7 @@
 #******************************************************************************
 # @(#) check_linux_autofs.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_autofs HC plugin.
+# This is a configuration file for the check_hpux_autofs HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************
