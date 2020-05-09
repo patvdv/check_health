@@ -91,6 +91,10 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 * hc-notify-eif
 * hc-notify-sms
 
+## Configure & deploy
+
+An Ansible role is available at: https://github.com/patvdv/kudos.check_health
+
 ## Execute (examples)
 
 * **Listing** available health checks:
