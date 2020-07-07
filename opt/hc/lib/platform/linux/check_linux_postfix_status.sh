@@ -31,6 +31,7 @@
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2019-03-25: fix for older Debian & Ubuntu [Patrick Van der Veken]
+# @(#) 2020-05-08: add pgrep als fallback check [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -41,7 +42,7 @@ function check_linux_postfix_status
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
 typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
-typeset _VERSION="2019-03-25"                           # YYYY-MM-DD
+typeset _VERSION="2020-05-08"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -135,12 +136,19 @@ then
     then
         if (( $(${_POSTFIX_BIN} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
         then
-            _STC=1
+            _RC=1
+
         fi
     else
         warn "postfix is not installed here"
         return 1
     fi
+fi
+
+# 3) try the pgrep way (note: old pgreps do not support '-c')
+if (( _RC > 0 ))
+then
+    (( $(pgrep -u postfix pickup 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
 
 # evaluate results

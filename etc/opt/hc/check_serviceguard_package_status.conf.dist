@@ -1,7 +1,7 @@
 #******************************************************************************
-# @(#) check_linux_sg_package_status.conf
+# @(#) check_serviceguard_package_status.conf
 #******************************************************************************
-# This is a configuration file for the check_linux_sg_package_status HC plugin.
+# This is a configuration file for the check_serviceguard_package_status HC plugin.
 # All lines starting with a '#' are comment lines.
 # [default: indicates hardcoded script values if no value is defined here]
 #******************************************************************************

@@ -11,7 +11,7 @@
 # [default: no]
 log_healthy="no"
 
-# specify properties as displayed by the 'vzlist -a -H -o ctid,status,onboot' command
+# specify properties as displayed by the 'hpvmstatus -M' command
 # Format:
 #  [vpar:<parid>:<runtime_status>:<boot_status>]
 # runtime_status should be 'on' or 'off'
