@@ -30,6 +30,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2020-09-05: fix log_hc call for failed checksum + quote fix [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +40,7 @@ function check_linux_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2020-09-05"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -276,7 +277,7 @@ do
             openssl-sha256)
                 if (( _USE_OPENSSL == 1 ))
                 then
-                    _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
+                    _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 "${_FILE_TO_CHECK}" 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
                     _FILE_TYPE="openssl-sha256"
                 else
                     _MSG="cannot compute checksum [${_FILE_TYPE}] for ${_FILE_TO_CHECK}"
@@ -286,7 +287,7 @@ do
             cksum-crc32)
                 if (( _USE_CKSUM == 1 ))
                 then
-                    _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
+                    _FILE_CKSUM=$(${_CKSUM_BIN} "${_FILE_TO_CHECK}" 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
                     _FILE_TYPE="cksum-crc32"
                 else
                     _MSG="cannot compute checksum [${_FILE_TYPE}] for ${_FILE_TO_CHECK}"
@@ -302,11 +303,11 @@ do
         # new file
         if (( _USE_OPENSSL == 1 ))
         then
-            _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
+            _FILE_CKSUM=$(${_OPENSSL_BIN} dgst -sha256 "${_FILE_TO_CHECK}" 2>>${HC_STDERR_LOG} | cut -f2 -d'=' 2>/dev/null | tr -d ' ' 2>/dev/null)
             _FILE_TYPE="openssl-sha256"
         elif (( _USE_CKSUM == 1 ))
         then
-            _FILE_CKSUM=$(${_CKSUM_BIN} ${_FILE_TO_CHECK} 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
+            _FILE_CKSUM=$(${_CKSUM_BIN} "${_FILE_TO_CHECK}" 2>>${HC_STDERR_LOG} | cut -f1 -d' ' 2>/dev/null)
             _FILE_TYPE="cksum-crc32"
         else
             _MSG="cannot compute checksum (openssl/cksum) for ${_FILE_TO_CHECK}"
@@ -348,7 +349,7 @@ do
     printf "%s|%s|%s\n" "${_FILE_TO_CHECK}" "${_FILE_TYPE}" "${_FILE_CKSUM}" >>${_TMP2_FILE}
 
     # report with curr/exp values
-    if (( _LOG_HEALTHY > 0 ))
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
     then
         log_hc "$0" ${_STC} "${_MSG}" "${_FILE_CKSUM}" "${_STATE_FILE_CKSUM}"
         continue
