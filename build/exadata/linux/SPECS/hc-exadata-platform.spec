@@ -36,6 +36,7 @@ cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_griddisks.sh $RPM_B
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
+cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_ib_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_ib_status.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
 cp ../SOURCES/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
@@ -105,6 +106,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
+%attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_ib_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
 %attr(755, root, root) /opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
@@ -130,6 +132,8 @@ echo "INFO: finished post-uninstall script"
 
 
 %changelog
+* Tue Jul 07 2020 <patrick@kudos.be> - 0.5.0
+- Added check_exadata_ib_status
 * Fri Jul 07 2019 <patrick@kudos.be> - 0.4.0
 - Added check_exadata_zfs_cluster
 * Fri May 14 2019 <patrick@kudos.be> - 0.3.0

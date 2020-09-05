@@ -28,6 +28,7 @@ package() {
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_luns.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_megaraid.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_cell_physicaldisks.sh
+    install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_ib_status.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_ib_status.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_megaraid.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_megaraid.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_cluster.sh
     install -D -m 755 opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh ${pkgdir}/opt/hc/lib/platform/exadata/check_exadata_zfs_logs.sh
