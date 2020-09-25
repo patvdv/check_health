@@ -26,6 +26,9 @@
 # @(#) 2019-02-10: initial version [Patrick Van der Veken]
 # @(#) 2019-03-09: text files [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2020-09-25: fixes around systemctl handling, better error handling,
+#                  corrected handling of _DO_MYSQLCHECK, fix non-localhost
+#                  process checking [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -39,7 +42,7 @@ typeset _MYSQLD_INIT_SCRIPT="/etc/init.d/mysqld"
 typeset _MYSQLD_SYSTEMD_SERVICE="mysqld.service"
 typeset _MARIADB_INIT_SCRIPT="/etc/init.d/mariadb"
 typeset _MARIADB_SYSTEMD_SERVICE="mariadb.service"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2020-09-25"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -165,7 +168,6 @@ case "${_CFG_HEALTHY}" in
         (( _LOG_HEALTHY > 0 )) || _LOG_HEALTHY=0
         ;;
 esac
-(( _DO_MYSQLCHECK == 0 )) && warn "mysqlcheck is disabled (as configured or due to missing mysql settings)"
 
 # log_healthy
 (( ARG_LOG_HEALTHY > 0 )) && _LOG_HEALTHY=1
@@ -190,78 +192,98 @@ then
 fi
 
 # ---- process state ----
-# 1) try using the init ways
-linux_get_init
-case "${LINUX_INIT}" in
-    'systemd')
-        # first try mysqld
-        _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_MYSQLD_SYSTEMD_SERVICE}")
-        if (( _CHECK_SYSTEMD_SERVICE > 0 ))
-        then
-            systemctl --quiet is-active ${_MYSQLD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
-        else
-            # then try mariadb
-            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_MARIADB_SYSTEMD_SERVICE}")
+# don't check procs if table check on a non-localhost is requested
+if (( _DO_MYSQLCHECK > 0 )) && ( [[ "${_CFG_MYSQL_HOST}" != "localhost" ]] &&
+                                 [[ "${_CFG_MYSQL_HOST}" != "127.0.0.1" ]] &&
+                                 [[ "${_CFG_MYSQL_HOST}" != "::1" ]] )
+then
+    warn "skipping process check because parameter 'mysql_host' is to a remote host in the configuration file ${_CONFIG_FILE}"
+else
+    # 1) try using the init ways
+    linux_get_init
+    case "${LINUX_INIT}" in
+        'systemd')
+            # first try mysqld
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_MYSQLD_SYSTEMD_SERVICE}")
             if (( _CHECK_SYSTEMD_SERVICE > 0 ))
             then
-                systemctl --quiet is-active ${_MARIADB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
-            else
-                warn "systemd unit file not found {${_MYSQLD_SYSTEMD_SERVICE}}/${_MARIADB_SYSTEMD_SERVICE}}"
-                _RC=1
+                (( ARG_DEBUG > 0 )) && debug "doing systemd service check for mysqld"
+                systemctl --quiet is-active ${_MYSQLD_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
             fi
-        fi
-        ;;
-    'upstart')
-        warn "code for upstart managed systems not implemented, NOOP"
-        return 1
-        ;;
-    'sysv')
-        # first check running mysqld
-        if [[ -x ${_MYSQLD_INIT_SCRIPT} ]]
-        then
-            if (( $(${_MYSQLD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+            # then try mariadb (also if mysqld check fails which can happen with --is-active when mysqld & mariadb are both enabled)
+            if (( _STC > 1 ))
             then
-                _STC=1
+                _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_MARIADB_SYSTEMD_SERVICE}")
+                if (( _CHECK_SYSTEMD_SERVICE > 0 ))
+                then
+                    (( ARG_DEBUG > 0 )) && debug "doing systemd service check for mariadbd"
+                    systemctl --quiet is-active ${_MARIADB_SYSTEMD_SERVICE} 2>>${HC_STDERR_LOG} || _STC=1
+                else
+                    warn "systemd unit file not found {${_MYSQLD_SYSTEMD_SERVICE}}/${_MARIADB_SYSTEMD_SERVICE}}"
+                    _RC=1
+                fi
             fi
-        else
-            if [[ -x ${_MARIADB_INIT_SCRIPT} ]]
+            ;;
+        'upstart')
+            warn "code for upstart managed systems not implemented, NOOP"
+            # fall through to pgrep
+            _RC=1
+            ;;
+        'sysv')
+            # first check running mysqld
+            if [[ -x ${_MYSQLD_INIT_SCRIPT} ]]
             then
-                if (( $(${_MARIADB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+                if (( $(${_MYSQLD_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
                 then
                     _STC=1
                 fi
             else
-                warn "sysv init script not found {${_MYSQLD_INIT_SCRIPT}}/{${_MARIADB_INIT_SCRIPT}}"
-                _RC=1
+                if [[ -x ${_MARIADB_INIT_SCRIPT} ]]
+                then
+                    if (( $(${_MARIADB_INIT_SCRIPT} status 2>>${HC_STDERR_LOG} | grep -c -i 'is running' 2>/dev/null) == 0 ))
+                    then
+                        _STC=1
+                    fi
+                else
+                    warn "sysv init script not found {${_MYSQLD_INIT_SCRIPT}}/{${_MARIADB_INIT_SCRIPT}}"
+                    _RC=1
+                fi
             fi
-        fi
-        ;;
-    *)
-        _RC=1
-        ;;
-esac
+            ;;
+        *)
+            _RC=1
+            ;;
+    esac
 
-# 2) try the pgrep way (note: old pgreps do not support '-c')
-if (( _RC > 0 ))
-then
-    (( $(pgrep -u root mysqld 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
-fi
+    # 2) try the pgrep way (note: old pgreps do not support '-c')
+    if (( _RC > 0 ))
+    then
+        (( ARG_DEBUG > 0 )) && debug "doing pgrep check for mysqld"
+        (( $(pgrep -u root,mysql mysqld 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    fi
+    if (( _STC > 0 ))
+    then
+        _STC=0
+        (( ARG_DEBUG > 0 )) && debug "doing pgrep check for mariadbd"
+        (( $(pgrep -u root,mysql mariadbd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    fi
 
-# evaluate results
-case ${_STC} in
-    0)
-        _MSG="mysqld/mariadb is running"
-        ;;
-    1)
-        _MSG="mysqld/mariadb is not running"
-        ;;
-    *)
+    # evaluate results
+    case ${_STC} in
+        0)
+            _MSG="mysqld/mariadb is running"
+            ;;
+        1)
+            _MSG="mysqld/mariadb is not running"
+            ;;
+        *)
         _MSG="could not determine status of mysqld/mariadb"
         ;;
-esac
-if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-then
-    log_hc "$0" ${_STC} "${_MSG}"
+    esac
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 fi
 
 # ---- table states (ISAM)----
@@ -286,9 +308,17 @@ then
             return 1
         fi
         # get all databases from mysqlshow
-        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "mysqlshow command: ${_MYSQLSHOW_BIN} ${_MYSQLSHOW_OPTS}"
-        _DB_LIST=$(${_MYSQLSHOW_BIN} ${_MYSQLSHOW_OPTS} 2>>${HC_STDERR_LOG} |\
-            grep -v -E -e '+--' -e 'Databases' 2>/dev/null | awk '{ print $2}' 2>/dev/null)
+        (( ARG_DEBUG > 0 )) && debug "mysqlshow command: ${_MYSQLSHOW_BIN} ${_MYSQLSHOW_OPTS}"
+        _DB_LIST=$(${_MYSQLSHOW_BIN} ${_MYSQLSHOW_OPTS} 2>>${HC_STDERR_LOG})
+        if (( $? > 0 )) || [[ -z "${_DB_LIST}" ]]
+        then
+            _MSG="unable to run command for {${_MYSQLSHOW_BIN}}"
+            log_hc "$0" 1 "${_MSG}"
+            # dump debug info
+            (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+            return 1
+        fi
+        _DB_LIST=$(print "${_DB_LIST}" | grep -v -E -e '+--' -e 'Databases' 2>/dev/null | awk '{ print $2}' 2>/dev/null)
     else
         _DB_LIST=$(data_comma2newline "${_CFG_CHECK_DATABASES}")
     fi
@@ -303,11 +333,11 @@ then
         warn "could not execute/parse {mysqlshow} or list of databases to check is empty, skipping table checks"
         return 1
     fi
-    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "database list for mysqlcheck: ${_MYSQL_DB_LIST}"
+    (( ARG_DEBUG > 0 )) && debug "database list for mysqlcheck: ${_MYSQL_DB_LIST}"
     # run check
     for _MYSQL_DB in ${_MYSQL_DB_LIST}
     do
-        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "mysqlcheck command: ${_MYSQLCHECK_BIN} ${_MYSQLCHECK_OPTS} --database ${_MYSQL_DB}"
+        (( ARG_DEBUG > 0 )) && debug "mysqlcheck command: ${_MYSQLCHECK_BIN} ${_MYSQLCHECK_OPTS} --database ${_MYSQL_DB}"
         _MYSQLCHECK_OUTPUT=$(${_MYSQLCHECK_BIN} ${_MYSQLCHECK_OPTS} --database ${_MYSQL_DB} 2>>${HC_STDERR_LOG})
         if (( $? > 0 )) || [[ -z "${_MYSQLCHECK_OUTPUT}" ]]
         then
@@ -337,7 +367,7 @@ then
                     log_hc "$0" ${_STC} "${_MSG}"
                 fi
             else
-                (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "excluding table: ${_MYSQL_TABLE}"
+                (( ARG_DEBUG > 0 )) && debug "excluding table: ${_MYSQL_TABLE}"
             fi
         done
         # add mysqlcheck output to stdout log
@@ -356,9 +386,17 @@ then
 fi
 if (( _DO_MYSQL_STATS > 0 ))
 then
-    (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && debug "mysql command: ${_MYSQLADMIN_BIN} ${_MYSQLADMIN_OPTS}"
+    (( ARG_DEBUG > 0 )) && debug "mysql command: ${_MYSQLADMIN_BIN} ${_MYSQLADMIN_OPTS}"
     print "==== {${_MYSQLADMIN_BIN} <hidden_opts> extended-status} ====" >>${HC_STDOUT_LOG}
     ${_MYSQLADMIN_BIN} ${_MYSQLADMIN_OPTS} extended-status  >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+    if (( $? > 0 ))
+    then
+        _MSG="unable to run command for {${_MYSQLADMIN_BIN}}"
+        log_hc "$0" 1 "${_MSG}"
+        # dump debug info
+        (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && dump_logs
+        continue
+    fi
 fi
 
 return 0
