@@ -31,7 +31,7 @@
 function display_init
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-03-22"                               # YYYY-MM-DD
+typeset _VERSION="2020-10-10"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -139,7 +139,7 @@ fi
 
 # print status line (but also check for terminal support)
 # shellcheck disable=SC1117
-printf "%-30s %50s\t[ %8s ]%s\n" \
+printf "%-45s %50s\t[ %8s ]%s\n" \
             "${_DISPLAY_HC}" \
             "(${_DISPLAY_CFG})" \
             "${_DISPLAY_COLOR}${_DISPLAY_CODE}${_NORMAL}" \

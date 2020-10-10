@@ -17,10 +17,16 @@ log_healthy="no"
 # [release >20191101]
 check_type="auto"
 
+# specify name of the httpd binary
+# Format: httpd|apache|apache2
+# [default: httpd]
+# [release >20201010]
+httpd_bin="httpd"
+
 # specify custom path to the httpd binary
 # [default: null]
-# [release >20191101]
-httpd_bin=""
+# [release >20201010]
+httpd_path=""
 
 
 #******************************************************************************

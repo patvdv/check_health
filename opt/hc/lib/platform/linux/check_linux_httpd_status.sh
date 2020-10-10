@@ -32,6 +32,9 @@
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2019-11-01: added support for configuration parameters 'check_type' and
 # @(#)             'httpd_bin' [Patrick Van der Veken]
+# @(#) 2020-10-10: added support for configuration parameters 'httpd_path' and
+# @(#)             changed meaning of 'httpd_bin' in order to support debian/ubuntu
+# @(#)             distros using the 'apache(2)' binary [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -41,9 +44,7 @@ function check_linux_httpd_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _HTTPD_INIT_SCRIPT="/etc/init.d/httpd"
-typeset _HTTPD_SYSTEMD_SERVICE="httpd.service"
-typeset _VERSION="2019-11-01"                           # YYYY-MM-DD
+typeset _VERSION="2020-10-10"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -54,13 +55,19 @@ typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
 typeset _STC=0
+typeset _HTTPD_INIT_SCRIPT=""
+typeset _HTTPD_SYSTEMD_SERVICE=""
 typeset _CHECK_SYSTEMD_SERVICE=0
 typeset _CFG_HEALTHY=""
 typeset _LOG_HEALTHY=0
 typeset _CFG_HTTPD_BIN=""
 typeset _HTTPD_BIN=""
+typeset _CFG_HTTPD_PATH=""
+typeset _HTTPD_PATH=""
+typeset _HTTPD_COMMAND=""
 typeset _CFG_CHECK_TYPE=""
 typeset _DO_PGREP=0
+typeset _HTTPD_CHECKER=""
 typeset _RC=0
 
 # handle arguments (originally comma-separated)
@@ -103,8 +110,15 @@ esac
 _CFG_HTTPD_BIN=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'httpd_bin')
 if [[ -n "${_CFG_HTTPD_BIN}" ]]
 then
-    _HTTPD_BIN="${_CFG_HTTPD_BIN}"
-    log "setting httpd path to {${_HTTPD_BIN}} (config override)"
+    # strip path if full path is used (2019-11-01 version)
+    _HTTPD_BIN="$(basename ${_CFG_HTTPD_BIN})"
+    log "setting httpd binary to {${_HTTPD_BIN}} (config override)"
+fi
+_CFG_HTTPD_PATH=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'httpd_path')
+if [[ -n "${_CFG_HTTPD_PATH}" ]]
+then
+    _HTTPD_PATH="${_CFG_HTTPD_PATH}"
+    log "setting httpd path to {${_HTTPD_PATH}} (config override)"
 fi
 _CFG_HEALTHY=$(_CONFIG_FILE="${_CONFIG_FILE}" data_get_lvalue_from_config 'log_healthy')
 case "${_CFG_HEALTHY}" in
@@ -131,12 +145,39 @@ else
     log "not logging/showing passed health checks"
 fi
 
+# check init/systemd settings
+case "${_HTTPD_BIN}" in
+    apache2)
+        typeset _HTTPD_INIT_SCRIPT="/etc/init.d/apache2"
+        typeset _HTTPD_SYSTEMD_SERVICE="apache2.service"
+        ;;
+    apache)
+        typeset _HTTPD_INIT_SCRIPT="/etc/init.d/apache"
+        typeset _HTTPD_SYSTEMD_SERVICE="apache.service"
+        ;;
+    *)
+        typeset _HTTPD_INIT_SCRIPT="/etc/init.d/httpd"
+        typeset _HTTPD_SYSTEMD_SERVICE="apache.httpd"
+        ;;
+esac
+log "setting httpd init script to {${_HTTPD_INIT_SCRIPT}}"
+log "setting httpd systemd service to {${_HTTPD_SYSTEMD_SERVICE}}"
 # check httpd (if specified)
-if [[ -z "${_HTTPD_BIN}" ]]
+if [[ -z "${_HTTPD_BIN}" || -z "${_HTTPD_PATH}" ]]
 then
-    _HTTPD_BIN="$(command -v httpd 2>>${HC_STDERR_LOG})"
+    if [[ -z "${_HTTPD_BIN}" ]]
+    then
+        _HTTPD_COMMAND="$(command -v httpd 2>>${HC_STDERR_LOG})"
+    else
+        _HTTPD_COMMAND="$(command -v ${_HTTPD_BIN} 2>>${HC_STDERR_LOG})"
+    fi
+    if [[ -n "${_HTTPD_COMMAND}" ]]
+    then
+        _HTTPD_BIN="$(basename ${_HTTPD_COMMAND})"
+        _HTTPD_PATH="$(dirname ${_HTTPD_COMMAND})"
+    fi
 fi
-if [[ ! -x ${_HTTPD_BIN} || -z "${_HTTPD_BIN}" ]]
+if [[ ! -x ${_HTTPD_PATH}/${_HTTPD_BIN} || -z "${_HTTPD_BIN}" || -z "${_HTTPD_PATH}" ]]
 then
     warn "httpd (apache) is not installed here"
     return 1
@@ -184,19 +225,19 @@ fi
 # 2) try the pgrep way (note: old pgreps do not support '-c')
 if (( _DO_PGREP > 0 || _RC > 0 ))
 then
-    (( $(pgrep -u root httpd 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
+    (( $(pgrep -u root "${_HTTPD_BIN}" 2>>${HC_STDERR_LOG} | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
 
 # evaluate results
 case ${_STC} in
     0)
-        _MSG="httpd is running"
+        _MSG="${_HTTPD_BIN} is running"
         ;;
     1)
-        _MSG="httpd is not running"
+        _MSG="${_HTTPD_BIN} is not running"
         ;;
     *)
-        _MSG="could not determine status of httpd"
+        _MSG="could not determine status of ${_HTTPD_BIN}"
         ;;
 esac
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -205,18 +246,34 @@ then
 fi
 
 # ---- config state ----
-${_HTTPD_BIN} -t >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
-if (( $? == 0 ))
+case "${_HTTPD_BIN}" in
+    apache2)
+        _HTTPD_CHECKER="$(command -v apache2ctl 2>>${HC_STDERR_LOG})"
+        ;;
+    apache)
+        _HTTPD_CHECKER="$(command -v apachectl 2>>${HC_STDERR_LOG})"
+        ;;
+    *)
+        _HTTPD_CHECKER="${_HTTPD_PATH}/${_HTTPD_BIN}"
+        ;;
+esac
+if [[ -x ${_HTTPD_CHECKER} ]]
 then
-    _MSG="httpd configuration files are syntactically correct"
-    _STC=0
+    ${_HTTPD_CHECKER} -t >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+    if (( $? == 0 ))
+    then
+        _MSG="${_HTTPD_BIN} configuration files are syntactically correct"
+        _STC=0
+    else
+        _MSG="${_HTTPD_BIN} configuration files have syntax error(s) {${_HTTPD_CHECKER} -t}"
+        _STC=1
+    fi
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 else
-    _MSG="httpd configuration files have syntax error(s) {httpd -s}"
-    _STC=1
-fi
-if (( _LOG_HEALTHY > 0 || _STC > 0 ))
-then
-    log_hc "$0" ${_STC} "${_MSG}"
+    warn "skipping syntax check (unable to find syntax check tool)"
 fi
 
 return 0
@@ -231,7 +288,8 @@ VERSION     : $2
 CONFIG      : $3 with parameters:
                log_healthy=<yes|no>
                check_type=<auto|pgrep|sysv|systemd> [compt. >=2019-11-01]
-               httpd_bin=<path_to_httpd> [compt. >=2019-11-01]
+               httpd_bin=<name_of_httpd> [compt. >=2020-10-10]
+               httpd_path=<path_to_httpd> [compt. >=2020-10-10]
 PURPOSE     : Checks whether httpd (apache service) is running and whether the
               httpd configuration files are syntactically correct
 LOG HEALTHY : Supported
