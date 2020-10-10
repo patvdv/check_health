@@ -157,7 +157,7 @@ case "${_HTTPD_BIN}" in
         ;;
     *)
         typeset _HTTPD_INIT_SCRIPT="/etc/init.d/httpd"
-        typeset _HTTPD_SYSTEMD_SERVICE="apache.httpd"
+        typeset _HTTPD_SYSTEMD_SERVICE="httpd.service"
         ;;
 esac
 log "setting httpd init script to {${_HTTPD_INIT_SCRIPT}}"
