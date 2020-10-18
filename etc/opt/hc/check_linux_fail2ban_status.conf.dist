@@ -1,0 +1,27 @@
+#******************************************************************************
+# @(#) check_linux_fail2ban_status.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_fail2ban_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# specify which type of process check to use
+# Format: <auto|pgrep|sysv|systemd>. NULL value equals to "auto"
+# [default: auto]
+check_type="auto"
+
+# specify the list jails to status check (comma-separated)
+# Format: jail1,jail2,jail3,...
+# [default: none]
+check_jails=""
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

@@ -23,6 +23,7 @@ package() {
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_backup.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_es_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_es_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_age.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_age.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_change.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_change.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_fs_mounts.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -48,6 +49,7 @@ package() {
     install -D -m 644 etc/opt/hc/check_linux_autofs.conf.dist ${pkgdir}/etc/opt/hc/check_linux_autofs.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_burp_backup.conf.dist ${pkgdir}/etc/opt/hc/check_linux_burp_backup.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_es_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_es_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_fail2ban_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fail2ban_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_file_age.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_age.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_file_change.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_change.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_fs_usage.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fs_usage.conf.dist

@@ -31,6 +31,7 @@ cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_autofs.sh $RPM_BUILD_ROOT/op
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_age.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_age.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_change.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_change.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -56,6 +57,7 @@ install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
 cp ../SOURCES/etc/opt/hc/check_linux_autofs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_autofs.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_fail2ban_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fail2ban_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_file_change.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_change.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_fs_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -114,6 +116,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_es_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_age.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_change.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -139,6 +142,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_autofs.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_burp_backup.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_es_status.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_fail2ban_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_age.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_change.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -159,6 +163,8 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Fri Oct 18 2020 <patrick@kudos.be> - 0.3.3
+- Added check_linux_fail2ban_status plugin
 * Fri Nov  1 2019 <patrick@kudos.be> - 0.3.2
 - Added configuration file for check_linux_httpd_status plugin
 * Sun Jul 14 2019 <patrick@kudos.be> - 0.3.1
