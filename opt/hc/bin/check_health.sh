@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2020-04-07"
+typeset -r SCRIPT_VERSION="2020-11-08"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -102,6 +102,8 @@ typeset HC_MIN_TIME_OUT=30
 typeset HC_MSG_VAR=""
 typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
+set -A HC_STDOUT_LOG_ARRAY
+set -A HC_STDERR_LOG_ARRAY
 typeset HC_WILL_FIX=""
 # shellcheck disable=SC2034
 typeset HC_REPORT_CACHE_LAST=""
@@ -334,18 +336,19 @@ function check_lock_dir
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 if (( ARG_LOCK > 0 ))
 then
-    mkdir ${LOCK_DIR} >/dev/null 2>/dev/null || {
+    mkdir "${LOCK_DIR}" >/dev/null 2>/dev/null || {
         print -u2 "ERROR: unable to acquire lock ${LOCK_DIR}"
         ARG_VERBOSE=0 warn "unable to acquire lock ${LOCK_DIR}"
         if [[ -f ${LOCK_DIR}/.pid ]]
         then
-            typeset LOCK_PID="$(<${LOCK_DIR}/.pid)"
+            # shellcheck disable=SC2086
+            typeset LOCK_PID=$(<"${LOCK_DIR}/.pid")
             print -u2 "ERROR: active health checker running on PID: ${LOCK_PID}"
             ARG_VERBOSE=0 warn "active health checker running on PID: ${LOCK_PID}. Exiting!"
         fi
         exit 1
     }
-    print $$ >${LOCK_DIR}/.pid
+    print $$ > "${LOCK_DIR}/.pid"
 else
     (( ARG_DEBUG > 0 )) && print "DEBUG: locking has been disabled"
 fi
@@ -658,16 +661,28 @@ function do_cleanup
 log "performing cleanup ..."
 
 # remove temporary files
-[[ -f "${HC_MSG_FILE}" ]] && rm -f ${HC_MSG_FILE} >/dev/null 2>&1
+[[ -f "${HC_MSG_FILE}" ]] && rm -f "${HC_MSG_FILE}" >/dev/null 2>&1
 
-# remove trailing log files
-[[ -f "${HC_STDOUT_LOG}" ]] && rm -f ${HC_STDOUT_LOG} >/dev/null 2>&1
-[[ -f "${HC_STDERR_LOG}" ]] && rm -f ${HC_STDERR_LOG} >/dev/null 2>&1
+# remove left over plugin log files (pop from array stacks)
+FILE_COUNT=1
+while (( FILE_COUNT <= ${#HC_STDOUT_LOG_ARRAY[*]} ))
+do
+    (( ARG_DEBUG > 0 )) && debug "cleaning up plugin log file ${HC_STDOUT_LOG_ARRAY[FILE_COUNT]}"
+    [[ -f "${HC_STDOUT_LOG_ARRAY[FILE_COUNT]}" ]] && rm -f "${HC_STDOUT_LOG_ARRAY[FILE_COUNT]}" >/dev/null 2>&1
+    FILE_COUNT=$(( FILE_COUNT + 1 ))
+done
+FILE_COUNT=1
+while (( FILE_COUNT <= ${#HC_STDERR_LOG_ARRAY[*]} ))
+do
+    (( ARG_DEBUG > 0 )) && debug "cleaning up plugin log file ${HC_STDERR_LOG_ARRAY[FILE_COUNT]}"
+    [[ -f "${HC_STDERR_LOG_ARRAY[FILE_COUNT]}" ]] && rm -f "${HC_STDERR_LOG_ARRAY[FILE_COUNT]}" >/dev/null 2>&1
+    FILE_COUNT=$(( FILE_COUNT + 1 ))
+done
 
 # remove lock directory
 if [[ -d ${LOCK_DIR} ]]
 then
-    rm -rf ${LOCK_DIR} >/dev/null 2>&1
+    rm -rf "${LOCK_DIR}" >/dev/null 2>&1
     log "${LOCK_DIR} lock directory removed"
 fi
 
@@ -692,6 +707,7 @@ typeset FSYML=""
 # find missing symlinks (do not skip core plug-ins here)
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | while read -r FDIR
 do
+    # shellcheck disable=SC2086
     find ${FDIR} -type f -print 2>/dev/null | while read -r FFILE
     do
         FSYML="${FFILE%.sh}"
@@ -710,7 +726,7 @@ done
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | while read -r FDIR
 do
     # do not use 'find -type l' here!
-    # shellcheck disable=SC2010
+    # shellcheck disable=SC2010,SC2086
     ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FSYML
     do
         # check if file is a dead symlink
@@ -1282,7 +1298,7 @@ case ${ARG_ACTION} in
             # re-initialize messages stash (log of failed checks)
             # shellcheck disable=SC2034
             HC_MSG_VAR=""
-            : >${HC_MSG_FILE} 2>/dev/null
+            : > "${HC_MSG_FILE}" 2>/dev/null
             # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
@@ -1320,13 +1336,16 @@ case ${ARG_ACTION} in
             # set & initialize STDOUT/STDERR locations (not in init_hc()!)
             HC_STDOUT_LOG="${TMP_DIR}/${HC_RUN}.stdout.log.$$"
             HC_STDERR_LOG="${TMP_DIR}/${HC_RUN}.stderr.log.$$"
-            : >${HC_STDOUT_LOG} 2>/dev/null
+            # push plugin log files to array stacks (index starts at 1!)
+            HC_STDOUT_LOG_ARRAY[${#HC_STDOUT_LOG_ARRAY[*]}+1]="${HC_STDOUT_LOG}"
+            HC_STDERR_LOG_ARRAY[${#HC_STDERR_LOG_ARRAY[*]}+1]="${HC_STDERR_LOG}"
+            : > "${HC_STDOUT_LOG}" 2>/dev/null
             # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 die "unable to reset the \${HC_STDOUT_LOG} file"
             fi
-            : >${HC_STDERR_LOG} 2>/dev/null
+            : > "${HC_STDERR_LOG}" 2>/dev/null
             # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
@@ -1352,6 +1371,7 @@ case ${ARG_ACTION} in
             # run HC with or without monitor
             if (( ARG_MONITOR == 0 ))
             then
+                # shellcheck disable=SC2086
                 ${HC_RUN} ${ARG_HC_ARGS}
                 RUN_RC=$?
                 EXIT_CODE=${RUN_RC}
@@ -1390,6 +1410,7 @@ case ${ARG_ACTION} in
                 # SLEEP_PID is the PID of the sleep subshell itself
                 SLEEP_PID=$!
 
+                # shellcheck disable=SC2086
                 ${HC_RUN} ${ARG_HC_ARGS} &
                 CHILD_PID=$!
                 log "spawning child process with time-out of ${HC_TIME_OUT} secs for HC call [PID=${CHILD_PID}]"
@@ -1440,7 +1461,7 @@ case ${ARG_ACTION} in
             handle_hc "${HC_RUN}"
             # exit with return code from handle_hc() (see --flip-rc)
             EXIT_CODE=$?
-            rm -f ${HC_MSG_FILE} >/dev/null 2>&1
+            rm -f "${HC_MSG_FILE}" >/dev/null 2>&1
         done
         ;;
     5)  # show info on HC (single)
