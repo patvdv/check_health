@@ -937,6 +937,7 @@ print ${_EPOCH}
 # REQUIRES: n/a
 function data_epoch2date
 {
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 typeset _UNIX_EPOCH="${1}"
 typeset _CONVERT_DATE=""
 
@@ -961,6 +962,155 @@ fi
 
 return 0
 }
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_timestring_to_days()
+# DOES: converts a specific timestring to days (rounded to integer)
+# EXPECTS: time definition with a single s|m|h|d suffix [string]
+# OUTPUTS: time value in hours [string]
+# RETURNS: 0=conversion OK; 1=conversion failed
+# REQUIRES: n/a
+function data_timestring_to_days
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _DAYS=""
+
+case "${1}" in
+    *s|*s)
+        _DAYS=$(( $(print "${1%*[sS]}") / 60 / 60 / 24 ))
+        ;;
+    *m|*M)
+        _DAYS=$(( $(print "${1%*[mM]}") / 60 / 24 ))
+        ;;
+    *h|*H)
+        _DAYS=$(( $(print "${1%*[hH]}") / 24 ))
+        ;;
+    *d|*D)
+        _DAYS=$(print "${1%*[dD]}")
+        ;;
+    *)
+        # invalid suffix specified
+        (( ARG_DEBUG > 0 )) && debug "invalid time suffix specified (only s[econds]|m[inutes]|h[ours]|d[days] allowed)"
+        return 1
+        ;;
+esac
+
+print "${_HOURS}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_timestring_to_hours()
+# DOES: converts a specific timestring to hours (rounded to integer)
+# EXPECTS: time definition with a single s|m|h|d suffix [string]
+# OUTPUTS: time value in hours [string]
+# RETURNS: 0=conversion OK; 1=conversion failed
+# REQUIRES: n/a
+function data_timestring_to_hours
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _HOURS=""
+
+case "${1}" in
+    *s|*s)
+        _HOURS=$(( $(print "${1%*[sS]}") / 60 / 24 ))
+        ;;
+    *m|*M)
+        _HOURS=$(( $(print "${1%*[mM]}") / 60 ))
+        ;;
+    *h|*H)
+        _HOURS=$(print "${1%*[hH]}")
+        ;;
+    *d|*D)
+        _HOURS=$(( $(print "${1%*[dD]}") * 24 ))
+        ;;
+    *)
+        # invalid suffix specified
+        (( ARG_DEBUG > 0 )) && debug "invalid time suffix specified (only s[econds]|m[inutes]|h[ours]|d[days] allowed)"
+        return 1
+        ;;
+esac
+
+print "${_HOURS}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_timestring_to_mins()
+# DOES: converts a specific timestring to minutes (rounded to integer)
+# EXPECTS: time definition with a single s|m|h|d suffix [string]
+# OUTPUTS: time value in minutes [string]
+# RETURNS: 0=conversion OK; 1=conversion failed
+# REQUIRES: n/a
+function data_timestring_to_mins
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _MINUTES=""
+
+case "${1}" in
+    *s|*s)
+        _MINUTES=$(( $(print "${1%*[sS]}") / 60 ))
+        ;;
+    *m|*M)
+        _MINUTES=$(print "${1%*[mM]}")
+        ;;
+    *h|*H)
+        _MINUTES=$(( $(print "${1%*[hH]}") * 60 ))
+        ;;
+    *d|*D)
+        _MINUTES=$(( $(print "${1%*[dD]}") * 60 * 24 ))
+        ;;
+    *)
+        # invalid suffix specified
+        (( ARG_DEBUG > 0 )) && debug "invalid time suffix specified (only s[econds]|m[inutes]|h[ours]|d[days] allowed)"
+        return 1
+        ;;
+esac
+
+print "${_MINUTES}"
+
+return 0
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: data_timestring_to_secs()
+# DOES: converts a specific timestring to seconds (rounded to integer)
+# EXPECTS: time definition with a single m|h|d suffix [string]
+# OUTPUTS: time value in seconds [string]
+# RETURNS: 0=conversion OK; 1=conversion failed
+# REQUIRES: n/a
+function data_timestring_to_secs
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset _SECONDS=""
+
+case "${1}" in
+    *s|*s)
+        _SECONDS=$(print "${1%*[sS]}")
+        ;;
+    *m|*M)
+        _SECONDS=$(( $(print "${1%*[Mm]}") * 60 ))
+        ;;
+    *h|*H)
+        _SECONDS=$(( $(print "${1%*[hH]}") * 60 * 60 ))
+        ;;
+    *d|*D)
+        _SECONDS=$(( $(print "${1%*[dD]}") * 60 * 60 * 24 ))
+        ;;
+    *)
+        # invalid suffix specified
+        (( ARG_DEBUG > 0 )) && debug "invalid time suffix specified (only s[econds]|m[inutes]|h[ours]|d[days] allowed)"
+        return 1
+        ;;
+esac
+
+print "${_SECONDS}"
+
+return 0
+}
+
 
 #******************************************************************************
 # END of script

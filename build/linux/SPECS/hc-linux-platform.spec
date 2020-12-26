@@ -30,8 +30,10 @@ install -d -m 755 $RPM_BUILD_ROOT/opt/hc/lib/platform/linux
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_autofs.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_autofs.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_backup.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_burp_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_burp_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_dovecot_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_dovecot_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_es_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_es_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fetchmail_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fetchmail_status.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_age.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_age.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_file_change.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_file_change.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -51,6 +53,7 @@ cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hplog.sh $RPM_BUILD_ROOT/opt
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_hpssacli.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_process_limits.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_process_limits.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_root_crontab.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
+cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_uptime.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_uptime.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 cp ../SOURCES/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh $RPM_BUILD_ROOT/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc
@@ -58,6 +61,7 @@ cp ../SOURCES/etc/opt/hc/check_linux_autofs.conf.dist $RPM_BUILD_ROOT/etc/opt/hc
 cp ../SOURCES/etc/opt/hc/check_linux_burp_backup.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_burp_backup.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_es_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_es_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_fail2ban_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fail2ban_status.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_fetchmail_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fetchmail_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_file_age.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_age.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_file_change.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_file_change.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_fs_usage.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -70,6 +74,7 @@ cp ../SOURCES/etc/opt/hc/check_linux_mysqld_status.conf.dist $RPM_BUILD_ROOT/etc
 cp ../SOURCES/etc/opt/hc/check_linux_ntp_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_ntp_status.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_process_limits.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_process_limits.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_root_crontab.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_root_crontab.conf.dist
+cp ../SOURCES/etc/opt/hc/check_linux_uptime.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_uptime.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_vz_ct_counters.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
 cp ../SOURCES/etc/opt/hc/check_linux_vz_ct_status.conf.dist $RPM_BUILD_ROOT/etc/opt/hc/check_linux_vz_ct_status.conf.dist
 install -d -m 755 $RPM_BUILD_ROOT/etc/opt/hc/core
@@ -115,8 +120,10 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_autofs.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_backup.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_burp_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_dovecot_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_es_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fetchmail_status.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_age.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_file_change.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -136,6 +143,7 @@ echo "INFO: finished post-uninstall script"
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_hpssacli.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_process_limits.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_root_crontab.sh
+%attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_uptime.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
 %attr(755, root, root) /opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
 %dir /etc/opt/hc
@@ -143,6 +151,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_burp_backup.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_es_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_fail2ban_status.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_fetchmail_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_age.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_file_change.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -155,6 +164,7 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/check_linux_ntp_status.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_process_limits.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_root_crontab.conf.dist
+%attr(644, root, root) /etc/opt/hc/check_linux_uptime.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_vz_ct_counters.conf.dist
 %attr(644, root, root) /etc/opt/hc/check_linux_vz_ct_status.conf.dist
 %dir /etc/opt/hc/core
@@ -163,6 +173,11 @@ echo "INFO: finished post-uninstall script"
 %attr(644, root, root) /etc/opt/hc/core/templates/mail_body.tpl-check_linux_root_crontab
 
 %changelog
+* Sat Dec 26 2020 <patrick@kudos.be> - 0.3.5
+- Added check_linux_fetchmail_status plugin
+- Added check_linux_dovecot_status plugin
+* Mon Dec 21 2020 <patrick@kudos.be> - 0.3.4
+- Added check_linux_uptime plugin
 * Fri Oct 18 2020 <patrick@kudos.be> - 0.3.3
 - Added check_linux_fail2ban_status plugin
 * Fri Nov  1 2019 <patrick@kudos.be> - 0.3.2

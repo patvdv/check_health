@@ -32,12 +32,14 @@ Fileset
 /opt/hc/lib/platform/aix/check_aix_subsystems.sh
 /opt/hc/lib/platform/aix/check_aix_sysbackup.sh
 /opt/hc/lib/platform/aix/check_aix_topasrec.sh
+/opt/hc/lib/platform/aix/check_aix_uptime.sh
 /etc/opt/hc
 /etc/opt/hc/check_aix_file_age.conf.dist
 /etc/opt/hc/check_aix_file_change.conf.dist
 /etc/opt/hc/check_aix_root_crontab.conf.dist
 /etc/opt/hc/check_aix_subsystems.conf.dist
 /etc/opt/hc/check_aix_sysbackup.conf.dist
+/etc/opt/hc/check_aix_uptime.conf.dist
   EOROOTFiles
   Relocatable: N
 EOFileset

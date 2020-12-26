@@ -35,6 +35,7 @@
 # @(#)             fixed problem with offset calculation [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-24: set dynamic path to client tools [Patrick Van der Veken]
+# @(#) 2020-12-21: fixes for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -50,13 +51,13 @@ typeset _CHRONYD_SYSTEMD_SERVICE="chronyd.service"
 typeset _NTPD_SYSTEMD_SERVICE="ntpd.service"
 typeset _CHRONYD_USER="chrony"
 typeset _NTPD_USER="ntp"
-typeset _VERSION="2019-03-24"                           # YYYY-MM-DD
+typeset _VERSION="2020-12-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 typeset _NTPQ_OPTS="-pn"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
@@ -82,7 +83,7 @@ for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
         help)
-            _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
+            _show_usage "$0" "${_VERSION}" "${_CONFIG_FILE}" && return 0
             ;;
         force_chrony)
             log "forcing chrony since force_chrony was used"
@@ -173,10 +174,7 @@ fi
 #------------------------------------------------------------------------------
 # check for client tools
 _CHRONYC_BIN="$(command -v chronyc 2>>${HC_STDERR_LOG})"
-
-
 _NTPQ_BIN="$(command -v ntpq 2>>${HC_STDERR_LOG})"
-
 
 #------------------------------------------------------------------------------
 # chronyd (prefer) or ntpd (fallback)
@@ -202,6 +200,7 @@ then
                 ;;
             'sysv')
                 chkconfig chronyd >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                # shellcheck disable=SC2181
                 if (( $? == 0 ))
                 then
                     _USE_CHRONYD=1
@@ -333,7 +332,10 @@ case ${_STC} in
         fi
         ;;
 esac
-log_hc "$0" ${_STC} "${_MSG}"
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 #------------------------------------------------------------------------------
 # check chronyc/ntpq results
@@ -341,6 +343,7 @@ _STC=0
 if (( _USE_CHRONYD > 0 ))
 then
     ${_CHRONYC_BIN} -nc sources 2>>${HC_STDERR_LOG} >>${HC_STDOUT_LOG}
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         _MSG="unable to execute {${_CHRONYC_BIN}}"
@@ -368,7 +371,10 @@ then
             _MSG="chrony is synchronizing against ${_CHRONY_PEER}"
             ;;
     esac
-    log_hc "$0" ${_STC} "${_MSG}"
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 
     # 2) offset value
     if (( _STC == 0 ))
@@ -380,6 +386,7 @@ then
                 # numeric, OK (negatives are OK too!)
                 # convert from us to ms
                 _CURR_OFFSET=$(print -R "${_CURR_OFFSET} * 1000" | bc 2>/dev/null)
+                # shellcheck disable=SC2181
                 if (( $? > 0 )) || [[ -z "${_CURR_OFFSET}" ]]
                 then
                     :
@@ -393,7 +400,10 @@ then
                 else
                     _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
                 fi
-                log_hc "$0" ${_STC} "${_MSG}"
+                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                then
+                    log_hc "$0" ${_STC} "${_MSG}"
+                fi
                 ;;
             *)
                 # not numeric
@@ -425,7 +435,10 @@ else
             _MSG="NTP is synchronizing against ${_NTP_PEER##*\*}"
             ;;
     esac
-    log_hc "$0" ${_STC} "${_MSG}"
+    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    then
+        log_hc "$0" ${_STC} "${_MSG}"
+    fi
 
     # 2) offset value
     if (( _STC == 0 ))
@@ -442,7 +455,10 @@ else
                 else
                     _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
                 fi
-                log_hc "$0" ${_STC} "${_MSG}"
+                if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+                then
+                    log_hc "$0" ${_STC} "${_MSG}"
+                fi
                 ;;
             *)
                 # not numeric

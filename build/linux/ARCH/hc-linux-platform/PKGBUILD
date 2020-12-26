@@ -22,8 +22,10 @@ package() {
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_autofs.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_autofs.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_backup.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_backup.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_burp_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_burp_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_dovecot_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_dovecot_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_es_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_es_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fail2ban_status.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_fetchmail_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fetchmail_status.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_age.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_age.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_file_change.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_file_change.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_fs_mounts.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_fs_mounts.sh
@@ -43,6 +45,7 @@ package() {
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_hpssacli.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_hpssacli.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_process_limits.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_process_limits.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_root_crontab.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_root_crontab.sh
+    install -D -m 755 opt/hc/lib/platform/linux/check_linux_uptime.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_uptime.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_counters.sh
     install -D -m 755 opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh ${pkgdir}/opt/hc/lib/platform/linux/check_linux_vz_ct_status.sh
     install -d -m 755 ${pkgdir}/etc/opt/hc
@@ -50,6 +53,7 @@ package() {
     install -D -m 644 etc/opt/hc/check_linux_burp_backup.conf.dist ${pkgdir}/etc/opt/hc/check_linux_burp_backup.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_es_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_es_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_fail2ban_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fail2ban_status.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_fetchmail_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fetchmail_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_file_age.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_age.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_file_change.conf.dist ${pkgdir}/etc/opt/hc/check_linux_file_change.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_fs_usage.conf.dist ${pkgdir}/etc/opt/hc/check_linux_fs_usage.conf.dist
@@ -62,6 +66,7 @@ package() {
     install -D -m 644 etc/opt/hc/check_linux_ntp_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_ntp_status.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_process_limits.conf.dist ${pkgdir}/etc/opt/hc/check_linux_process_limits.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_root_crontab.conf.dist ${pkgdir}/etc/opt/hc/check_linux_root_crontab.conf.dist
+    install -D -m 644 etc/opt/hc/check_linux_uptime.conf.dist ${pkgdir}/etc/opt/hc/check_linux_uptime.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_vz_ct_counters.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_counters.conf.dist
     install -D -m 644 etc/opt/hc/check_linux_vz_ct_status.conf.dist ${pkgdir}/etc/opt/hc/check_linux_vz_ct_status.conf.dist
     install -d -m 755 ${pkgdir}/etc/opt/hc/core

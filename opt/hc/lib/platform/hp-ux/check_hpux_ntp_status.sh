@@ -30,6 +30,7 @@
 # @(#)             with offset calculation [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: Text updates [Patrick Van der Veken]
+# @(#) 2020-12-21: fixes for --log-healthy [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #------------------------------------------------------------------------------
@@ -39,14 +40,14 @@ function check_hpux_ntp_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2020-12-21"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 typeset _NTPQ_BIN="/usr/sbin/ntpq"
 typeset _NTPQ_OPTS="-pn"
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
@@ -65,7 +66,7 @@ for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
         help)
-            _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
+            _show_usage "$0" "${_VERSION}" "${_CONFIG_FILE}" && return 0
             ;;
     esac
 done
@@ -148,7 +149,10 @@ case "${_NTP_PEER}" in
         _MSG="NTP is synchronizing against ${_NTP_PEER##*\*}"
         ;;
 esac
-log_hc "$0" ${_STC} "${_MSG}"
+if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+then
+    log_hc "$0" ${_STC} "${_MSG}"
+fi
 
 # 2) offset value
 if (( _STC == 0 ))
@@ -165,7 +169,10 @@ then
             else
                 _MSG="NTP offset of ${_CURR_OFFSET} is within the acceptable range"
             fi
-            log_hc "$0" ${_STC} "${_MSG}"
+            if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+            then
+                log_hc "$0" ${_STC} "${_MSG}"
+            fi
             ;;
         *)
             # not numeric

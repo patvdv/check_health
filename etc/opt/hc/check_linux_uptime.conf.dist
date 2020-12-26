@@ -1,0 +1,41 @@
+#******************************************************************************
+# @(#) check_linux_uptime.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_uptime HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# trigger event when current uptime is less than previously record uptime?
+# [default: yes]
+check_reboot="yes"
+
+# time to wait before the current uptime is considered for the reboot check.
+# Example: a value of 60m means the check for a previous reboot will be at earliest
+#          performed 1 hour after the last reboot of the host.
+# Format: <value>m|h|d where m=minutes, h=hours, d=days (lowercase suffix).
+#         if no suffix is specified, then minutes are assumed.
+# [default: 60m]
+reboot_time="60m"
+
+# trigger event when current uptime goes over the maximum threshold?
+# [default: no]
+check_old_age="no"
+
+# time to expire before the current uptime is considered "old age".
+# Example: a value of 365d means a must-reboot will be flagged at earliest after
+#          1 year of uptime of the host
+# Format: <value>m|h|d where m=minutes, h=hours, d=days (lowercase suffix).
+#         if no suffix is specified, then minutes are assumed.
+# [default: 365d]
+old_age_time="365d"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

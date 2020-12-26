@@ -1,8 +1,8 @@
 #!/usr/bin/env ksh
 #******************************************************************************
-# @(#) check_linux_postfix_status.sh
+# @(#) check_linux_dovecot_status.sh
 #******************************************************************************
-# @(#) Copyright (C) 2016 by KUDOS BVBA (info@kudos.be).  All rights reserved.
+# @(#) Copyright (C) 2020 by KUDOS BVBA (info@kudos.be).  All rights reserved.
 #
 # This program is a free software; you can redistribute it and/or modify
 # it under the same terms of the GNU General Public License as published by
@@ -16,33 +16,23 @@
 #
 # DOCUMENTATION (MAIN)
 # -----------------------------------------------------------------------------
-# @(#) MAIN: check_linux_postfix_status
+# @(#) MAIN: check_linux_dovecot_status
 # DOES: see _show_usage()
 # EXPECTS: n/a
 # REQUIRES: data_comma2space(), linux_get_init(), init_hc(), log_hc(), warn()
 #
 # @(#) HISTORY:
-# @(#) 2016-12-01: initial version [Patrick Van der Veken]
-# @(#) 2017-05-08: suppress errors on postfix call + fix fall-back
-# @(#)             for sysv->pgrep[Patrick Van der Veken]
-# @(#) 2018-05-21: STDERR fixes [Patrick Van der Veken]
-# @(#) 2018-11-18: add linux_has_systemd_service() [Patrick Van der Veken]
-# @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
-# @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
-# @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
-# @(#) 2019-03-25: fix for older Debian & Ubuntu [Patrick Van der Veken]
-# @(#) 2020-05-08: add pgrep als fallback check [Patrick Van der Veken]
-# @(#) 2020-12-27: add configuration check + quoting fixes [Patrick Van der Veken]
+# @(#) 2020-12-27: initial version [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
 
 # -----------------------------------------------------------------------------
-function check_linux_postfix_status
+function check_linux_dovecot_status
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _POSTFIX_INIT_SCRIPT="/etc/init.d/postfix"
-typeset _POSTFIX_SYSTEMD_SERVICE="postfix.service"
+typeset _DOVECOT_INIT_SCRIPT="/etc/init.d/dovecot"
+typeset _DOVECOT_SYSTEMD_SERVICE="dovecot.service"
 typeset _VERSION="2020-12-27"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
@@ -52,8 +42,8 @@ typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
-typeset _POSTFIX_BIN=""
-typeset _POSTFIX_CHECKER=""
+typeset _DOVECOT_BIN=""
+typeset _DOVECOT_CHECKER=""
 typeset _MSG=""
 typeset _STC=0
 typeset _LOG_HEALTHY=0
@@ -91,7 +81,7 @@ fi
 linux_get_init
 case "${LINUX_INIT}" in
     'systemd')
-        # Debian8/Ubuntu16 do not correctly report a unit file for postfix,
+        # Debian8/Ubuntu16 do not correctly report a unit file for dovecot,
         # do not check for it and instead just query systemd service
         linux_get_distro
         if [[ "${LINUX_DISTRO}" = "Debian" ]] && (( ${LINUX_RELEASE%%.*} < 9 ))
@@ -101,13 +91,13 @@ case "${LINUX_INIT}" in
         then
             _CHECK_SYSTEMD_SERVICE=1
         else
-            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_POSTFIX_SYSTEMD_SERVICE}")
+            _CHECK_SYSTEMD_SERVICE=$(linux_has_systemd_service "${_DOVECOT_SYSTEMD_SERVICE}")
         fi
         if (( _CHECK_SYSTEMD_SERVICE > 0 ))
         then
-            systemctl --quiet is-active ${_POSTFIX_SYSTEMD_SERVICE} 2>>"${HC_STDERR_LOG}" || _STC=1
+            systemctl --quiet is-active ${_DOVECOT_SYSTEMD_SERVICE} 2>>"${HC_STDERR_LOG}" || _STC=1
         else
-            warn "systemd unit file not found {${_POSTFIX_SYSTEMD_SERVICE}}"
+            warn "systemd unit file not found {${_DOVECOT_SYSTEMD_SERVICE}}"
             _RC=1
         fi
         ;;
@@ -117,14 +107,14 @@ case "${LINUX_INIT}" in
         ;;
     'sysv')
         # check running SysV
-        if [[ -x ${_POSTFIX_INIT_SCRIPT} ]]
+        if [[ -x ${_DOVECOT_INIT_SCRIPT} ]]
         then
-            if (( $(${_POSTFIX_INIT_SCRIPT} status 2>>"${HC_STDERR_LOG}" | grep -c -i 'is running' 2>/dev/null) == 0 ))
+            if (( $(${_DOVECOT_INIT_SCRIPT} status 2>>"${HC_STDERR_LOG}" | grep -c -i 'is running' 2>/dev/null) == 0 ))
             then
                 _STC=1
             fi
         else
-            warn "sysv init script not found {${_POSTFIX_INIT_SCRIPT}}"
+            warn "sysv init script not found {${_DOVECOT_INIT_SCRIPT}}"
             _RC=1
         fi
         ;;
@@ -133,18 +123,18 @@ case "${LINUX_INIT}" in
         ;;
 esac
 
-# 2) try the postfix way
+# 2) try the dovecot way
 if (( _RC > 0 ))
 then
-    _POSTFIX_BIN="$(command -v postfix 2>>${HC_STDERR_LOG})"
-    if [[ -x ${_POSTFIX_BIN} && -n "${_POSTFIX_BIN}" ]]
+    _DOVECOT_BIN="$(command -v dovecot 2>>${HC_STDERR_LOG})"
+    if [[ -x ${_DOVECOT_BIN} && -n "${_DOVECOT_BIN}" ]]
     then
-        if (( $(${_POSTFIX_BIN} status 2>>"${HC_STDERR_LOG}" | grep -c -i 'is running' 2>/dev/null) == 0 ))
+        if (( $(${_DOVECOT_BIN} status 2>>"${HC_STDERR_LOG}" | grep -c -i 'is running' 2>/dev/null) == 0 ))
         then
             _RC=1
         fi
     else
-        warn "postfix is not installed here"
+        warn "dovecot is not installed here"
         return 1
     fi
 fi
@@ -152,19 +142,19 @@ fi
 # 3) try the pgrep way (note: old pgreps do not support '-c')
 if (( _RC > 0 ))
 then
-    (( $(pgrep -u postfix pickup 2>>"${HC_STDERR_LOG}" | wc -l 2>/dev/null) == 0 )) && _STC=1
+    (( $(pgrep -u dovecot 2>>"${HC_STDERR_LOG}" | wc -l 2>/dev/null) == 0 )) && _STC=1
 fi
 
 # evaluate results
 case ${_STC} in
     0)
-        _MSG="postfix is running"
+        _MSG="dovecot is running"
         ;;
     1)
-        _MSG="postfix is not running"
+        _MSG="dovecot is not running"
         ;;
     *)
-        _MSG="could not determine status of postfix"
+        _MSG="could not determine status of dovecot"
         ;;
 esac
 if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -174,18 +164,18 @@ fi
 
 #-------------------------------------------------------------------------------
 # configuration state
-_POSTFIX_CHECKER="$(command -v postconf 2>>${HC_STDERR_LOG})"
-if [[ -x ${_POSTFIX_CHECKER} && -n "${_POSTFIX_CHECKER}" ]]
+_DOVECOT_CHECKER="$(command -v doveconf 2>>${HC_STDERR_LOG})"
+if [[ -x ${_DOVECOT_CHECKER} && -n "${_DOVECOT_CHECKER}" ]]
 then
     # dump configuration
-    ${_POSTFIX_CHECKER} -n >>"${HC_STDOUT_LOG}" 2>>"${HC_STDERR_LOG}"
+    ${_DOVECOT_CHECKER} -n >>"${HC_STDOUT_LOG}" 2>>"${HC_STDERR_LOG}"
     # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
-        _MSG="postfix configuration files have syntax error(s) {${_POSTFIX_CHECKER} -n}"
+        _MSG="dovecot configuration files have syntax error(s) {${_DOVECOT_CHECKER} -n}"
         _STC=1
     else
-        _MSG="postfix configuration files are syntactically correct"
+        _MSG="dovecot configuration files are syntactically correct"
         _STC=0
     fi
     if (( _LOG_HEALTHY > 0 || _STC > 0 ))
@@ -205,8 +195,8 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-PURPOSE     : Checks whether postfix (mail system) is running and whether the
-              postfix configuration files are syntactically correct
+PURPOSE     : Checks whether dovecot (mail system) is running and whether the
+              dovecot configuration files are syntactically correct
 LOG HEALTHY : Supported
 
 EOT

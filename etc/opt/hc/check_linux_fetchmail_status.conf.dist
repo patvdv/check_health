@@ -1,0 +1,28 @@
+#******************************************************************************
+# @(#) check_linux_fetchmail_status.conf
+#******************************************************************************
+# This is a configuration file for the check_linux_fetchmail_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# specify the regex of error codes that will be used to search the log file_path
+# [default: error|authfail|lockbusy|ioerr]
+error_regex="error|authfail|lockbusy|ioerr"
+
+# specify fetchmail details
+# Format:
+#   fetchmail:<account>:<rc_file>:<check_log=Yes|No>
+# Examples:
+#fetchmail:vmail:/srv/vmail/janedoe/.fetchmailrc:Yes
+#fetchmail:vmail:/srv/vmail/johndoe/.fetchmailrc:No
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
