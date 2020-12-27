@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_data
 {
-typeset _VERSION="2020-03-06"                               # YYYY-MM-DD
+typeset _VERSION="2020-12-27"                               # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -51,7 +51,7 @@ typeset _PARAMETER="${1}"
 typeset _LVALUE=""
 typeset _RC=0
 
-_LVALUE=$(grep -i "^${_PARAMETER} *=" ${_CONFIG_FILE} | cut -f2- -d'=')
+_LVALUE=$(grep -i "^${_PARAMETER} *=" "${_CONFIG_FILE}" | cut -f2- -d'=')
 
 if [[ -n "${_LVALUE}" ]]
 then
@@ -637,7 +637,7 @@ case "${1}" in
             return 1
         fi
         # check if X < Y
-        if $(print "${1}" | awk -F '-' '{ if ($1 < $2) { exit 1 }}' 2>/dev/null)
+        if print "${1}" | awk -F '-' '{ if ($1 < $2) { exit 1 }}' 2>/dev/null
         then
             (( ARG_DEBUG > 0 )) && debug "in range $1 operator Y is smaller or equal to operator Y"
             return 1
@@ -995,7 +995,7 @@ case "${1}" in
         ;;
 esac
 
-print "${_HOURS}"
+print "${_DAYS}"
 
 return 0
 }
@@ -1110,7 +1110,6 @@ print "${_SECONDS}"
 
 return 0
 }
-
 
 #******************************************************************************
 # END of script
