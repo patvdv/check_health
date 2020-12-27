@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2020-11-08"
+typeset -r SCRIPT_VERSION="2020-12-27"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -86,7 +86,6 @@ typeset EXIT_CODE=0
 typeset FDIR=""
 typeset FFILE=""
 typeset FPATH=""
-typeset HC_ARCHIVE=""
 typeset HC_CHECK=""
 typeset HC_DISABLE=""
 typeset HC_ENABLE=""
@@ -1554,27 +1553,8 @@ case ${ARG_ACTION} in
                 ;;
         esac
         ;;
-    13)  # archive current log entries for all HCs
-        list_hc "list" | while read -r HC_ARCHIVE
-        do
-            # check for HC (function)
-            exists_hc "${HC_ARCHIVE}" && die "cannot find HC: ${HC_ARCHIVE}"
-            log "archiving current log entries for HC: ${HC_ARCHIVE}"
-            archive_hc "${HC_ARCHIVE}"
-            ARCHIVE_RC=$?
-            case ${ARCHIVE_RC} in
-                0)
-                    log "no archiving needed for ${HC_ARCHIVE}"
-                    ;;
-                1)
-                    log "successfully archived log entries for ${HC_ARCHIVE}"
-                    ;;
-                2)
-                    log "failed to archive log entries for ${HC_ARCHIVE} [RC=${ARCHIVE_RC}]"
-                    EXIT_CODE=1
-                    ;;
-            esac
-        done
+    13) # archive current log entries for all HCs
+        archive_hc_all
         ;;
 esac
 

@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2020-04-15"           # YYYY-MM-DD
+typeset _VERSION="2020-12-27"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -63,7 +63,7 @@ typeset TMP2_FILE="${TMP_DIR}/.$0.tmp2.archive.$$"
 trap "rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_LOG_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # get pre-archive log count
-PRE_LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+PRE_LOG_COUNT=$(wc -l "${HC_LOG}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
 if (( PRE_LOG_COUNT == 0 ))
 then
     warn "${HC_LOG} is empty, nothing to archive"
@@ -71,7 +71,7 @@ then
 fi
 
 # isolate messages from HC, find unique %Y-%m combinations
-grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} 2>/dev/null |\
+grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" "${HC_LOG}" 2>/dev/null |\
     cut -f1 -d"${LOG_SEP}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null |\
     cut -f1-2 -d'-' 2>/dev/null | sort -u 2>/dev/null |\
     while read -r YEAR_MONTH
@@ -84,48 +84,97 @@ do
     fi
 
     # find all messages for that YEAR-MONTH combination
-    grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" ${HC_LOG} >${TMP1_FILE}
-    TODO_LOG_COUNT=$(wc -l ${TMP1_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+    grep "${YEAR_MONTH}.*${LOG_SEP}${HC_NAME}${LOG_SEP}" "${HC_LOG}" >"${TMP1_FILE}"
+    TODO_LOG_COUNT=$(wc -l "${TMP1_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
     log "# of entries in ${YEAR_MONTH} to archive: ${TODO_LOG_COUNT}"
 
     # combine existing archived messages and resort
     ARCHIVE_FILE="${ARCHIVE_DIR}/hc.${YEAR_MONTH}.log"
-    cat ${ARCHIVE_FILE} ${TMP1_FILE} 2>/dev/null | sort -u >${TMP2_FILE} 2>/dev/null
-    mv ${TMP2_FILE} ${ARCHIVE_FILE} 2>/dev/null || {
+    cat "${ARCHIVE_FILE}" "${TMP1_FILE}" 2>/dev/null | sort -u >"${TMP2_FILE}" 2>/dev/null
+    mv "${TMP2_FILE}" "${ARCHIVE_FILE}" 2>/dev/null || {
         warn "failed to move archive file, aborting"
         return 2
     }
-    LOG_COUNT=$(wc -l ${ARCHIVE_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+    LOG_COUNT=$(wc -l "${ARCHIVE_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
     log "# of entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
 
     # remove archived messages from the $HC_LOG (but create a backup first!)
-    cp -p ${HC_LOG} ${SAVE_HC_LOG} 2>/dev/null
+    cp -p "${HC_LOG}" "${SAVE_HC_LOG}" 2>/dev/null
     # compare with the sorted $HC_LOG
-    sort ${HC_LOG} >${TMP1_FILE}
-    comm -23 ${TMP1_FILE} ${ARCHIVE_FILE} 2>/dev/null >${TMP2_FILE}
+    sort "${HC_LOG}" >"${TMP1_FILE}"
+    comm -23 "${TMP1_FILE}" "${ARCHIVE_FILE}" 2>/dev/null >"${TMP2_FILE}"
 
     # check archive action (HC_LOG should not be empty unless it contained
     # only messages from one single HC plugin before archival)
     if [[ -s ${TMP2_FILE} ]] || (( PRE_LOG_COUNT == TODO_LOG_COUNT ))
     then
-        mv ${TMP2_FILE} ${HC_LOG} 2>/dev/null || {
+        mv "${TMP2_FILE}" "${HC_LOG}" 2>/dev/null || {
             warn "failed to move HC log file, aborting"
             return 2
         }
-        LOG_COUNT=$(wc -l ${HC_LOG} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+        LOG_COUNT=$(wc -l "${HC_LOG}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
         log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
         ARCHIVE_RC=1
     else
         warn "a problem occurred. Rolling back archival"
-        mv ${SAVE_HC_LOG} ${HC_LOG} 2>/dev/null
+        mv "${SAVE_HC_LOG}" "${HC_LOG}" 2>/dev/null
         ARCHIVE_RC=2
     fi
 done
 
 # clean up temporary file(s)
-rm -f ${TMP1_FILE} ${TMP2_FILE} ${SAVE_HC_LOG} >/dev/null 2>&1
+rm -f "${TMP1_FILE}" "${TMP2_FILE}" "${SAVE_HC_LOG}" >/dev/null 2>&1
 
 return ${ARCHIVE_RC}
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: archive_hc_all()
+# DOES: archive log entries for all HCs
+# EXPECTS: n/a
+# RETURNS: 0
+# REQUIRES: ${HC_LOG}
+function archive_hc_all
+{
+typeset HC_ARCHIVE=""
+
+# build list with all HCs in $HC_LOG and sort them by highest number of messages
+# first (to speed up the archiving operation)
+log "parsing log file ${HC_LOG} for messages ..."
+awk -F"${LOG_SEP}" '
+    {
+        # only do records with a proper HC name in $2
+        if ($2 ~ /check_/) {
+            count[$2]++;
+        }
+    }
+
+    END {
+        for (hc in count) {
+            print count[hc] ":" hc;
+        }
+    }' "${HC_LOG}" 2>/dev/null | sort -rn 2>/dev/null |\
+while IFS=":" read -r HC_COUNT HC_ARCHIVE
+do
+    # check for HC (function)
+    exists_hc "${HC_ARCHIVE}" && die "cannot find HC: ${HC_ARCHIVE}"
+    log "archiving ${HC_COUNT} log entries for HC ${HC_ARCHIVE}"
+    archive_hc "${HC_ARCHIVE}"
+    ARCHIVE_RC=$?
+    case ${ARCHIVE_RC} in
+        0)
+            log "no archiving needed for ${HC_ARCHIVE}"
+            ;;
+        1)
+            log "successfully archived log entries for ${HC_ARCHIVE}"
+            ;;
+        2)
+            warn "failed to archive log entries for ${HC_ARCHIVE} [RC=${ARCHIVE_RC}]"
+            ;;
+    esac
+done
+
+return 0
 }
 
 # -----------------------------------------------------------------------------
@@ -145,7 +194,7 @@ function count_log_errors
 typeset LOG_STASH="${1}"
 typeset ERROR_COUNT=0
 
-# shellcheck disable=SC2002
+# shellcheck disable=SC2002,SC2086
 ERROR_COUNT=$(cat ${LOG_STASH} 2>/dev/null | awk -F"${LOG_SEP}" '
     BEGIN { num = 0 }
     {
@@ -155,7 +204,7 @@ ERROR_COUNT=$(cat ${LOG_STASH} 2>/dev/null | awk -F"${LOG_SEP}" '
     }
     END { print num }' 2>/dev/null)
 
-print ${ERROR_COUNT}
+print "${ERROR_COUNT}"
 
 return 0
 }
@@ -197,7 +246,7 @@ then
         print - "$*" | while read -r LOG_LINE
         do
             # shellcheck disable=SC2153
-            print "${NOW}: ERROR: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
+            print "${NOW}: ERROR: [$$]:" "${LOG_LINE}" >>"${LOG_FILE}"
         done
     fi
     print - "$*" | while read -r LOG_LINE
@@ -264,7 +313,7 @@ HAS_REPORT_STD=0
 # check which core display/notification plugins are installed
 # do not use a while-do loop here because mksh/pdksh does not pass updated
 # variables back from the sub shell (only works for true ksh88/ksh93)
-# shellcheck disable=SC2010
+# shellcheck disable=SC2010,SC2086
 for FFILE in $(ls -1 ${FPATH_PARENT}/core/*.sh 2>/dev/null | grep -v "include_" 2>/dev/null)
 do
     case "${FFILE}" in
@@ -651,8 +700,10 @@ return 0
 function dump_logs
 {
 log "=== STDOUT ==="
+# shellcheck disable=SC2086
 log "$(<${HC_STDOUT_LOG})"
 log "=== STDERR ==="
+# shellcheck disable=SC2086
 log "$(<${HC_STDERR_LOG})"
 
 return 0
@@ -741,25 +792,26 @@ fi
 trap "[[ -f ${TMP_FILE} ]] && rm -f ${TMP_FILE} >/dev/null 2>&1; return 1" 1 2 3 15
 
 # check and rewrite log file(s)
+# shellcheck disable=SC2086
 find ${LOG_STASH} -type f -print 2>/dev/null | while read -r FIX_FILE
 do
     log "fixing log file ${FIX_FILE} ..."
 
     # count before rewrite
-    STASH_COUNT=$(wc -l ${FIX_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+    STASH_COUNT=$(wc -l "${FIX_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
 
     # does it have errors?
-    ERROR_COUNT=$(count_log_errors ${FIX_FILE})
+    ERROR_COUNT=$(count_log_errors "${FIX_FILE}")
 
     # we count the empty lines (again)
-    EMPTY_COUNT=$(grep -c -E -e '^$' ${FIX_FILE} 2>/dev/null)
+    EMPTY_COUNT=$(grep -c -E -e '^$' "${FIX_FILE}" 2>/dev/null)
 
     # rewrite if needed
     if (( ERROR_COUNT > 0 ))
     then
-        : >${TMP_FILE} 2>/dev/null
+        : >"${TMP_FILE}" 2>/dev/null
         # shellcheck disable=SC2002
-        cat ${FIX_FILE} 2>/dev/null | awk -F"${LOG_SEP}" -v OFS="${LOG_SEP}" '
+        cat "${FIX_FILE}" 2>/dev/null | awk -F"${LOG_SEP}" -v OFS="${LOG_SEP}" '
 
             BEGIN { max_log_fields = '"${NUM_LOG_FIELDS}"'
                     max_fields = (max_log_fields - 1) * 2
@@ -835,10 +887,10 @@ do
                     # correct log line, no rewrite needed
                     print $0
                 }
-            }' >${TMP_FILE} 2>/dev/null
+            }' >"${TMP_FILE}" 2>/dev/null
 
         # count after rewrite (include empty lines again in the count)
-        TMP_COUNT=$(wc -l ${TMP_FILE} 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+        TMP_COUNT=$(wc -l "${TMP_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
         TMP_COUNT=$(( TMP_COUNT + EMPTY_COUNT ))
 
         # bail out when we do not have enough records
@@ -849,16 +901,16 @@ do
         fi
 
         # swap log file (but create a backup first!)
-        cp -p ${FIX_FILE} ${SAVE_TMP_FILE} 2>/dev/null
+        cp -p "${FIX_FILE}" "${SAVE_TMP_FILE}" 2>/dev/null
         # shellcheck disable=SC2181
         if (( $? == 0 ))
         then
-            mv ${TMP_FILE} ${FIX_FILE} 2>/dev/null
+            mv "${TMP_FILE}" "${FIX_FILE}" 2>/dev/null
             # shellcheck disable=SC2181
             if (( $? > 0 ))
             then
                 warn "failed to move/update log file, rolling back"
-                mv ${SAVE_TMP_FILE} ${FIX_FILE} 2>/dev/null
+                mv "${SAVE_TMP_FILE}" "${FIX_FILE}" 2>/dev/null
                 return 2
             fi
             FIX_RC=1
@@ -868,7 +920,7 @@ do
         fi
 
         # clean up temporary file(s)
-        rm -f ${SAVE_TMP_FILE} ${TMP_FILE} >/dev/null 2>&1
+        rm -f "${SAVE_TMP_FILE}" "${TMP_FILE}" >/dev/null 2>&1
     else
         log "no fixing needed for ${FIX_FILE}"
     fi
@@ -913,7 +965,7 @@ if [[ -s ${HC_MSG_FILE} ]]
 then
     # load messages file into memory
     # do not use array: max 1024 items in ksh88; regular variable is only 32-bit memory limited
-    HC_MSG_VAR=$(<${HC_MSG_FILE})
+    HC_MSG_VAR=$(<"${HC_MSG_FILE}")
 
     # DEBUG: dump TMP file
     if (( ARG_DEBUG > 0 ))
@@ -931,6 +983,7 @@ else
     # nothing to do, respect current EXIT_CODE
     if (( EXIT_CODE > 0 ))
     then
+        # shellcheck disable=SC2086
         return ${EXIT_CODE}
     else
         return 0
@@ -1152,50 +1205,50 @@ then
         if (( ONE_MSG_STC > 0 ))
         then
             # build log string
-            LOG_STRING_FAIL=$(printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" "${ONE_MSG_TIME}" "${HC_NAME}" ${ONE_MSG_STC} "${ONE_MSG_TEXT}" "${HC_FAIL_ID}")
+            LOG_STRING_FAIL=$(printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" "${ONE_MSG_TIME}" "${HC_NAME}" "${ONE_MSG_STC}" "${ONE_MSG_TEXT}" "${HC_FAIL_ID}")
 
             # do atomic log update
             # shellcheck disable=SC1117
-            print "${LOG_STRING_FAIL}" >>${HC_LOG}
+            print "${LOG_STRING_FAIL}" >>"${HC_LOG}"
 
             # cache report (--report --last)
             HC_REPORT_CACHE_LAST_FILE="${HC_REPORT_CACHE_LAST_STUB}-${HC_NAME}"
             case "${HC_REPORT_CACHE_LAST}" in
                 Yes|yes|YES)
                     # fetch date of last cache entry (did we rollover from last HC event?)
-                    HC_CACHE_LAST_DATE=$(tail -n 1 ${HC_REPORT_CACHE_LAST_FILE} 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null)
+                    HC_CACHE_LAST_DATE=$(tail -n 1 "${HC_REPORT_CACHE_LAST_FILE}" 2>/dev/null | cut -f1 -d"${LOG_SEP}" 2>/dev/null)
                     if [[ -z "${HC_CACHE_LAST_DATE}" ]] || [[ "${HC_CACHE_LAST_DATE}" != "${HC_CACHE_LAST_NOW}" ]]
                     then
                         # set and update cache file
-                        print "${LOG_STRING_FAIL}" >${HC_REPORT_CACHE_LAST_FILE}
+                        print "${LOG_STRING_FAIL}" >"${HC_REPORT_CACHE_LAST_FILE}"
                     else
                         # append cache file
-                        print "${LOG_STRING_FAIL}" >>${HC_REPORT_CACHE_LAST_FILE}
+                        print "${LOG_STRING_FAIL}" >>"${HC_REPORT_CACHE_LAST_FILE}"
                     fi
                     ;;
                 *)
                     # remove cache file if it exists
-                    [[ -f ${HC_REPORT_CACHE_LAST_FILE} ]] && rm -f ${HC_REPORT_CACHE_LAST_FILE} >/dev/null 2>/dev/null
+                    [[ -f "${HC_REPORT_CACHE_LAST_FILE}" ]] && rm -f "${HC_REPORT_CACHE_LAST_FILE}" >/dev/null 2>/dev/null
                     ;;
             esac
             # cache report (--report --today)
             case "${HC_REPORT_CACHE_TODAY}" in
                 Yes|yes|YES)
                     # fetch date of last cache entry (did we rollover midnight?)
-                    HC_CACHE_TODAY_DATE=$(tail -n 1 ${HC_REPORT_CACHE_TODAY_FILE} 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null | awk '{ print $1 }' 2>/dev/null)
+                    HC_CACHE_TODAY_DATE=$(tail -n 1 "${HC_REPORT_CACHE_TODAY_FILE}" 2>/dev/null | cut -f1 -d"${LOG_SEP}" 2>/dev/null | awk '{ print $1 }' 2>/dev/null)
                     if [[ -z "${HC_CACHE_TODAY_DATE}" ]] || [[ "${HC_CACHE_TODAY_DATE}" != "${HC_CACHE_TODAY_NOW}" ]]
                     then
                         # rotate and update cache file
                         (( ARG_DEBUG > 0 )) && debug "rotating today's cache file at ${HC_REPORT_CACHE_TODAY_FILE}"
-                        print "${LOG_STRING_FAIL}" >${HC_REPORT_CACHE_TODAY_FILE}
+                        print "${LOG_STRING_FAIL}" >"${HC_REPORT_CACHE_TODAY_FILE}"
                     else
                         # append cache file
-                        print "${LOG_STRING_FAIL}" >>${HC_REPORT_CACHE_TODAY_FILE}
+                        print "${LOG_STRING_FAIL}" >>"${HC_REPORT_CACHE_TODAY_FILE}"
                     fi
                     ;;
                 *)
                     # remove cache file if it exists
-                    [[ -f ${HC_REPORT_CACHE_TODAY_FILE} ]] && rm -f ${HC_REPORT_CACHE_TODAY_FILE} >/dev/null 2>/dev/null
+                    [[ -f "${HC_REPORT_CACHE_TODAY_FILE}" ]] && rm -f "${HC_REPORT_CACHE_TODAY_FILE}" >/dev/null 2>/dev/null
                     ;;
             esac
             # RC handling (max/sum/count)
@@ -1218,50 +1271,50 @@ then
             fi
         else
             # build log string
-            LOG_STRING_GOOD=$(printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" "${ONE_MSG_TIME}" "${HC_NAME}" ${ONE_MSG_STC} "${ONE_MSG_TEXT}")
+            LOG_STRING_GOOD=$(printf "%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}%s${LOG_SEP}" "${ONE_MSG_TIME}" "${HC_NAME}" "${ONE_MSG_STC}" "${ONE_MSG_TEXT}")
 
             # do atomic log update
             # shellcheck disable=SC1117
-            print "${LOG_STRING_GOOD}" >>${HC_LOG}
+            print "${LOG_STRING_GOOD}" >>"${HC_LOG}"
 
             # cache report (--report --last)
             HC_REPORT_CACHE_LAST_FILE="${HC_REPORT_CACHE_LAST_STUB}-${HC_NAME}"
             case "${HC_REPORT_CACHE_LAST}" in
                 Yes|yes|YES)
                     # fetch date of last cache entry (did we rollover from last HC event?)
-                    HC_CACHE_LAST_DATE=$(tail -n 1 ${HC_REPORT_CACHE_LAST_FILE} 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null)
+                    HC_CACHE_LAST_DATE=$(tail -n 1 "${HC_REPORT_CACHE_LAST_FILE}" 2>/dev/null | cut -f1 -d"${LOG_SEP}" 2>/dev/null)
                     if [[ -z "${HC_CACHE_LAST_DATE}" ]] || [[ "${HC_CACHE_LAST_DATE}" != "${HC_CACHE_LAST_NOW}" ]]
                     then
                         # set and update cache file
-                        print "${LOG_STRING_GOOD}" >${HC_REPORT_CACHE_LAST_FILE}
+                        print "${LOG_STRING_GOOD}" >"${HC_REPORT_CACHE_LAST_FILE}"
                     else
                         # append cache file
-                        print "${LOG_STRING_GOOD}" >>${HC_REPORT_CACHE_LAST_FILE}
+                        print "${LOG_STRING_GOOD}" >>"${HC_REPORT_CACHE_LAST_FILE}"
                     fi
                     ;;
                 *)
                     # remove cache file if it exists
-                    [[ -f ${HC_REPORT_CACHE_LAST_FILE} ]] && rm -f ${HC_REPORT_CACHE_LAST_FILE} >/dev/null 2>/dev/null
+                    [[ -f "${HC_REPORT_CACHE_LAST_FILE}" ]] && rm -f "${HC_REPORT_CACHE_LAST_FILE}" >/dev/null 2>/dev/null
                     ;;
             esac
             # cache report (--report --today)
             case "${HC_REPORT_CACHE_TODAY}" in
                 Yes|yes|YES)
                     # fetch date of last cache last_entry (did we rollover midnight?)
-                    HC_CACHE_TODAY_DATE=$(tail -n 1 ${HC_REPORT_CACHE_TODAY_FILE} 2>/dev/null | cut -f1 -d${LOG_SEP} 2>/dev/null | awk '{ print $1 }' 2>/dev/null)
+                    HC_CACHE_TODAY_DATE=$(tail -n 1 "${HC_REPORT_CACHE_TODAY_FILE}" 2>/dev/null | cut -f1 -d"${LOG_SEP}" 2>/dev/null | awk '{ print $1 }' 2>/dev/null)
                     if [[ -z "${HC_CACHE_TODAY_DATE}" ]] || [[ "${HC_CACHE_TODAY_DATE}" != "${HC_CACHE_TODAY_NOW}" ]]
                     then
                         # rotate and update cache file
                         (( ARG_DEBUG > 0 )) && debug "rotating today's cache file at ${HC_REPORT_CACHE_TODAY_FILE}"
-                        print "${LOG_STRING_GOOD}" >${HC_REPORT_CACHE_TODAY_FILE}
+                        print "${LOG_STRING_GOOD}" >"${HC_REPORT_CACHE_TODAY_FILE}"
                     else
                         # append cache file
-                        print "${LOG_STRING_GOOD}" >>${HC_REPORT_CACHE_TODAY_FILE}
+                        print "${LOG_STRING_GOOD}" >>"${HC_REPORT_CACHE_TODAY_FILE}"
                     fi
                     ;;
                 *)
                     # remove cache file if it exists
-                    [[ -f ${HC_REPORT_CACHE_TODAY_FILE} ]] && rm -f ${HC_REPORT_CACHE_TODAY_FILE} >/dev/null 2>/dev/null
+                    [[ -f ${HC_REPORT_CACHE_TODAY_FILE} ]] && rm -f "${HC_REPORT_CACHE_TODAY_FILE}" >/dev/null 2>/dev/null
                     ;;
             esac
         fi
@@ -1280,14 +1333,14 @@ then
             then
                 # cut off the path and the .$$ part from the file location
                 HC_STDOUT_LOG_SHORT="${HC_STDOUT_LOG##*/}"
-                mv ${HC_STDOUT_LOG} "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDOUT_LOG_SHORT%.*}" >/dev/null 2>&1 || \
+                mv "${HC_STDOUT_LOG}" "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDOUT_LOG_SHORT%.*}" >/dev/null 2>&1 || \
                 die "failed to move ${HC_STDOUT_LOG} to event directory at ${1}"
             fi
             if [[ -f ${HC_STDERR_LOG} ]]
             then
                 # cut off the path and the .$$ part from the file location
                 HC_STDERR_LOG_SHORT="${HC_STDERR_LOG##*/}"
-                mv ${HC_STDERR_LOG} "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDERR_LOG_SHORT%.*}" >/dev/null 2>&1 || \
+                mv "${HC_STDERR_LOG}" "${EVENTS_DIR}/${DIR_PREFIX}/${HC_FAIL_ID}/${HC_STDERR_LOG_SHORT%.*}" >/dev/null 2>&1 || \
                 die "failed to move ${HC_STDERR_LOG} to event directory at ${1}"
             fi
         fi
@@ -1350,6 +1403,7 @@ fi
 function handle_timeout
 {
 (( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+# shellcheck disable=SC2086
 [[ -n "${CHILD_PID}" ]] && kill -s TERM ${CHILD_PID}
 warn "child process with PID ${CHILD_PID} has been forcefully stopped"
 # shellcheck disable=SC2034
@@ -1479,7 +1533,7 @@ esac
 
 # mangle $ARG_HC to build the full list of HCs to be executed
 ARG_HC=""
-grep -i '^hc:' ${HOST_CONFIG_FILE} 2>/dev/null |\
+grep -i '^hc:' "${HOST_CONFIG_FILE}" 2>/dev/null |\
     while IFS=':' read -r _ HC_EXEC _ _
 do
     ARG_HC="${ARG_HC},${HC_EXEC}"
@@ -1541,13 +1595,13 @@ case "${OS_NAME}" in
         # check system crontabs
         if (( CRON_COUNT == 0 ))
         then
-            # shellcheck disable=SC2002
+            # shellcheck disable=SC2002,SC2086
             CRON_COUNT=$(cat ${CRON_SYS_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null)
         fi
         # check anacron
         if (( CRON_COUNT == 0 ))
         then
-            # shellcheck disable=SC2002
+            # shellcheck disable=SC2002,SC2086
             CRON_COUNT=$(cat ${CRON_ANACRON_LOCATIONS} 2>/dev/null | grep -c -E -e "^[^#].*${CRON_HC}" 2>/dev/null)
         fi
         ;;
@@ -1557,6 +1611,7 @@ case "${OS_NAME}" in
         ;;
 esac
 
+# shellcheck disable=SC2086
 return ${CRON_COUNT}
 }
 
@@ -1588,11 +1643,11 @@ printf "%80s\n" | tr ' ' -
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" | sort 2>/dev/null | while read -r FDIR
 do
     # exclude core helper librar(y|ies)
-    # shellcheck disable=SC2010
+    # shellcheck disable=SC2010,SC2086
     ls -1 ${FDIR}/*.sh 2>/dev/null | grep -v "include_" | sort 2>/dev/null | while read -r FFILE
     do
         # cache script contents in memory
-        FSCRIPT=$(<${FFILE})
+        FSCRIPT="$(<${FFILE})"
 
         # reset state
         FSTATE="enabled"
@@ -1634,12 +1689,12 @@ print -n "Dead links: "
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" 2>/dev/null | while read -r FDIR
 do
     # do not use 'find -type l' here!
-    # shellcheck disable=SC2010,SC1117
+    # shellcheck disable=SC2010,SC1117,SC2086
     ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
     do
         if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
         then
-            printf "%s " ${FFILE##*/}
+            printf "%s " "${FFILE##*/}"
         fi
     done
 done
@@ -1705,11 +1760,11 @@ fi
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core$" 2>/dev/null | sort 2>/dev/null |\
     while read -r FDIR
 do
-    # shellcheck disable=SC2012
+    # shellcheck disable=SC2012,SC2086
     ls -1 ${FDIR}/${FNEEDLE} 2>/dev/null | sort 2>/dev/null | while read -r FFILE
     do
         # cache script contents in memory
-        FSCRIPT=$(<${FFILE})
+        FSCRIPT="$(<${FFILE})"
 
         # --list (basic)
         # find function name but skip helper functions in the plug-in file (function _name)
@@ -1836,12 +1891,12 @@ then
     print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep -v "core" 2>/dev/null | while read -r FDIR
     do
         # do not use 'find -type l' here!
-        # shellcheck disable=SC2010,SC1117
+        # shellcheck disable=SC2010,SC1117,SC2086
         ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
         do
             if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
             then
-                printf "%s " ${FFILE##*/}
+                printf "%s " "${FFILE##*/}"
             fi
         done
     done
@@ -1899,11 +1954,11 @@ printf "%100s\n" | tr ' ' -
 print "${FPATH}" | tr ':' '\n' 2>/dev/null  | grep "core$" 2>/dev/null | sort 2>/dev/null | while read -r FDIR
 do
     # exclude core helper librar(y|ies)
-    # shellcheck disable=SC2010
+    # shellcheck disable=SC2010,SC2086
     ls -1 ${FDIR}/*.sh 2>/dev/null | grep "include_" 2>/dev/null | sort 2>/dev/null | while read -r FFILE
     do
         # cache script contents in memory
-        FSCRIPT=$(<${FFILE})
+        FSCRIPT="$(<${FFILE})"
 
         # find function name
         FNAME=$(print -R "${FSCRIPT}" | grep -E -e "^function[[:space:]].*version_" 2>/dev/null)
@@ -1936,12 +1991,12 @@ print -n "Dead links: "
 print "${FPATH}" | tr ':' '\n' 2>/dev/null | grep "core$" 2>/dev/null | while read -r FDIR
 do
     # do not use 'find -type l' here!
-    # shellcheck disable=SC2010,SC1117
+    # shellcheck disable=SC2010,SC1117,SC2086
     ls ${FDIR} 2>/dev/null | grep -v "\." 2>/dev/null | while read -r FFILE
     do
         if [[ -h "${FDIR}/${FFILE}" ]] && [[ ! -f "${FDIR}/${FFILE}" ]]
         then
-            printf "%s " ${FFILE##*/}
+            printf "%s " "${FFILE##*/}"
         fi
     done
 done
@@ -1972,7 +2027,7 @@ then
     then
         print - "$*" | while read -r LOG_LINE
         do
-            print "${NOW}: INFO: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
+            print "${NOW}: INFO: [$$]:" "${LOG_LINE}" >>"${LOG_FILE}"
         done
     fi
     if (( ARG_VERBOSE > 0 ))
@@ -2041,7 +2096,7 @@ fi
 
 # save the HC failure message for now
 print "${HC_STC}${MSG_SEP}${HC_NOW}${MSG_SEP}${HC_MSG_TEXT}${MSG_SEP}${HC_MSG_CUR_VAL}${MSG_SEP}${HC_MSG_EXP_VAL}" \
-    >>${HC_MSG_FILE}
+    >>"${HC_MSG_FILE}"
 
 return 0
 }
@@ -2096,13 +2151,14 @@ awk -F"${LOG_SEP}" '{
                         }
                     }
                 }
-                ' ${HC_LOG} 2>/dev/null
+                ' "${HC_LOG}" 2>/dev/null
 
 # archived events
 print; print
 print -R "--- ARCHIVED events --"
 print
-find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | while read -r _ARCHIVE_FILE
+# shellcheck disable=SC2086
+find ${ARCHIVE_DIR} -type f -name "hc.*.log" 2>/dev/null | sort -rn 2>/dev/null | while read -r _ARCHIVE_FILE
 do
     print "${_ARCHIVE_FILE}:"
     awk -F"${LOG_SEP}" '{
@@ -2138,7 +2194,7 @@ do
                             }
                         }
                     }
-                    ' ${_ARCHIVE_FILE} 2>/dev/null
+                    ' "${_ARCHIVE_FILE}" 2>/dev/null
 done
 
 return 0
@@ -2179,7 +2235,7 @@ then
     then
         print - "$*" | while read -r LOG_LINE
         do
-            print "${NOW}: WARN: [$$]:" "${LOG_LINE}" >>${LOG_FILE}
+            print "${NOW}: WARN: [$$]:" "${LOG_LINE}" >>"${LOG_FILE}"
         done
     fi
     if (( ARG_VERBOSE > 0 ))
