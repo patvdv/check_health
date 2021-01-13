@@ -31,7 +31,7 @@
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2020-09-05: fix log_hc call for failed checksum + quote fix [Patrick Van der Veken]
-# @(#) 2020-01-13: fix log_hc call (wrong logic) [Patrick Van der Veken]
+# @(#) 2021-01-13: fix log_hc call (wrong logic) [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
