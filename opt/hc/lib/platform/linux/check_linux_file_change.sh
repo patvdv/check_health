@@ -31,6 +31,7 @@
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
 # @(#) 2020-09-05: fix log_hc call for failed checksum + quote fix [Patrick Van der Veken]
+# @(#) 2020-01-13: fix log_hc call (wrong logic) [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -40,7 +41,7 @@ function check_linux_file_change
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2020-09-05"                           # YYYY-MM-DD
+typeset _VERSION="2021-01-13"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -323,7 +324,7 @@ do
     fi
 
     # bounce failures back and jump to next file
-    if (( _LOG_HEALTHY > 0 || _STC > 0 ))
+    if (( _LOG_HEALTHY > 0 && _STC > 0 ))
     then
         log_hc "$0" ${_STC} "${_MSG}"
         continue
