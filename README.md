@@ -147,7 +147,7 @@ An Ansible role is available at: https://github.com/patvdv/kudos.check_health
 
 ### Documentation
 
-More documentation can be found at http://www.kudos.be/Projects/Health_checker.html
+More documentation can be found at <http://www.kudos.be/check_health/>
 
 ### Logo
 
