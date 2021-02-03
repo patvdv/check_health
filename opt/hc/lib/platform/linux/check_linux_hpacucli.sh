@@ -29,6 +29,7 @@
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added code for data_is_numeric() & support for
 # @(#)             --log-healthy [Patrick Van der Veken]
+# @(#) 2020-02-03: made slot num detection smarter [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -38,7 +39,7 @@ function check_linux_hpacucli
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2020-02-03"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -193,7 +194,7 @@ then
     # get all slot numbers for multiple raid controllers
     cat ${_TMP_FILE} | grep "in Slot [0-9]" 2>/dev/null | while read _ACU_LINE
     do
-        _SLOT_NUM="$(print ${_ACU_LINE} | cut -f6 -d' ' 2>/dev/null)"
+        _SLOT_NUM="$(print ${_ACU_LINE} | sed 's/.*in Slot \([0-9][0-9]*\).*/\1/' 2>/dev/null)"
         data_is_numeric "${_SLOT_NUM}"
         if (( $? == 0 ))
         then
