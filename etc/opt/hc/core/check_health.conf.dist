@@ -31,6 +31,10 @@ HC_REPORT_CACHE_LAST="No"
 # [values: Yes|No]
 HC_REPORT_CACHE_TODAY="No"
 
+# Show log entry count(s) after archiving. Disabling this will speed up archiving.
+# [values: Yes|No]
+HC_COUNT_ARCHIVES="Yes"
+
 
 #******************************************************************************
 # End of FILE

@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2020-12-27"           # YYYY-MM-DD
+typeset _VERSION="2021-02-13"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -50,6 +50,7 @@ typeset HC_NAME="${1}"
 typeset ARCHIVE_FILE=""
 typeset ARCHIVE_RC=0
 typeset YEAR_MONTH=""
+typeset COUNT_STATS=1
 typeset LOG_COUNT=0
 typeset PRE_LOG_COUNT=0
 typeset TODO_LOG_COUNT=0
@@ -69,6 +70,16 @@ then
     warn "${HC_LOG} is empty, nothing to archive"
     return 0
 fi
+
+# check log count toggle (only affects $LOG_COUNT)
+case "${HC_COUNT_ARCHIVES}" in
+    No|no|NO)
+        COUNT_STATS=0
+        ;;
+    *)
+        : # default is to do additional stats
+        ;;
+esac
 
 # isolate messages from HC, find unique %Y-%m combinations
 grep ".*${LOG_SEP}${HC_NAME}${LOG_SEP}" "${HC_LOG}" 2>/dev/null |\
@@ -95,8 +106,11 @@ do
         warn "failed to move archive file, aborting"
         return 2
     }
-    LOG_COUNT=$(wc -l "${ARCHIVE_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
-    log "# of entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
+    if (( COUNT_STATS > 0 ))
+    then
+        LOG_COUNT=$(wc -l "${ARCHIVE_FILE}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+        log "# of entries in ${ARCHIVE_FILE} now: ${LOG_COUNT}"
+    fi
 
     # remove archived messages from the $HC_LOG (but create a backup first!)
     cp -p "${HC_LOG}" "${SAVE_HC_LOG}" 2>/dev/null
@@ -112,8 +126,11 @@ do
             warn "failed to move HC log file, aborting"
             return 2
         }
-        LOG_COUNT=$(wc -l "${HC_LOG}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
-        log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
+        if (( COUNT_STATS > 0 ))
+        then
+            LOG_COUNT=$(wc -l "${HC_LOG}" 2>/dev/null | cut -f1 -d' ' 2>/dev/null)
+            log "# entries in ${HC_LOG} now: ${LOG_COUNT}"
+        fi
         ARCHIVE_RC=1
     else
         warn "a problem occurred. Rolling back archival"

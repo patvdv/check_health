@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2020-12-27"
+typeset -r SCRIPT_VERSION="2021-02-13"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -103,6 +103,8 @@ typeset HC_STDOUT_LOG=""
 typeset HC_STDERR_LOG=""
 set -A HC_STDOUT_LOG_ARRAY
 set -A HC_STDERR_LOG_ARRAY
+# shellcheck disable=SC2034
+typeset HC_COUNT_ARCHVES=""
 typeset HC_WILL_FIX=""
 # shellcheck disable=SC2034
 typeset HC_REPORT_CACHE_LAST=""
