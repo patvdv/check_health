@@ -23,8 +23,8 @@
 # REQUIRES: ksh88/93 (mksh/pdksh will probably work too but YMMV)
 #           build_fpath(), check_config(), check_core(), check_lock_dir(),
 #           check_params(), check_platform(), check_user(), check_shell(),
-#           display_usage(), do_cleanup, fix_symlinks(), read_config()
-#           + include functions
+#           display_usage(), do_cleanup, fix_symlinks(), get_disable_comment(),
+#           read_config() + include functions
 #           For other pre-requisites see the documentation in display_usage()
 # REQUIRES (OPTIONAL): display_*(), notify_*(), report_*()
 # EXISTS: 0=no errors encountered, >0=some errors encountered
@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2021-02-13"
+typeset -r SCRIPT_VERSION="2021-03-28"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -87,6 +87,7 @@ typeset FDIR=""
 typeset FFILE=""
 typeset FPATH=""
 typeset HC_CHECK=""
+typeset HC_COMMENT=""
 typeset HC_DISABLE=""
 typeset HC_ENABLE=""
 typeset HC_RUN=""
@@ -129,6 +130,7 @@ typeset DEBUG_OPTS=""
 # command-line parameters
 typeset ARG_ACTION=0            # HC action flag
 typeset ARG_CHECK_HOST=0        # host check is off by default
+typeset ARG_COMMENT=""
 typeset ARG_CONFIG_FILE=""      # custom configuration file for a HC, none by default
 typeset ARG_DEBUG=0             # debug is off by default
 typeset ARG_DEBUG_LEVEL=0       # debug() only by default
@@ -288,7 +290,7 @@ case "${KSH_VERSION}" in
                 # shellcheck source=/dev/null
                 (( ARG_DEBUG > 0 )) && print -u2 "DEBUG: including ${INCLUDE_FILE}"
                 # shellcheck source=/dev/null
-                . ${INCLUDE_FILE}
+                . "${INCLUDE_FILE}"
             else
                 print -u2 "ERROR: library file ${INCLUDE_FILE} exists but has no symlink. Run --fix-symlinks"
                 exit 1
@@ -473,6 +475,15 @@ then
         exit 1
     fi
 fi
+# --comment
+if [[ -n "${ARG_COMMENT}" ]]
+then
+    if (( ARG_ACTION != 2 )) && (( ARG_ACTION != 6 ))
+    then
+        print -u2 "ERROR: you can only use '--comment' in combination with '--disable' or '--disable-all'"
+        exit 1
+    fi
+fi
 # check log location
 if (( ARG_LOG > 0 ))
 then
@@ -574,8 +585,8 @@ cat << EOT
 Execute/report simple health checks (HC) on UNIX hosts.
 
 Syntax: ${SCRIPT_DIR}/${SCRIPT_NAME} [--help] | [--help-terse] | [--version] |
-    [--list=<needle>] | [--list-details] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all | --enable-all) | [--fix-logs [--with-history]] |
-        (--check-host | ((--archive | --check | --enable | --disable | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
+    [--list=<needle>] | [--list-details] | [--list-core] | [--list-include] | [--fix-symlinks] | [--show-stats] | (--archive-all | --disable-all [--comment=<text>] | --enable-all) | [--fix-logs [--with-history]] |
+        (--check-host | ((--archive | --check | --enable | --disable [--comment=<text>] | --run [--timeout=<secs>] | --show) --hc=<list_of_checks> [--config-file=<configuration_file>] [hc-args="<arg1,arg2=val,arg3">]))
             [--display=<method>] ([--debug] [--debug-level=<level>]) [--log-healthy] [--no-fix] [--no-log] [--no-lock] [--no-monitor] [[--flip-rc] [--with-rc=<count|max|sum>]]]
                 [--notify=<method_list>] [--mail-to=<address_list>] [--sms-to=<sms_rcpt> --sms-provider=<name>]
                     [--report=<method> [--with-history] ( ([--last] | [--today]) | [(--older|--newer)=<date>] | [--reverse] [--id=<fail_id> [--detail]] )]
@@ -591,6 +602,7 @@ Parameters:
 --archive-all   : move events for all HCs from the HC log file into archive log files
 --check         : display HC state.
 --check-host    : execute all configured HC(s) (see check_host.conf)
+--comment       : add comment to requested action (--disable). WARNING: comments may not contain spaces!
 --config-file   : custom configuration file for a HC (may only be specified when executing a single HC plugin)
 --debug         : run script in debug mode
 --debug-level   : level of debugging information to show (0,1,2)
@@ -829,6 +841,12 @@ do
                 ARG_ACTION=4
             fi
             ARG_CHECK_HOST=1
+            ;;
+        -comment=*)
+            ARG_COMMENT="${CMD_PARAMETER#-comment=}"
+            ;;
+        --comment=*)
+            ARG_COMMENT="${CMD_PARAMETER#--comment=}"
             ;;
         -config-file=*)
             ARG_CONFIG_FILE="${CMD_PARAMETER#-config-file=}"
@@ -1230,7 +1248,13 @@ case ${ARG_ACTION} in
             # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
-                log "HC ${HC_CHECK} is currently disabled"
+                HC_COMMENT=$(get_disable_comment "${HC_CHECK}")
+                if [[ -n "${HC_COMMENT}" ]]
+                then
+                    log "HC ${HC_CHECK} is currently disabled (${HC_COMMENT})"
+                else
+                    log "HC ${HC_CHECK} is currently disabled"
+                fi
             else
                 log "HC ${HC_CHECK} is currently enabled"
             fi
@@ -1252,6 +1276,11 @@ case ${ARG_ACTION} in
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
             log "disabling HC: ${HC_DISABLE}"
             touch "${STATE_PERM_DIR}/${HC_DISABLE}.disabled" >/dev/null 2>&1
+            # write comment if supplied
+            if [[ -n "${ARG_COMMENT}" ]]
+            then
+                print "${ARG_COMMENT}" >"${STATE_PERM_DIR}/${HC_DISABLE}.disabled"
+            fi
             # shellcheck disable=SC2181
             if (( $? == 0 ))
             then
@@ -1482,6 +1511,11 @@ case ${ARG_ACTION} in
             exists_hc "${HC_DISABLE}" && die "cannot find HC: ${HC_DISABLE}"
             log "disabling HC: ${HC_DISABLE}"
             touch "${STATE_PERM_DIR}/${HC_DISABLE}.disabled" >/dev/null 2>&1
+            # write comment if supplied
+            if [[ -n "${ARG_COMMENT}" ]]
+            then
+                print "${ARG_COMMENT}" >"${STATE_PERM_DIR}/${HC_DISABLE}.disabled"
+            fi
             DISABLE_RC=$?
             if (( DISABLE_RC == 0 ))
             then

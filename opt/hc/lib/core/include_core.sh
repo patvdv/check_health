@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2021-02-13"           # YYYY-MM-DD
+typeset _VERSION="2021-03-28"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -946,6 +946,26 @@ do
 done
 
 return ${FIX_RC}
+}
+
+# -----------------------------------------------------------------------------
+# @(#) FUNCTION: get_disable_comment()
+# DOES: retrieve comment for a disabled HC
+# EXPECTS: HC name [string]
+# OUTPUTS: comment [string]
+# RETURNS: 0
+# REQUIRES: n/a
+function get_disable_comment
+{
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+typeset COMMENT_HC="${1}"
+
+if [[ -s "${STATE_PERM_DIR}/${COMMENT_HC}.disabled" ]]
+then
+    cat "${STATE_PERM_DIR}/${COMMENT_HC}.disabled" 2>/dev/null
+fi
+
+return 0
 }
 
 # -----------------------------------------------------------------------------
