@@ -34,6 +34,8 @@
 # @(#)             added support for --log-healthy [Patrick Van der Veken]
 # @(#) 2019-03-10: fix for burp v2
 # @(#) 2019-03-16: replace 'which' [Patrick Van der Veken]
+# @(#) 2021-03-28: updated code for changing 'burp -v' option as of burp v2.2 +
+#                  quote fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -45,13 +47,13 @@ function check_linux_burp_backup
 typeset _BURP_SERVER_CONFIG_FILE="/etc/burp/burp-server.conf"
 typeset _BURP_CLIENT_CONFIG_FILE="/etc/burp/burp.conf"
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
-typeset _VERSION="2019-03-16"                           # YYYY-MM-DD
+typeset _VERSION="2021-03-28"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="Linux"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
-init_hc "$0" "${_SUPPORTED_PLATFORMS}"  "${_VERSION}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
@@ -64,6 +66,7 @@ typeset _BURP_BACKUP_DIR=""
 typeset _BURP_CLIENTCONF_DIR=""
 typeset _BURP_CLIENT=""
 typeset _BURP_VERSION=""
+typeset _BURP_V_OUTPUT=""
 typeset _BURP_WARNINGS=""
 typeset _GNU_DATE=""
 typeset _COUNT=1
@@ -75,7 +78,7 @@ for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
         help)
-            _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
+            _show_usage "$0" "${_VERSION}" "${_CONFIG_FILE}" && return 0
             ;;
     esac
 done
@@ -99,7 +102,7 @@ case "${_CFG_HEALTHY}" in
 esac
 
 # check for old-style configuration file (non-prefixed stanzas)
-_IS_OLD_STYLE=$(grep -c -E -e "^client:" ${_CONFIG_FILE} 2>/dev/null)
+_IS_OLD_STYLE=$(grep -c -E -e "^client:" "${_CONFIG_FILE}" 2>/dev/null)
 if (( _IS_OLD_STYLE == 0 ))
 then
     warn "no 'client:' stanza(s) found in ${_CONFIG_FILE}; possibly an old-style configuration?"
@@ -123,6 +126,7 @@ fi
 # check for capable GNU date
 _GNU_DATE=$(date --date="1 day ago" '+%s' 2>/dev/null)
 data_is_numeric "${_GNU_DATE}"
+# shellcheck disable=SC2181
 if (( $? > 0 ))
 then
     warn "no capable GNU date found here"
@@ -137,8 +141,20 @@ then
     return 1
 fi
 
-# burp v1 or v2?
-_BURP_VERSION="$(${_BURP_BIN} -v 2>/dev/null)"
+# burp v1 or v2? (up to v2.1 burp -v; as of burp v2.2 use burp -V but we can still use burp -v with a workaround)
+_BURP_V_OUTPUT="$(${_BURP_BIN} -v 2>/dev/null)"
+# check if the output contains 'server version'
+case "${_BURP_V_OUTPUT}" in
+    *Server\ version*)
+        # burp 2.2 and above
+        _BURP_VERSION=$(print "${_BURP_V_OUTPUT}" | grep "Server version" | awk -F":" '{ print $NF}')
+        _BURP_VERSION="burp-"$(data_strip_outer_space "${_BURP_VERSION}")
+        ;;
+    *)
+        # burp 2.1 and below
+        _BURP_VERSION="${_BURP_V_OUTPUT}"
+        ;;
+esac
 (( ARG_DEBUG > 0 )) && debug "burp version: ${_BURP_VERSION}"
 case "${_BURP_VERSION}" in
     burp-2*)
@@ -183,8 +199,8 @@ case "${_BURP_VERSION}" in
 esac
 
 # check backup runs of clients
-grep -E -e "^client:" ${_CONFIG_FILE} 2>/dev/null |\
-    while IFS=':' read _ _BURP_CLIENT _BURP_WARNINGS _BURP_AGE
+grep -E -e "^client:" "${_CONFIG_FILE}" 2>/dev/null |\
+    while IFS=':' read -r _ _BURP_CLIENT _BURP_WARNINGS _BURP_AGE
 do
     typeset _BACKUP_AGING=""
     typeset _BACKUP_DATE=""
@@ -222,10 +238,10 @@ do
         # ex.:
         #   Backup: 0000078 2016-11-27 03:39:03 (deletable)
         #   Backup: 0000079 2016-12-04 03:59:04
-        _BACKUP_STATS="$(${_BURP_BIN} -a l -C ${_BURP_CLIENT} 2>>${HC_STDERR_LOG} | grep '^Backup' | tail -n 1 | cut -f2- -d':')"
+        _BACKUP_STATS="$(${_BURP_BIN} -a l -C "${_BURP_CLIENT}" 2>>"${HC_STDERR_LOG}" | grep '^Backup' | tail -n 1 | cut -f2- -d':')"
         if [[ -n "${_BACKUP_STATS}" ]]
         then
-            _BACKUP_RUN="$(print ${_BACKUP_STATS} | awk '{print $1}')"
+            _BACKUP_RUN="$(print "${_BACKUP_STATS}" | awk '{print $1}')"
             # output format: YYYYMMDD HHMM
             _BACKUP_DATE=$(print "${_BACKUP_STATS}" | awk '{gsub(/-/,"",$2); gsub(/:/,"",$3); print $2" "substr($3,0,4)}' 2>/dev/null)
             # convert to UNIX seconds
@@ -267,16 +283,16 @@ do
                         continue
                     fi
                 fi
-                if [[ -r ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz ]]
+                if [[ -r "${_BURP_BACKUP_DIR}"/"${_BURP_CLIENT}"/current/log.gz ]]
                 then
-                    _BACKUP_WARNINGS=$(zcat ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz 2>/dev/null | grep -c "WARNING:" 2>/dev/null)
+                    _BACKUP_WARNINGS=$(zcat "${_BURP_BACKUP_DIR}"/"${_BURP_CLIENT}"/current/log.gz 2>/dev/null | grep -c "WARNING:" 2>/dev/null)
                 else
                     warn "could not find ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz"
                     continue
                 fi
                 ;;
             burp-1*)
-                _BACKUP_WARNINGS=$(${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z backup_stats 2>>${HC_STDERR_LOG} |\
+                _BACKUP_WARNINGS=$(${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C "${_BURP_CLIENT}" -b "${_BACKUP_RUN}" -z backup_stats 2>>"${HC_STDERR_LOG}" |\
                                     grep '^warnings' 2>/dev/null | cut -f2 -d':' 2>/dev/null)
                 ;;
         esac
@@ -325,16 +341,16 @@ do
         # save STDOUT
         if (( _STC > 0 ))
         then
-            print "=== ${_BURP_CLIENT}: ${_BACKUP_RUN} ===" >>${HC_STDOUT_LOG}
+            print "=== ${_BURP_CLIENT}: ${_BACKUP_RUN} ===" >>"${HC_STDOUT_LOG}"
             case "${_BURP_VERSION}" in
                 burp-2*)
-                    if [[ -r ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz ]]
+                    if [[ -r "${_BURP_BACKUP_DIR}"/"${_BURP_CLIENT}"/current/log.gz ]]
                     then
-                        zcat ${_BURP_BACKUP_DIR}/${_BURP_CLIENT}/current/log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                        zcat "${_BURP_BACKUP_DIR}"/"${_BURP_CLIENT}"/current/log.gz >>"${HC_STDOUT_LOG}" 2>>"${HC_STDERR_LOG}"
                     fi
                     ;;
                 burp-1*)
-                    ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C ${_BURP_CLIENT} -b ${_BACKUP_RUN} -z log.gz >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+                    ${_BURP_BIN} -c ${_BURP_SERVER_CONFIG_FILE} -a S -C "${_BURP_CLIENT}" -b "${_BACKUP_RUN}" -z log.gz >>"${HC_STDOUT_LOG}" 2>>"${HC_STDERR_LOG}"
                     ;;
             esac
         fi
