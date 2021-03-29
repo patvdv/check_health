@@ -105,6 +105,7 @@ This is the OS/platform plugin package"
 
         directory       ../../../etc/opt/hc/=/etc/opt/hc
         file            -m 644 check_hpux_autofs.conf.dist
+        file            -m 644 check_hpux_cron_status.conf.dist
         file            -m 644 check_hpux_drd_status.conf.dist
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist

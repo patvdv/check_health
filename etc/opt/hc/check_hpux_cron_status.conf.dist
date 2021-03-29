@@ -1,0 +1,25 @@
+#******************************************************************************
+# @(#) check_hpux_cron_status.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_cron_status HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="no"
+
+# specify the wait time (in seconds) between registering and checking a cron task
+# [default: 10]
+wait_time=10
+
+# specify the path the cron log file
+# [default: /var/adm/cron/log]
+cron_log="/var/adm/cron/log"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************
