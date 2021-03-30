@@ -38,7 +38,7 @@
 
 # ------------------------- CONFIGURATION starts here -------------------------
 # define the version (YYYY-MM-DD)
-typeset -r SCRIPT_VERSION="2021-03-28"
+typeset -r SCRIPT_VERSION="2021-03-31"
 # location of parent directory containing KSH functions/HC plugins
 typeset -r FPATH_PARENT="/opt/hc/lib"
 # location of custom HC configuration files
@@ -115,6 +115,7 @@ typeset HC_REPORT_CACHE_TODAY=""
 typeset LINUX_DISTRO=""
 # shellcheck disable=SC2034
 typeset LINUX_RELEASE=""
+typeset PREVIOUS_HC_TIME_OUT=""
 typeset ARCHIVE_RC=0
 typeset DISABLE_RC=0
 typeset ENABLE_RC=0
@@ -1385,6 +1386,7 @@ case ${ARG_ACTION} in
             # --check-host handling: alternative configuration file, mangle ARG_CONFIG_FILE & HC_TIME_OUT
             if (( ARG_CHECK_HOST == 1 ))
             then
+                PREVIOUS_HC_TIME_OUT=${HC_TIME_OUT}
                 ARG_CONFIG_FILE=""      # reset from previous call
                 RUN_CONFIG_FILE=$(grep -i -E -e "^hc:${HC_RUN}:" ${HOST_CONFIG_FILE} 2>/dev/null | cut -f3 -d':')
                 [[ -n "${RUN_CONFIG_FILE}" ]] && ARG_CONFIG_FILE="${CONFIG_DIR}/${RUN_CONFIG_FILE}"
@@ -1394,7 +1396,7 @@ case ${ARG_ACTION} in
                     (( RUN_TIME_OUT > HC_TIME_OUT )) && HC_TIME_OUT=${RUN_TIME_OUT}
                 else
                     # reset for next HC
-                    HC_TIME_OUT=60
+                    HC_TIME_OUT=${PREVIOUS_HC_TIME_OUT}
                 fi
             fi
 
