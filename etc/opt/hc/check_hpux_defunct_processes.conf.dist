@@ -1,0 +1,27 @@
+#******************************************************************************
+# @(#) check_hpux_defunct_processes.conf
+#******************************************************************************
+# This is a configuration file for the check_hpux_defunct_processes HC plugin.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# specify whether to also log passed health checks
+# (warning: this may rapidly grow the HC log)
+# [default: no]
+log_healthy="yes"
+
+# specify above which threshold of defunct processes to generate a HC fail event
+# If group_by_ppid is set to 'yes' then the value of 'process_threshold' will
+# apply for each PPID, otherwise it will apply to all defunct processes together
+# [default: 10]
+process_threshold=10
+
+# specify whether to group by parent ID or not.
+# [default: yes]
+group_by_ppid="yes"
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

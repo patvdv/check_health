@@ -63,6 +63,7 @@ This is the OS/platform plugin package"
         file            -m 755 check_hpux_autopath.sh
         file            -m 755 check_hpux_cdsf_cluster.sh
         file            -m 755 check_hpux_cron_status.sh
+        file            -m 755 check_hpux_defunct_processes.sh
         file            -m 755 check_hpux_drd_status.sh
         file            -m 755 check_hpux_file_age.sh
         file            -m 755 check_hpux_file_change.sh
@@ -106,6 +107,7 @@ This is the OS/platform plugin package"
         directory       ../../../etc/opt/hc/=/etc/opt/hc
         file            -m 644 check_hpux_autofs.conf.dist
         file            -m 644 check_hpux_cron_status.conf.dist
+        file            -m 644 check_hpux_defunct_processes.conf.dist
         file            -m 644 check_hpux_drd_status.conf.dist
         file            -m 644 check_hpux_file_age.conf.dist
         file            -m 644 check_hpux_file_change.conf.dist

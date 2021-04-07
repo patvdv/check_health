@@ -32,6 +32,7 @@
 # @(#) 2018-10-28: fixed (linter) errors [Patrick Van der Veken]
 # @(#) 2019-01-24: arguments fix [Patrick Van der Veken]
 # @(#) 2019-03-09: added support for --log-healthy [Patrick Van der Veken]
+# @(#) 2021-04-07: quotes & shellcheck fixes [Patrick Van der Veken]
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
 #******************************************************************************
@@ -43,13 +44,13 @@ function check_hpux_ioscan
 typeset _CONFIG_FILE="${CONFIG_DIR}/$0.conf"
 typeset _IOSCAN_BIN="/usr/sbin/ioscan"
 typeset _IOSCAN_OPTS="-Fn"
-typeset _VERSION="2019-03-09"                           # YYYY-MM-DD
+typeset _VERSION="2021-04-07"                           # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="HP-UX"                    # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
 # set defaults
-(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set ${DEBUG_OPTS}
-init_hc "$0" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
+(( ARG_DEBUG > 0 && ARG_DEBUG_LEVEL > 0 )) && set "${DEBUG_OPTS}"
+init_hc "${0}" "${_SUPPORTED_PLATFORMS}" "${_VERSION}"
 typeset _ARGS=$(data_comma2space "$*")
 typeset _ARG=""
 typeset _MSG=""
@@ -71,7 +72,7 @@ for _ARG in ${_ARGS}
 do
     case "${_ARG}" in
         help)
-            _show_usage $0 ${_VERSION} ${_CONFIG_FILE} && return 0
+            _show_usage "${0}" "${_VERSION}" "${_CONFIG_FILE}" && return 0
             ;;
     esac
 done
@@ -154,7 +155,8 @@ else
         _IOSCAN_OPTS="${_IOSCAN_OPTS}u"
     fi
     log "executing ioscan with options: ${_IOSCAN_OPTS}"
-    ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >>${HC_STDOUT_LOG} 2>>${HC_STDERR_LOG}
+    ${_IOSCAN_BIN} ${_IOSCAN_OPTS} >>"${HC_STDOUT_LOG}" 2>>"${HC_STDERR_LOG}"
+    # shellcheck disable=SC2181
     if (( $? > 0 ))
     then
         _MSG="unable to run command: {${_IOSCAN_BIN}}"
@@ -166,13 +168,13 @@ else
 fi
 
 # check for requested device classes
-grep -E -e ".*:.*:.*:.*:.*:.*:.*:.*:${_IOSCAN_CLASSES}:.*" ${HC_STDOUT_LOG} 2>/dev/null |\
-    while read _IOSCAN_LINE
+grep -E -e ".*:.*:.*:.*:.*:.*:.*:.*:${_IOSCAN_CLASSES}:.*" "${HC_STDOUT_LOG}" 2>/dev/null |\
+    while read -r _IOSCAN_LINE
 do
     # possible states are: CLAIMED, UNCLAIMED, DIFF_HW, NO_HW, ERROR, SCAN
-    _HW_CLASS="$(print ${_IOSCAN_LINE} | cut -f9 -d':')"
-    _HW_PATH="$(print ${_IOSCAN_LINE} | cut -f11 -d':')"
-    _HW_STATE="$(print ${_IOSCAN_LINE} | cut -f16 -d':')"
+    _HW_CLASS=$(print "${_IOSCAN_LINE}" | cut -f9 -d':')
+    _HW_PATH=$(print "${_IOSCAN_LINE}" | cut -f11 -d':')
+    _HW_STATE=$(print "${_IOSCAN_LINE}" | cut -f16 -d':')
 
     case "${_HW_STATE}" in
         NO_HW)
@@ -214,7 +216,6 @@ function _show_usage
 cat <<- EOT
 NAME        : $1
 VERSION     : $2
-CONFIG      : $3 with:
 CONFIG      : $3 with parameters:
                 log_healthy=<yes|no>
                 ioscan_classes=<list_of_device_classes_to_check>
