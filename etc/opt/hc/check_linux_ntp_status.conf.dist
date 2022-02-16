@@ -19,6 +19,11 @@ force_chrony="no"
 # [default: no]
 force_ntp="no"
 
+# whether to force the use of systemd-timesyncd?
+# [default: no]
+# [release >20220129]
+force_systemd="no"
+
 # maximum allowed offset (in milliseconds (positive integers only)
 # [default: 500]
 max_offset=500
