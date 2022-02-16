@@ -30,7 +30,7 @@
 function notify_mail
 {
 # ------------------------- CONFIGURATION starts here -------------------------
-typeset _VERSION="2019-04-20"                               # YYYY-MM-DD
+typeset _VERSION="2022-02-16"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 
@@ -58,6 +58,7 @@ typeset _MAIL_ATTACH_BIT=""
 typeset _MAIL_METHOD=""
 typeset _MAIL_RC=0
 typeset _MAILX_BIN=""
+typeset _MAILX_ATTACH_SWITCH=""
 typeset _MUTT_BIN=""
 typeset _SENDMAIL_BIN=""
 typeset _UUENCODE_BIN=""
@@ -90,6 +91,17 @@ case "${OS_NAME}" in
             if [[ -x ${_MAILX_BIN} ]] && [[ -n "${_MAILX_BIN}" ]]
             then
                 _MAIL_METHOD="mailx"
+                # check which switch we need for attaching a file:
+                # Debian/Ubuntu: -A file
+                # Redhat (Heirloom version): -a file
+                ${_MAILX_BIN} -h 2>&1 | grep -q -e "-a FILE" >/dev/null 2>/dev/null
+                # shellcheck disable=SC2181
+                if (( $? == 0 ))
+                then
+                    _MAILX_ATTACH_SWITCH="-a "
+                else
+                    _MAILX_ATTACH_SWITCH="-A "
+                fi
             else
                 _MAIL_METHOD="sendmail"
             fi
@@ -122,18 +134,18 @@ then
     [[ -r "${_MAIL_INFO_TPL}" ]] || die "cannot read mail info template at ${_MAIL_INFO_TPL}"
     eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_INFO_TPL})
-__EOT" >${_TMP1_MAIL_FILE}
+__EOT" >"${_TMP1_MAIL_FILE}"
 fi
 
 # create header part
 [[ -r "${_MAIL_HEADER_TPL}" ]] || die "cannot read mail header template at ${_MAIL_HEADER_TPL}"
 eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_HEADER_TPL})
-__EOT" >>${_TMP1_MAIL_FILE}
-print "" >>${_TMP1_MAIL_FILE}
+__EOT" >>"${_TMP1_MAIL_FILE}"
+print "" >>"${_TMP1_MAIL_FILE}"
 
 # create body part (from $HC_MSG_VAR)
-print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read _MAIL_MSG_STC _ _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
+print "${HC_MSG_VAR}" | while IFS=${MSG_SEP} read -r _MAIL_MSG_STC _ _MAIL_MSG_TEXT _MAIL_MSG_CUR_VAL _MAIL_MSG_EXP_VAL
 do
     # magically unquote if needed
     if [[ -n "${_MAIL_MSG_TEXT}" ]]
@@ -175,8 +187,8 @@ done
 [[ -r "${_MAIL_BODY_TPL}" ]] || die "cannot read mail body template at ${_MAIL_BODY_TPL}"
 eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_BODY_TPL})
-__EOT" >>${_TMP1_MAIL_FILE}
-print "" >>${_TMP1_MAIL_FILE}
+__EOT" >>"${_TMP1_MAIL_FILE}"
+print "" >>"${_TMP1_MAIL_FILE}"
 
 # HC STDOUT log? (drop the .$$ bit)
 _MAIL_STDOUT_LOG="${EVENTS_DIR}/${DIR_PREFIX}/${_MAIL_FAIL_ID}/${_HC_STDOUT_LOG_SHORT%.*}"
@@ -184,7 +196,14 @@ if [[ -s "${_MAIL_STDOUT_LOG}" ]]
 then
     # shellcheck disable=SC2034
     _MAIL_STDOUT_MSG="${_MAIL_STDOUT_LOG}"
-    _MAIL_ATTACH_BIT="-a ${_MAIL_STDOUT_LOG}"
+    case "${_MAIL_METHOD}" in
+        "mailx")
+            _MAIL_ATTACH_BIT="${_MAILX_ATTACH_SWITCH} ${_MAIL_STDOUT_LOG}"
+            ;;
+        *)
+            _MAIL_ATTACH_BIT="-a ${_MAIL_STDOUT_LOG}"
+            ;;
+    esac
 else
     # shellcheck disable=SC2034
     _MAIL_STDOUT_MSG="no log file available"
@@ -195,7 +214,14 @@ if [[ -s "${_MAIL_STDERR_LOG}" ]]
 then
     # shellcheck disable=SC2034
     _MAIL_STDERR_MSG="${_MAIL_STDERR_LOG}"
-    _MAIL_ATTACH_BIT="${_MAIL_ATTACH_BIT} -a ${_MAIL_STDERR_LOG}"
+    case "${_MAIL_METHOD}" in
+        "mailx")
+            _MAIL_ATTACH_BIT="${_MAIL_ATTACH_BIT} ${_MAILX_ATTACH_SWITCH} ${_MAIL_STDERR_LOG}"
+            ;;
+        *)
+            _MAIL_ATTACH_BIT="${_MAIL_ATTACH_BIT} -a ${_MAIL_STDERR_LOG}"
+            ;;
+    esac
 else
      # shellcheck disable=SC2034
     _MAIL_STDERR_MSG="no log file available"
@@ -205,28 +231,29 @@ fi
 [[ -r ${_MAIL_FOOTER_TPL} ]] || die "cannot read mail body template at ${_MAIL_FOOTER_TPL}"
 eval "cat << __EOT
 $(sed 's/[\$`]/\\&/g;s/<## @\([^ ]*\) ##>/${\1}/g' <${_MAIL_FOOTER_TPL})
-__EOT" >>${_TMP1_MAIL_FILE}
+__EOT" >>"${_TMP1_MAIL_FILE}"
 
 # combine and send message components
 case "${_MAIL_METHOD}" in
     "mailx")
         # remove non-ASCII characters to avoid Exchange ATT00001.bin
-        cat ${_TMP1_MAIL_FILE} | tr -cd '[:print:]\n' 2>/dev/null |\
+        # shellcheck disable=SC2086
+        tr -cd '[:print:]\n' < "${_TMP1_MAIL_FILE}" 2>/dev/null |\
             ${_MAILX_BIN} ${_MAIL_ATTACH_BIT} -s "${_SUBJ_MSG}" "${ARG_MAIL_TO}"
         _MAIL_RC=$?
         ;;
     "mutt")
         # attach bit goes at the end
-        cat ${_TMP1_MAIL_FILE} 2>/dev/null |\
-            ${_MUTT_BIN} -s "${_SUBJ_MSG}" "${ARG_MAIL_TO}" ${_MAIL_ATTACH_BIT}
+        # shellcheck disable=SC2086
+        ${_MUTT_BIN} -s "${_SUBJ_MSG}" "${ARG_MAIL_TO}" ${_MAIL_ATTACH_BIT} <"${_TMP1_MAIL_FILE}"
         _MAIL_RC=$?
         ;;
     "sendmail")
         [[ -s "${_MAIL_STDOUT_LOG}" ]] && \
-            uuencode ${_MAIL_STDOUT_LOG} stdout.log >>${_TMP2_MAIL_FILE} 2>/dev/null
+            uuencode "${_MAIL_STDOUT_LOG}" stdout.log >>"${_TMP2_MAIL_FILE}" 2>/dev/null
         [[ -s "${_MAIL_STDERR_LOG}" ]] && \
-            uuencode ${_MAIL_STDERR_LOG} stderr.log >>${_TMP2_MAIL_FILE} 2>/dev/null
-        cat ${_TMP1_MAIL_FILE} ${_TMP2_MAIL_FILE} 2>/dev/null | ${_SENDMAIL_BIN} -t
+            uuencode "${_MAIL_STDERR_LOG}" stderr.log >>"${_TMP2_MAIL_FILE}" 2>/dev/null
+        cat "${_TMP1_MAIL_FILE}" "${_TMP2_MAIL_FILE}" 2>/dev/null | ${_SENDMAIL_BIN} -t
         _MAIL_RC=$?
         ;;
     *)
@@ -242,8 +269,8 @@ else
 fi
 
 # clean up temporary files
-[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f ${_TMP1_MAIL_FILE} >/dev/null 2>&1
-[[ -f ${_TMP2_MAIL_FILE} ]] && rm -f ${_TMP2_MAIL_FILE} >/dev/null 2>&1
+[[ -f ${_TMP1_MAIL_FILE} ]] && rm -f "${_TMP1_MAIL_FILE}" >/dev/null 2>&1
+[[ -f ${_TMP2_MAIL_FILE} ]] && rm -f "${_TMP2_MAIL_FILE}" >/dev/null 2>&1
 
 return 0
 }
