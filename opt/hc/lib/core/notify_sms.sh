@@ -20,7 +20,8 @@
 # DOES: send sms alert
 # EXPECTS: 1=HC name [string], 2=HC FAIL_ID [string]
 # RETURNS: 0
-# REQUIRES: data_get_lvalue_from_config(), init_hc(), log(), warn()
+# REQUIRES: data_encode_url(), data_get_lvalue_from_config(), init_hc(),
+#           log(), warn(), curl
 #
 # -----------------------------------------------------------------------------
 # DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
@@ -31,7 +32,7 @@ function notify_sms
 {
 # ------------------------- CONFIGURATION starts here -------------------------
 typeset _CONFIG_FILE="${CONFIG_DIR}/core/providers/$0.conf"
-typeset _VERSION="2018-10-28"                               # YYYY-MM-DD
+typeset _VERSION="2022-10-14"                               # YYYY-MM-DD
 typeset _SUPPORTED_PLATFORMS="AIX,HP-UX,Linux"              # uname -s match
 # ------------------------- CONFIGURATION ends here ---------------------------
 

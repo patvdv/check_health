@@ -1,0 +1,26 @@
+# Maintainer: Patrick Van der Veken <patrick@kudos.be>
+
+_pkgname="check_health"
+pkgname="hc-notify-slack"
+pkgver="%BUILD_DATE%"
+pkgrel=1
+pkgdesc="The KUDOS Health Checker (HC) for UNIX (Slack notify core plugin)"
+arch=("any")
+url="https://github.com/patvdv/${_pkgname}"
+license=('GPL3')
+makedepends=('git')
+depends=('hc-linux')
+source=("${_pkgname}::git+${url}.git#branch=master")
+install=".install"
+sha256sums=('SKIP')
+
+package() {
+    cd "${srcdir}/${_pkgname}"
+    install -d -m 755 ${pkgdir}/opt/hc/lib
+    install -d -m 755 ${pkgdir}/opt/hc/lib/core
+    install -D -m 755 opt/hc/lib/core/notify_slack.sh ${pkgdir}/opt/hc/lib/core/notify_slack.sh
+    install -d -m 755 ${pkgdir}/etc/opt/hc
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core
+    install -d -m 755 ${pkgdir}/etc/opt/hc/core/providers
+    install -D -m 644 etc/opt/hc/core/providers/notify_slack.conf.dist ${pkgdir}/etc/opt/hc/core/providers/notify_slack.conf.dist
+}

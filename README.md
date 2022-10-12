@@ -90,6 +90,7 @@ Additionally, there may be bundles for display or notification plugins, e.g.:
 * hc-display-terse
 * hc-notify-eif
 * hc-notify-sms
+* hc-notify-slack
 
 ## Configure & deploy
 
@@ -141,6 +142,7 @@ An Ansible role is available at: https://github.com/patvdv/kudos.check_health
 * **Alerting** on failed health checks:
 ```
 /opt/hc/bin/check_health.sh --hc=check_hpux_root_crontab --run --notify=mail --mail-to="alert@acme.com"
+/opt/hc/bin/check_health.sh --hc=check_linux_fs_usage --run --notify=slack"
 ```    
 
 ## References

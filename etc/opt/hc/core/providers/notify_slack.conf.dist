@@ -1,0 +1,15 @@
+#******************************************************************************
+# @(#) notify_slack.conf
+#******************************************************************************
+# This is the the configuration file for the notify_slack.sh provider.
+# All lines starting with a '#' are comment lines.
+# [default: indicates hardcoded script values if no value is defined here]
+#******************************************************************************
+
+# URL of the webhook of the Slack app
+SLACK_WEBHOOK=""
+
+
+#******************************************************************************
+# End of FILE
+#******************************************************************************

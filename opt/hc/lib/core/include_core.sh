@@ -30,7 +30,7 @@
 # RETURNS: 0
 function version_include_core
 {
-typeset _VERSION="2021-03-28"           # YYYY-MM-DD
+typeset _VERSION="2022-10-14"           # YYYY-MM-DD
 
 print "INFO: $0: ${_VERSION#version_*}"
 
@@ -307,6 +307,7 @@ DO_DISPLAY_CUSTOM9=0
 DO_NOTIFY_EIF=0
 DO_NOTIFY_MAIL=0
 DO_NOTIFY_SMS=0
+DO_NOTIFY_SLACK=0
 DO_REPORT_STD=0
 HAS_DISPLAY_CSV=0
 HAS_DISPLAY_INIT=0
@@ -325,6 +326,7 @@ HAS_DISPLAY_CUSTOM9=0
 HAS_NOTIFY_EIF=0
 HAS_NOTIFY_MAIL=0
 HAS_NOTIFY_SMS=0
+HAS_NOTIFY_SLACK=0
 HAS_REPORT_STD=0
 
 # check which core display/notification plugins are installed
@@ -401,6 +403,10 @@ do
         *notify_eif.sh)
             HAS_NOTIFY_EIF=1
             (( ARG_DEBUG > 0 )) && debug "notify_eif plugin is available"
+            ;;
+        *notify_slack.sh)
+            HAS_NOTIFY_SLACK=1
+            (( ARG_DEBUG > 0 )) && debug "notify_slack plugin is available"
             ;;
         *report_std.sh)
             # shellcheck disable=SC2034
@@ -558,6 +564,9 @@ then
                 ;;
             *mail*) # by mail
                 DO_NOTIFY_MAIL=1
+                ;;
+            *slack*) # by Slack
+                DO_NOTIFY_SLACK=1
                 ;;
             *sms*) # by sms
                 DO_NOTIFY_SMS=1
@@ -1414,6 +1423,17 @@ then
                 notify_eif "${HC_NAME}" "${HC_FAIL_ID}"
             else
                 warn "notify_sms plugin is not avaible, cannot send alert via sms!"
+            fi
+        fi
+        # by Slack?
+        if (( DO_NOTIFY_SLACK == 1 ))
+        then
+            if (( HAS_NOTIFY_SLACK == 1 ))
+            then
+                # call plugin
+                notify_slack "${HC_NAME}" "${HC_FAIL_ID}"
+            else
+                warn "notify_slack plugin is not avaible, cannot send alert via Slack!"
             fi
         fi
     fi
